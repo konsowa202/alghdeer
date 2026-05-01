@@ -1,0 +1,42 @@
+{
+  "generatedAt": "2026-05-01T15:12:18.593Z",
+  "profile": "https://www.instagram.com/alghdeer_sa/",
+  "featuredReel": "https://www.instagram.com/reel/DXl2kAGijT4/",
+  "results": [
+    {
+      "target": "featuredReel",
+      "ok": true
+    },
+    {
+      "target": "profile_try_1",
+      "ok": false
+    },
+    {
+      "target": "profile_try_2",
+      "ok": false
+    },
+    {
+      "target": "profile_try_3",
+      "ok": false
+    },
+    {
+      "target": "profile_try_4",
+      "ok": false
+    }
+  ],
+  "media": [
+    {
+      "fileName": "DXl2kAGijT4.jpg",
+      "url": "/instagram/DXl2kAGijT4.jpg",
+      "kind": "image",
+      "size": 20870
+    },
+    {
+      "fileName": "DXl2kAGijT4.mp4",
+      "url": "/instagram/DXl2kAGijT4.mp4",
+      "kind": "video",
+      "size": 19677619
+    }
+  ],
+  "note": "Local files are in /public/instagram and can be rendered directly."
+}
