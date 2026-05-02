@@ -10,7 +10,8 @@ export default function Philosophy() {
   const prefersNarrowTitles = useMediaQuery("(max-width: 767px)");
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "center center"] });
-  const titleScaleX = useTransform(scrollYProgress, [0, 1], [0.8, 1.12]);
+  const titleScaleXWide = useTransform(scrollYProgress, [0, 1], [0.8, 1.12]);
+  const titleScaleXNarrow = useTransform(scrollYProgress, [0, 1], [0.94, 1.06]);
 
   return (
     <section ref={ref} className="py-20 sm:py-32 md:py-40 bg-white text-black overflow-hidden">
@@ -19,11 +20,10 @@ export default function Philosophy() {
           <p className="text-xs tracking-[0.4em] uppercase text-black/30 mb-6 sm:mb-8">{lang === "ar" ? "فلسفتنا" : "OUR PHILOSOPHY"}</p>
 
           <motion.h2
-            style={
-              prefersNarrowTitles
-                ? undefined
-                : { scaleX: titleScaleX, transformOrigin: "center center" }
-            }
+            style={{
+              scaleX: prefersNarrowTitles ? titleScaleXNarrow : titleScaleXWide,
+              transformOrigin: "center center",
+            }}
             className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-black leading-[1.2] mb-8 sm:mb-12 px-1"
           >
             {lang === "ar"

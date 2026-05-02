@@ -3,20 +3,28 @@
 import React, { useRef } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export default function Hero() {
   const { t, lang } = useLanguage();
+  const narrow = useMediaQuery("(max-width: 767px)");
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
 
-  const extendWidth = useTransform(scrollYProgress, [0, 1], ["42%", "100%"]);
+  const extendWidthWide = useTransform(scrollYProgress, [0, 1], ["42%", "100%"]);
+  const extendWidthNarrow = useTransform(scrollYProgress, [0, 1], ["48%", "96%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.92, 1], [1, 1, 0]);
   const y = useTransform(scrollYProgress, [0, 1], [0, -40]);
   const imgScale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
-  // Strong, direct stretch that grows fast then completes at section end.
-  const titleScaleX = useTransform(scrollYProgress, [0, 0.22, 1], [1, 1.36, 1.58]);
-  const titleLetterSpacing = useTransform(scrollYProgress, [0, 0.22, 1], ["0em", "0.12em", "0.18em"]);
+  const titleScaleXWide = useTransform(scrollYProgress, [0, 0.22, 1], [1, 1.36, 1.58]);
+  const titleScaleXNarrow = useTransform(scrollYProgress, [0, 0.22, 1], [1, 1.14, 1.26]);
+  const titleLetterWide = useTransform(scrollYProgress, [0, 0.22, 1], ["0em", "0.12em", "0.18em"]);
+  const titleLetterNarrow = useTransform(scrollYProgress, [0, 0.22, 1], ["0em", "0.07em", "0.11em"]);
   const titleY = useTransform(scrollYProgress, [0, 1], [0, -8]);
+
+  const titleScaleX = narrow ? titleScaleXNarrow : titleScaleXWide;
+  const titleLetterSpacing = narrow ? titleLetterNarrow : titleLetterWide;
+  const extendWidth = narrow ? extendWidthNarrow : extendWidthWide;
 
   return (
     <section ref={ref} id="home" className="relative h-[125vh] w-full overflow-hidden">

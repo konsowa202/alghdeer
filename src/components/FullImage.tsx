@@ -20,12 +20,12 @@ export default function FullImage() {
       </motion.div>
       <motion.div style={{ opacity }} className="relative z-10 h-full flex items-center justify-center text-center px-4 sm:px-6">
         <div>
-          <p className="text-white/50 text-[10px] sm:text-xs tracking-[0.3em] sm:tracking-[0.5em] uppercase mb-4 sm:mb-6">
+          <p className="text-white/50 text-xs tracking-[0.28em] sm:tracking-[0.5em] uppercase mb-4 sm:mb-6">
             {lang === "ar" ? "📍 جدة ، المملكة العربية السعودية" : "📍 JEDDAH, SAUDI ARABIA"}
           </p>
           <motion.h2
             style={{ scaleX: titleScaleX, transformOrigin: "center center" }}
-            className="text-2xl sm:text-4xl md:text-6xl lg:text-8xl font-black text-white leading-tight max-w-4xl"
+            className="text-[clamp(1.6rem,6.5vw,2.75rem)] sm:text-4xl md:text-6xl lg:text-8xl font-black text-white leading-tight max-w-4xl"
           >
             {lang === "ar"
               ? "مخيم شتوي بطابع بوهيمي عصري"

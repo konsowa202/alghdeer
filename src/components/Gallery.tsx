@@ -32,7 +32,7 @@ export default function Gallery() {
           </motion.h2>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-[140px] sm:auto-rows-[180px] md:auto-rows-[250px] gap-1.5 sm:gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-[minmax(158px,1fr)] sm:auto-rows-[188px] md:auto-rows-[250px] gap-1.5 sm:gap-2">
           {images.map((img, i) => (
             <motion.div
               key={i}

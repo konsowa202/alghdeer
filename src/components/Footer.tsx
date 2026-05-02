@@ -28,17 +28,17 @@ export default function Footer() {
             <form className="space-y-5 sm:space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
                 <div>
-                  <label className="block text-white/40 text-[10px] sm:text-xs tracking-widest uppercase mb-2 sm:mb-3">{t("nameLabel")}</label>
+                  <label className="block text-white/40 text-xs tracking-widest uppercase mb-2 sm:mb-3">{t("nameLabel")}</label>
                   <input type="text" className="w-full bg-transparent border-b border-white/10 pb-3 text-white text-sm focus:outline-none focus:border-white/50 transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-white/40 text-[10px] sm:text-xs tracking-widest uppercase mb-2 sm:mb-3">{t("companyLabel")}</label>
+                  <label className="block text-white/40 text-xs tracking-widest uppercase mb-2 sm:mb-3">{t("companyLabel")}</label>
                   <input type="text" className="w-full bg-transparent border-b border-white/10 pb-3 text-white text-sm focus:outline-none focus:border-white/50 transition-colors" />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
                 <div>
-                  <label className="block text-white/40 text-[10px] sm:text-xs tracking-widest uppercase mb-2 sm:mb-3">{t("groupSizeLabel")}</label>
+                  <label className="block text-white/40 text-xs tracking-widest uppercase mb-2 sm:mb-3">{t("groupSizeLabel")}</label>
                   <input type="number" className="w-full bg-transparent border-b border-white/10 pb-3 text-white text-sm focus:outline-none focus:border-white/50 transition-colors" />
                 </div>
                 <div>

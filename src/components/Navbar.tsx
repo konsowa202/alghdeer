@@ -41,7 +41,7 @@ export default function Navbar() {
             <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border border-[#cba135]/50 group-hover:border-[#d4b458] transition-colors">
               <Image src="/logo.jpg" alt="الغدير" fill className="object-cover" />
             </div>
-            <span className="text-base sm:text-lg md:text-xl font-black text-white leading-none pt-0.5">
+            <span className="text-lg sm:text-xl md:text-xl font-black text-white leading-none pt-0.5">
               {lang === "ar" ? "الغدير" : "ALGHDEER"}
             </span>
           </a>

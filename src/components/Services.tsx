@@ -7,11 +7,18 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export default function Services() {
   const { lang } = useLanguage();
+  const isAr = lang === "ar";
   const prefersNarrowTitles = useMediaQuery("(max-width: 767px)");
   const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "center center"] });
-  const titleScaleX = useTransform(scrollYProgress, [0, 1], [0.85, 1.08]);
-  const isAr = lang === "ar";
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const titleScaleX = useTransform(scrollYProgress, (p) =>
+    prefersNarrowTitles ? 0.9 + p * 0.22 : 0.8 + p * 0.34,
+  );
+  const titleStretchLetter = useTransform(scrollYProgress, (p) => {
+    if (!isAr) return "0em";
+    const em = prefersNarrowTitles ? 0.02 + p * 0.04 : p * 0.1;
+    return `${em}em`;
+  });
 
   const services = [
     {
@@ -45,18 +52,18 @@ export default function Services() {
   ];
 
   return (
-    <section ref={ref} className="py-20 sm:py-32 md:py-40 bg-black text-white overflow-hidden">
+    <section ref={ref} className="py-20 sm:py-32 md:py-40 bg-black text-white overflow-visible">
       <div className="container mx-auto px-4 sm:px-6 lg:px-16">
         <div className="mb-12 sm:mb-20 border-b border-white/10 pb-8 sm:pb-10">
           <p className="text-xs tracking-[0.4em] uppercase text-white/30 mb-3 sm:mb-4">
             {isAr ? "خدماتنا" : "OUR SERVICES"}
           </p>
           <motion.h2
-            style={
-              prefersNarrowTitles
-                ? undefined
-                : { scaleX: titleScaleX, transformOrigin: isAr ? "right center" : "left center" }
-            }
+            style={{
+              scaleX: titleScaleX,
+              letterSpacing: titleStretchLetter,
+              transformOrigin: isAr ? "right center" : "left center",
+            }}
             className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black"
           >
             {isAr ? "نصنع لكم التجربة" : "We Craft Your Experience"}

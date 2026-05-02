@@ -10,14 +10,22 @@ export default function Events() {
   const { lang } = useLanguage();
   const prefersNarrowTitles = useMediaQuery("(max-width: 767px)");
   const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "center center"] });
-  const titleScaleX = useTransform(scrollYProgress, [0, 1], [1, 1.35]);
+  /** أطول من ‎center/center‎ عشان التمدّد يبان وهتشغّل السكروول؛ وإلا المرحلة بتخلص قبل ما تشوف اليور */
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const titleScaleX = useTransform(scrollYProgress, (p) =>
+    prefersNarrowTitles ? 1 + p * 0.26 : 1 + p * 0.45,
+  );
+  const titleStretchLetter = useTransform(scrollYProgress, (p) => {
+    if (lang !== "ar") return "0em";
+    const em = prefersNarrowTitles ? 0.02 + p * 0.07 : p * 0.14;
+    return `${em}em`;
+  });
 
   const featured = instagramContent[0];
   const cards = instagramContent.slice(1, 7);
 
   return (
-    <section ref={ref} id="events" className="py-20 sm:py-32 md:py-40 bg-black text-white overflow-hidden">
+    <section ref={ref} id="events" className="py-20 sm:py-32 md:py-40 bg-black text-white overflow-visible">
       <div className="container mx-auto px-4 sm:px-6 lg:px-16">
         <div className="mb-12 sm:mb-20">
           <motion.p
@@ -30,11 +38,11 @@ export default function Events() {
           </motion.p>
           <div className="overflow-visible">
             <motion.h2
-              style={
-                prefersNarrowTitles
-                  ? undefined
-                  : { scaleX: titleScaleX, transformOrigin: lang === "ar" ? "right center" : "left center" }
-              }
+              style={{
+                scaleX: titleScaleX,
+                letterSpacing: titleStretchLetter,
+                transformOrigin: lang === "ar" ? "right center" : "left center",
+              }}
               className="text-5xl sm:text-7xl md:text-8xl lg:text-[10rem] font-black leading-[0.85] hero-kashida"
             >
               {lang === "ar" ? "فعالياتنا" : "OUR EVENTS"}
