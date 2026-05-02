@@ -5,6 +5,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, Instagram } from "lucide-react";
 import Image from "next/image";
+import ContactBookingForm from "@/components/ContactBookingForm";
 
 export default function Footer() {
   const { t, lang } = useLanguage();
@@ -25,35 +26,7 @@ export default function Footer() {
             </p>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-8 sm:mb-10">{t("contactTitle")}</h2>
 
-            <form className="space-y-5 sm:space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-                <div>
-                  <label className="block text-white/40 text-xs tracking-widest uppercase mb-2 sm:mb-3">{t("nameLabel")}</label>
-                  <input type="text" className="w-full bg-transparent border-b border-white/10 pb-3 text-white text-sm focus:outline-none focus:border-white/50 transition-colors" />
-                </div>
-                <div>
-                  <label className="block text-white/40 text-xs tracking-widest uppercase mb-2 sm:mb-3">{t("companyLabel")}</label>
-                  <input type="text" className="w-full bg-transparent border-b border-white/10 pb-3 text-white text-sm focus:outline-none focus:border-white/50 transition-colors" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-                <div>
-                  <label className="block text-white/40 text-xs tracking-widest uppercase mb-2 sm:mb-3">{t("groupSizeLabel")}</label>
-                  <input type="number" className="w-full bg-transparent border-b border-white/10 pb-3 text-white text-sm focus:outline-none focus:border-white/50 transition-colors" />
-                </div>
-                <div>
-                  <label className="block text-white/40 text-[10px] sm:text-xs tracking-widest uppercase mb-2 sm:mb-3">{t("dateLabel")}</label>
-                  <input type="date" className="w-full bg-transparent border-b border-white/10 pb-3 text-white text-sm focus:outline-none focus:border-white/50 transition-colors" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-white/40 text-[10px] sm:text-xs tracking-widest uppercase mb-2 sm:mb-3">{t("requestsLabel")}</label>
-                <textarea rows={3} className="w-full bg-transparent border-b border-white/10 pb-3 text-white text-sm focus:outline-none focus:border-white/50 transition-colors resize-none" />
-              </div>
-              <button type="button" className="mt-4 px-8 sm:px-10 py-3.5 sm:py-4 bg-white text-black font-bold tracking-widest uppercase hover:bg-white/90 transition-all text-xs sm:text-sm w-full sm:w-auto">
-                {t("submitBtn")}
-              </button>
-            </form>
+            <ContactBookingForm />
           </motion.div>
 
           {/* Info */}
@@ -102,7 +75,12 @@ export default function Footer() {
 
         <div className="border-t border-white/5 pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between text-white/30 text-[10px] sm:text-xs tracking-widest gap-3">
           <p>&copy; {new Date().getFullYear()} {lang === "ar" ? "مخيمات الغدير" : "ALGHDEER CAMPS"}</p>
-          <p>{lang === "ar" ? "جميع الحقوق محفوظة" : "ALL RIGHTS RESERVED"}</p>
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+            <a href="/dashboard/login" className="hover:text-white/50 transition-colors">
+              {lang === "ar" ? "دخول الموظفين" : "Staff login"}
+            </a>
+            <p>{lang === "ar" ? "جميع الحقوق محفوظة" : "ALL RIGHTS RESERVED"}</p>
+          </div>
         </div>
       </div>
     </footer>
