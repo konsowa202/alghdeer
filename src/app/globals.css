@@ -86,12 +86,22 @@
 /* ── Base ── */
 @layer base {
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  /* يمنع تمدد أفقي خفي (ماركي + RTL) اللي كان يخلّي شرط أسود جانبي على الموبايل */
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+  }
 
   body {
     @apply bg-black text-white antialiased;
     font-family: var(--font-body-ar), var(--font-ibm), sans-serif;
     background: linear-gradient(180deg, #0f1117 0%, #060607 100%);
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
   }
   html[dir="ltr"] body {
     font-family: var(--font-ibm), var(--font-body-ar), sans-serif;

@@ -4,8 +4,9 @@ import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion } from "framer-motion";
 
+/** عرض كل بطاقة نسبياً لمشهد العرض؛ تجنّب ‎calc(…100vw…)‎ المتكررة مع شريط أراء يوسّع الـRTL أفقياً */
 const CARD =
-  "w-[min(20rem,calc(100vw-2.75rem))] sm:w-[22.5rem] shrink-0 grow-0 p-6 sm:p-8 border border-black/10 bg-white hover:border-black/25 transition-colors duration-300 shadow-[0_1px_0_rgba(0,0,0,0.03)] rounded-sm box-border";
+  "w-[min(20rem,88vw)] sm:w-[22.5rem] shrink-0 grow-0 p-6 sm:p-8 border border-black/10 bg-white hover:border-black/25 transition-colors duration-300 shadow-[0_1px_0_rgba(0,0,0,0.03)] rounded-sm box-border";
 
 const MARQUEE_CHUNK_COUNT = 8;
 
@@ -79,7 +80,7 @@ function MarqueeTrack({
 
   return (
     /* عزل اتجاه LTR لتفادي تمركز الشريط على يمين الصفحة في RTL */
-    <div className="w-full min-h-[12rem]" dir="ltr" style={{ direction: "ltr" }}>
+    <div className="w-full max-w-full min-h-[12rem] overflow-hidden" dir="ltr" style={{ direction: "ltr" }}>
       <div
         dir="ltr"
         className="testimonial-marquee-track inline-flex w-max shrink-0 flex-nowrap justify-start motion-reduce:animate-none"
