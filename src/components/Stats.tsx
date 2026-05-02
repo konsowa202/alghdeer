@@ -50,7 +50,7 @@ export default function Stats() {
           </h2>
           <div className="w-16 sm:w-24 h-px bg-gradient-to-r from-transparent via-[#cba135] to-transparent mx-auto" />
         </div>
-        <div className="flex md:grid md:grid-cols-4 gap-8 sm:gap-12 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-2">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-8 md:gap-10">
           {stats.map((stat, i) => (
             <motion.div
               key={i}
@@ -58,7 +58,7 @@ export default function Stats() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
-              className="flex flex-col items-center text-center relative overflow-hidden min-w-[62%] sm:min-w-[36%] md:min-w-0 snap-start border border-white/10 bg-white/[0.02] hover:border-[#cba135]/55 hover:bg-white/[0.04] px-5 py-7 sm:px-6 sm:py-8 transition-all duration-500 group"
+              className="flex flex-col items-center text-center relative overflow-hidden min-h-0 border border-white/10 bg-white/[0.02] hover:border-[#cba135]/55 hover:bg-white/[0.04] px-4 py-6 sm:px-6 sm:py-8 transition-all duration-500 group"
             >
               <div className="mb-4 sm:mb-6 w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-[#cba135]/40 flex items-center justify-center text-[#cba135] group-hover:bg-[#cba135] group-hover:text-black transition-all duration-500">
                 <span className="text-lg sm:text-xl leading-none">#</span>

@@ -27,7 +27,7 @@ export default function Hero() {
           muted
           loop
           playsInline
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 mix-blend-overlay opacity-35">
           <img src="/hero.png" alt="مخيمات الغدير" className="w-full h-full object-cover" />
@@ -53,7 +53,7 @@ export default function Hero() {
                   letterSpacing: lang === "ar" ? titleLetterSpacing : "0em",
                   y: titleY,
                 }}
-                className="hero-kashida text-[3.3rem] sm:text-[5.4rem] md:text-[7rem] lg:text-[9.5rem] xl:text-[11rem] font-black text-white leading-[0.95]"
+                className="hero-kashida text-[clamp(4.1rem,18vw,5.85rem)] sm:text-[5.4rem] md:text-[7rem] lg:text-[9.5rem] xl:text-[11rem] font-black text-white leading-[0.95]"
               >
                 {lang === "ar" ? "الغدير" : "ALGHDEER"}
               </motion.h1>
@@ -81,11 +81,11 @@ export default function Hero() {
             transition={{ duration: 1, delay: 1.8 }}
             className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center"
           >
-            <a href="#events" className="group relative px-6 sm:px-8 py-3.5 sm:py-4 border border-[#cba135]/55 text-white text-xs sm:text-sm tracking-[0.2em] uppercase overflow-hidden text-center">
+            <a href="#events" className="group relative px-5 sm:px-8 py-3 sm:py-4 border border-[#cba135]/55 text-white text-[11px] sm:text-sm tracking-[0.2em] uppercase overflow-hidden text-center">
               <span className="relative z-10 group-hover:text-black transition-colors duration-500">{t("exploreBtn")}</span>
               <div className="absolute inset-0 bg-[#cba135] scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left rtl:origin-right" />
             </a>
-            <a href="#contact" className="px-6 sm:px-8 py-3.5 sm:py-4 bg-[#cba135] text-black text-xs sm:text-sm tracking-[0.2em] uppercase font-bold hover:bg-[#d4b458] transition-all text-center">
+            <a href="#contact" className="px-5 sm:px-8 py-3 sm:py-4 bg-[#cba135] text-black text-[11px] sm:text-sm tracking-[0.2em] uppercase font-bold hover:bg-[#d4b458] transition-all text-center">
               {t("inquireBtn")}
             </a>
           </motion.div>

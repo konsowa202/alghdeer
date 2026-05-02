@@ -117,6 +117,24 @@
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.92) 50%, rgba(255, 255, 255, 0.08) 100%);
 }
 
+/* آراء العملاء: ‎—marquee-dx‎ = عرض مجموعة واحدة بالبسل (سالب)، يُحقن من الجافاسربت */
+@keyframes testimonial-marquee-shift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(var(--marquee-dx, 0px), 0, 0); }
+}
+
+.testimonial-marquee-track {
+  animation: testimonial-marquee-shift 52s linear infinite;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .testimonial-marquee-track {
+    animation: none !important;
+  }
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #000; }

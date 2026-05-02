@@ -4,9 +4,11 @@ import React, { useRef } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { instagramContent } from "@/data/instagramContent";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export default function Events() {
   const { lang } = useLanguage();
+  const prefersNarrowTitles = useMediaQuery("(max-width: 767px)");
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "center center"] });
   const titleScaleX = useTransform(scrollYProgress, [0, 1], [1, 1.35]);
@@ -28,7 +30,11 @@ export default function Events() {
           </motion.p>
           <div className="overflow-visible">
             <motion.h2
-              style={{ scaleX: titleScaleX, transformOrigin: lang === "ar" ? "right center" : "left center" }}
+              style={
+                prefersNarrowTitles
+                  ? undefined
+                  : { scaleX: titleScaleX, transformOrigin: lang === "ar" ? "right center" : "left center" }
+              }
               className="text-5xl sm:text-7xl md:text-8xl lg:text-[10rem] font-black leading-[0.85] hero-kashida"
             >
               {lang === "ar" ? "فعالياتنا" : "OUR EVENTS"}
@@ -49,7 +55,7 @@ export default function Events() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="relative xl:col-span-3 aspect-[9/16] sm:aspect-[16/9] xl:aspect-auto overflow-hidden border border-white/10"
+            className="relative xl:col-span-3 aspect-video max-h-[min(56vh,560px)] sm:max-h-none sm:aspect-[16/9] xl:aspect-auto overflow-hidden border border-white/10 bg-black"
           >
             <video
               src={featured.mediaUrl}
@@ -59,7 +65,7 @@ export default function Events() {
               loop
               playsInline
               controls
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-contain sm:object-cover"
             />
             <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black via-black/10 to-transparent" />
             <div className="absolute bottom-0 right-0 left-0 p-5 sm:p-8">
