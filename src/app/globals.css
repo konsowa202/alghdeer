@@ -145,6 +145,19 @@
   }
 }
 
+/* شريط شعارات العملاء تحت الهيرو — نفس منطق الإزاحة */
+.clients-marquee-track {
+  animation: testimonial-marquee-shift 48s linear infinite;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clients-marquee-track {
+    animation: none !important;
+  }
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #000; }

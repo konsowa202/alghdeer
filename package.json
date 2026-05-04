@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "sync:client-logos": "node scripts/sync-client-logos.mjs",
+    "prebuild": "npm run sync:client-logos",
+    "dev": "npm run sync:client-logos && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

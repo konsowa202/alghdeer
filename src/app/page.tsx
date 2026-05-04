@@ -1,6 +1,7 @@
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import ClientsMarquee from "@/components/ClientsMarquee";
 import Events from "@/components/Events";
 import About from "@/components/About";
 import Experiences from "@/components/Experiences";
@@ -20,6 +21,8 @@ export default function Home() {
       <Navbar />
       {/* 2. Hero - Full screen with يمتد animation */}
       <Hero />
+      {/* 2b. عملاؤنا — شريط شعارات (مارquee) */}
+      <ClientsMarquee />
       {/* 3. فعالياتنا - Our Events (Instagram content) */}
       <Events />
       {/* 4. About / Concept (white) */}
