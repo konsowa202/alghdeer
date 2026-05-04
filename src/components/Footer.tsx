@@ -5,6 +5,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, Instagram } from "lucide-react";
 import Image from "next/image";
+import TikTokIcon from "@/components/icons/TikTokIcon";
 import ContactBookingForm from "@/components/ContactBookingForm";
 
 export default function Footer() {
@@ -66,8 +67,11 @@ export default function Footer() {
             </div>
 
             <div className="flex gap-3 mt-8 sm:mt-12">
-              <a href="https://www.instagram.com/alghdeer_sa" target="_blank" rel="noopener noreferrer" className="w-11 h-11 sm:w-12 sm:h-12 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-all">
+              <a href="https://www.instagram.com/alghdeer_sa" target="_blank" rel="noopener noreferrer" className="w-11 h-11 sm:w-12 sm:h-12 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-all" aria-label="Instagram">
                 <Instagram size={18} />
+              </a>
+              <a href="https://www.tiktok.com/@alghdeer_sa" target="_blank" rel="noopener noreferrer" className="w-11 h-11 sm:w-12 sm:h-12 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-all" aria-label="TikTok">
+                <TikTokIcon size={18} />
               </a>
             </div>
           </motion.div>
