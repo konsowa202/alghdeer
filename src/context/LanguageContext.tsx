@@ -15,103 +15,111 @@ interface LanguageContextType {
 const en: Translation = {
   // Nav
   home: "Home",
-  events: "Events",
+  events: "Discover",
   concept: "Concept",
   experiences: "Experiences",
-  facilities: "Facilities",
+  facilities: "Amenities",
   gallery: "Gallery",
-  contact: "Contact",
+  contact: "Book Ticket",
   bookBtn: "Book Now",
 
   // Hero
-  heroSub: "An exclusive desert retreat in Jeddah, blending modern elegance with the timeless beauty of Arabian heritage.",
-  exploreBtn: "Explore",
-  inquireBtn: "Inquire Now",
+  heroSub:
+    "An exclusive desert sanctuary in Jeddah blending glass VIP pavilions, bohemian white sails, and authentic Arabian nights.",
+  exploreBtn: "Explore Experiences",
+  inquireBtn: "Get Your Ticket",
 
   // About
-  aboutTitle: "Where Heritage Meets Modern Luxury",
-  aboutText1: "Alghdeer is more than a camp — it is a curated escape into the heart of the Arabian desert. Designed for corporate retreats, VIP gatherings, and private celebrations.",
-  aboutText2: "Every detail is crafted to evoke a sense of wonder: from the scent of oud to the warmth of a campfire under an infinite sky.",
+  aboutTitle: "Desert Authenticity, Modern Luxury",
+  aboutText1:
+    "Designed in the heart of Jeddah's Burayman desert, Alghdeer Camp brings together climate-controlled glass lounges, flowing white canvas canopies, and timeless Arabian hospitality.",
+  aboutText2:
+    "From executive corporate retreats to starlit gala dinners and desert safari adventures, every evening is crafted to perfection.",
 
   // Experiences
-  expTitle: "Experiences",
-  exp1Title: "Corporate Retreats",
-  exp1Desc: "Tailored team-building experiences and executive offsites designed to inspire and connect.",
-  exp2Title: "VIP Private Events",
-  exp2Desc: "Exclusive gatherings with full privacy, luxury amenities, and bespoke Arabian hospitality.",
-  exp3Title: "Desert Celebrations",
-  exp3Desc: "Unforgettable celebrations under the stars — weddings, anniversaries, and milestone events.",
+  expTitle: "Signature Experiences",
+  exp1Title: "Corporate Galas & VIP Lounges",
+  exp1Desc: "Climate-controlled glass pavilions, executive seating, and turnkey corporate hospitality.",
+  exp2Title: "4x4 Safari & Dune Convoys",
+  exp2Desc: "Jeep Wrangler desert convoys, night ATV trails, horseback riding, and group challenges.",
+  exp3Title: "Family & Kids Carnival",
+  exp3Desc: "Interactive mascot shows, family lounges, camel rides, and joyful celebrations for all ages.",
 
   // Facilities
-  facTitle: "Amenities",
-  fac1: "Arabic Coffee Corner",
-  fac2: "Luxury Desert Tents",
-  fac3: "Campfire Lounge",
-  fac4: "Private Restrooms",
-  fac5: "Entertainment Zone",
+  facTitle: "Camp Spaces",
+  fac1: "Glass VIP Pavilion",
+  fac2: "Bohemian Sails & Majlis",
+  fac3: "Royal Open-Air Buffet",
+  fac4: "Specialty Coffee Bar",
+  fac5: "Live Stage & Fireworks",
+  fac6: "Safari & Sports Arena",
 
   // Gallery
   galleryTitle: "Visual Journey",
 
   // Contact
-  contactTitle: "Plan Your Experience",
-  nameLabel: "Full Name",
-  companyLabel: "Company",
-  groupSizeLabel: "Group Size",
-  dateLabel: "Preferred Date",
-  requestsLabel: "Special Requests",
-  submitBtn: "Send Inquiry",
+  contactTitle: "Issue Your Event Ticket",
+  nameLabel: "Guest Name",
+  companyLabel: "Company / Occasion",
+  groupSizeLabel: "Guests Count",
+  dateLabel: "Event Date & Time",
+  requestsLabel: "Special Notes",
+  submitBtn: "Issue VIP Ticket",
 };
 
 const ar: Translation = {
   // Nav
   home: "الرئيسية",
-  events: "فعالياتنا",
+  events: "اكتشف الغدير",
   concept: "المفهوم",
   experiences: "تجاربنا",
   facilities: "المرافق",
   gallery: "المعرض",
-  contact: "تواصل معنا",
+  contact: "تذكرة الحجز",
   bookBtn: "احجز الآن",
 
   // Hero
-  heroSub: "ملاذ حصري في صحراء جدة، يجمع بين الأناقة الحديثة وجمال التراث العربي الأصيل.",
-  exploreBtn: "استكشف",
-  inquireBtn: "استفسر الآن",
+  heroSub:
+    "واحة صحراوية فاخرة في جدة، تجمع فخامة القاعات الزجاجية وسحر الخيام البوهيمية تحت النجوم.",
+  exploreBtn: "استكشف التجارب",
+  inquireBtn: "احصل على تذكرتك",
 
   // About
-  aboutTitle: "حيث يلتقي التراث بالفخامة العصرية",
-  aboutText1: "الغدير ليس مجرد مخيم — إنه رحلة مصممة بعناية إلى قلب الصحراء العربية. مخصص للخلوات المؤسسية وتجمعات كبار الشخصيات والاحتفالات الخاصة.",
-  aboutText2: "كل تفصيل مصنوع لإثارة الدهشة: من عبق العود إلى دفء نار المخيم تحت سماء لا نهائية.",
+  aboutTitle: "أصالة الصحراء، فخامة التفاصيل",
+  aboutText1:
+    "صُمم مخيم الغدير ليكون الوجهة الأرقى في صحراء جدة، حيث تلتقي القاعات الزجاجية المكيفة والممرات المظللة بالكانفاس الأبيض مع كرم الضيافة العربية الأصيلة.",
+  aboutText2:
+    "من حفلات الشركات الكبرى والولائم الفاخرة إلى مغامرات السفاري وليالي الطرب والألعاب النارية، نصنع لك ليلة استثنائية.",
 
   // Experiences
-  expTitle: "تجاربنا",
-  exp1Title: "خلوات الشركات",
-  exp1Desc: "تجارب بناء فِرق مصممة خصيصاً وخلوات تنفيذية لإلهام وتوحيد فريقكم.",
-  exp2Title: "فعاليات VIP خاصة",
-  exp2Desc: "تجمعات حصرية بخصوصية تامة ومرافق فاخرة وضيافة عربية مخصصة.",
-  exp3Title: "احتفالات صحراوية",
-  exp3Desc: "احتفالات لا تُنسى تحت النجوم — أعراس، ذكرى سنوية، ومناسبات استثنائية.",
+  expTitle: "تجارب الغدير",
+  exp1Title: "مخيمات الشركات والقاعات الزجاجية",
+  exp1Desc: "قاعات زجاجية مكيفة بإطلالة بانورامية وتجهيز متكامل لفعاليات الشركات وكبار الشخصيات.",
+  exp2Title: "قوافل السفاري وتطعيس الجيوب",
+  exp2Desc: "مسارات صحراوية لجيوب الرانجلر والدبابات، ركوب الخيل، وتحديات حماسية عند الغروب.",
+  exp3Title: "كرنفال العائلات والأطفال",
+  exp3Desc: "عروض الشخصيات التفاعلية العملاقة، جلسات العائلات المريحة، وأجواء بهجة آمنة للصغار والكبار.",
 
   // Facilities
-  facTitle: "المرافق والخدمات",
-  fac1: "ركن القهوة العربية",
-  fac2: "خيام صحراوية فاخرة",
-  fac3: "صالة المدفأة",
-  fac4: "دورات مياه خاصة",
-  fac5: "منطقة الترفيه",
+  facTitle: "مرافق المخيم",
+  fac1: "القاعة الزجاجية (VIP)",
+  fac2: "المجالس والخيام البوهيمية",
+  fac3: "البوفيه الملكي والمشاوي",
+  fac4: "ركن القهوة المختصة",
+  fac5: "مسرح العروض والألعاب النارية",
+  fac6: "حلبة السفاري والألعاب",
 
   // Gallery
   galleryTitle: "رحلة بصرية",
 
   // Contact
-  contactTitle: "خطّط لتجربتك",
-  nameLabel: "الاسم الكامل",
-  companyLabel: "الشركة",
-  groupSizeLabel: "عدد الأشخاص",
-  dateLabel: "التاريخ المفضل",
-  requestsLabel: "طلبات خاصة",
-  submitBtn: "أرسل استفسارك",
+  contactTitle: "إصدار تذكرة الحجز",
+  nameLabel: "اسم الضيف",
+  companyLabel: "الجهة / المناسبة",
+  groupSizeLabel: "عدد الضيوف",
+  dateLabel: "تاريخ ووقت المناسبة",
+  requestsLabel: "ملاحظات خاصة",
+  submitBtn: "إصدار تذكرة الحجز",
 };
 
 const LanguageContext = createContext<LanguageContextType>({

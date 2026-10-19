@@ -37,8 +37,12 @@ export default function Hero() {
           playsInline
           className="w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0 mix-blend-overlay opacity-35">
-          <img src="/hero.png" alt="مخيمات الغدير" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 mix-blend-overlay opacity-25">
+          <img
+            src="/instagram/frames/frame_aframe_jeeps.jpg"
+            alt="مخيمات الغدير"
+            className="w-full h-full object-cover"
+          />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/20" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/55 to-transparent rtl:bg-gradient-to-l" />
@@ -78,7 +82,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 1.2 }}
-            className="text-white/70 text-base sm:text-lg md:text-xl max-w-md sm:max-w-2xl mb-8 sm:mb-10 leading-relaxed mx-auto"
+            className="text-white/75 text-base sm:text-lg md:text-xl max-w-md sm:max-w-2xl mb-8 sm:mb-10 leading-relaxed mx-auto"
           >
             {t("heroSub")}
           </motion.p>
@@ -89,11 +93,19 @@ export default function Hero() {
             transition={{ duration: 1, delay: 1.8 }}
             className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center"
           >
-            <a href="#events" className="group relative px-5 sm:px-8 py-3 sm:py-4 border border-[#cba135]/55 text-white text-[11px] sm:text-sm tracking-[0.2em] uppercase overflow-hidden text-center">
-              <span className="relative z-10 group-hover:text-black transition-colors duration-500">{t("exploreBtn")}</span>
+            <a
+              href="#events"
+              className="group relative px-5 sm:px-8 py-3 sm:py-4 border border-[#cba135]/55 text-white text-[11px] sm:text-sm tracking-[0.2em] uppercase overflow-hidden text-center"
+            >
+              <span className="relative z-10 group-hover:text-black transition-colors duration-500">
+                {t("exploreBtn")}
+              </span>
               <div className="absolute inset-0 bg-[#cba135] scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left rtl:origin-right" />
             </a>
-            <a href="#contact" className="px-5 sm:px-8 py-3 sm:py-4 bg-[#cba135] text-black text-[11px] sm:text-sm tracking-[0.2em] uppercase font-bold hover:bg-[#d4b458] transition-all text-center">
+            <a
+              href="#contact"
+              className="px-5 sm:px-8 py-3 sm:py-4 bg-[#cba135] text-black text-[11px] sm:text-sm tracking-[0.2em] uppercase font-bold hover:bg-[#d4b458] transition-all text-center"
+            >
               {t("inquireBtn")}
             </a>
           </motion.div>

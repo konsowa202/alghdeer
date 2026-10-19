@@ -10,13 +10,13 @@ const ibmPlex = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Alghdeer | الغدير - Authentic Arabian Desert Camp",
+  title: "ALGHDEER camp | مخيمات الغدير — جدة • طريق بريمان",
   description:
-    "مخيمات الغدير - Exclusive private desert retreats and corporate getaways in Jeddah, Saudi Arabia. A modern bohemian camp experience rooted in Arabian heritage.",
+    "مخيمات الغدير (@alghdeer_sa) — وجهتكم الشتوية والرمضانية الأضخم في جدة (طريق بريمان) لاستضافة فعاليات الشركات الكبرى، الغبقات الرمضانية، والاحتفالات الخاصة.",
   icons: {
-    icon: "/logo.jpg",
-    shortcut: "/logo.jpg",
-    apple: "/logo.jpg",
+    icon: "/logo-dark-bg.png",
+    shortcut: "/logo-dark-bg.png",
+    apple: "/logo-dark-bg.png",
   },
 };
 
