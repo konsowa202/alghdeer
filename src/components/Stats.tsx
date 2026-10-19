@@ -30,12 +30,29 @@ function AnimatedCounter({ target, duration = 2000 }: { target: number; duration
 
 export default function Stats() {
   const { lang } = useLanguage();
+  const isAr = lang === "ar";
 
   const stats = [
-    { value: 45, suffix: "+", label: lang === "ar" ? "فعالية منظمة" : "Events Organized" },
-    { value: 500, suffix: "+", label: lang === "ar" ? "ضيف مميز" : "VIP Guests" },
-    { value: 100, suffix: "%", label: lang === "ar" ? "رضا العملاء" : "Client Satisfaction" },
-    { value: 5, suffix: "★", label: lang === "ar" ? "تقييم" : "Star Rating" },
+    {
+      value: 60,
+      suffix: "+",
+      label: isAr ? "فعالية شركات وموسم ناجح" : "Corporate & Seasonal Events",
+    },
+    {
+      value: 1500,
+      suffix: "+",
+      label: isAr ? "ضيف في أمسياتنا الكبرى" : "Guests Hosted Per Season",
+    },
+    {
+      value: 100,
+      suffix: "%",
+      label: isAr ? "تجهيز متكامل من الضيافة للترفيه" : "Turnkey Event Execution",
+    },
+    {
+      value: 5,
+      suffix: "★",
+      label: isAr ? "الوجهة الأولى في بريمان جدة" : "Premier Camp in Burayman",
+    },
   ];
 
   return (
@@ -43,10 +60,10 @@ export default function Stats() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-16">
         <div className="text-center mb-10 sm:mb-12">
           <p className="text-[10px] sm:text-xs tracking-[0.35em] uppercase text-[#cba135]/70 mb-3">
-            {lang === "ar" ? "أرقامنا" : "OUR NUMBERS"}
+            {isAr ? "أرقامنا في الغدير" : "OUR IMPACT"}
           </p>
           <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-6">
-            {lang === "ar" ? "الثقة بالأرقام" : "Trust in Numbers"}
+            {isAr ? "الثقة بالأرقام" : "Trust in Numbers"}
           </h2>
           <div className="w-16 sm:w-24 h-px bg-gradient-to-r from-transparent via-[#cba135] to-transparent mx-auto" />
         </div>
@@ -69,7 +86,9 @@ export default function Stats() {
                 </span>
                 <span className="text-[#cba135]">{stat.suffix}</span>
               </div>
-              <p className="text-[11px] sm:text-sm font-semibold tracking-wider sm:tracking-[0.12em] uppercase text-white/90">{stat.label}</p>
+              <p className="text-[11px] sm:text-sm font-semibold tracking-wider sm:tracking-[0.12em] uppercase text-white/90">
+                {stat.label}
+              </p>
             </motion.div>
           ))}
         </div>

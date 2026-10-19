@@ -1,162 +1,386 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { instagramContent } from "@/data/instagramContent";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import TikTokIcon from "@/components/icons/TikTokIcon";
+import { Play, X, Volume2, VolumeX, ExternalLink } from "lucide-react";
+
+type BentoCardItem = {
+  id: string;
+  image: string;
+  videoUrl: string;
+  permalink: string;
+  titleAr: string;
+  titleEn: string;
+  subAr: string;
+  subEn: string;
+};
 
 export default function Events() {
   const { lang } = useLanguage();
+  const isAr = lang === "ar";
   const prefersNarrowTitles = useMediaQuery("(max-width: 767px)");
   const ref = useRef<HTMLElement>(null);
-  /** أطول من ‎center/center‎ عشان التمدّد يبان وهتشغّل السكروول؛ وإلا المرحلة بتخلص قبل ما تشوف اليور */
+
+  const [activeVideo, setActiveVideo] = useState<BentoCardItem | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const titleScaleX = useTransform(scrollYProgress, (p) =>
-    prefersNarrowTitles ? 1 + p * 0.26 : 1 + p * 0.45,
+    prefersNarrowTitles ? 1 + p * 0.18 : 1 + p * 0.35,
   );
-  const titleStretchLetter = useTransform(scrollYProgress, (p) => {
-    if (lang !== "ar") return "0em";
-    const em = prefersNarrowTitles ? 0.02 + p * 0.07 : p * 0.14;
-    return `${em}em`;
-  });
 
-  const featured = instagramContent[0];
-  const cards = instagramContent.slice(1, 7);
+  const cards: BentoCardItem[] = [
+    {
+      id: "oasis",
+      image: "/nano/wbk_card_majlis_gate.jpg",
+      videoUrl: "/instagram/DXl3MV1Cp7o.mp4",
+      permalink: "https://www.instagram.com/reel/DXl3MV1Cp7o/",
+      titleAr: "واحة الغدير",
+      titleEn: "ALGHDEER OASIS",
+      subAr: "جولة في القاعات والمجالس",
+      subEn: "Camp & Pavilions Tour",
+    },
+    {
+      id: "safari",
+      image: "/nano/wbk_card_safari.jpg",
+      videoUrl: "/instagram/DXl8V0yCkwI.mp4",
+      permalink: "https://www.instagram.com/reel/DXl8V0yCkwI/",
+      titleAr: "مملكة السفاري والتطعيس",
+      titleEn: "DESERT SAFARI & DUNES",
+      subAr: "مسارات الجيوب والدبابات",
+      subEn: "4x4 Convoy & Night ATVs",
+    },
+    {
+      id: "live",
+      image: "/nano/wbk_card_live_nights.jpg",
+      videoUrl: "/instagram/DXl904UiqLC.mp4",
+      permalink: "https://www.instagram.com/reel/DXl904UiqLC/",
+      titleAr: "ليالي الطرب",
+      titleEn: "TARAB NIGHTS",
+      subAr: "عروض حية وألعاب نارية",
+      subEn: "Live Music & Fireworks",
+    },
+    {
+      id: "aerial",
+      image: "/nano/wbk_card_aerial_camp.jpg",
+      videoUrl: "/instagram/DXmC4HPiuuJ.mp4",
+      permalink: "https://www.instagram.com/reel/DXmC4HPiuuJ/",
+      titleAr: "أمسيات الشركات",
+      titleEn: "CORPORATE GALAS",
+      subAr: "ولائم فاخرة تحت النجوم",
+      subEn: "Starlit Banquets",
+    },
+  ];
 
   return (
-    <section ref={ref} id="events" className="py-20 sm:py-32 md:py-40 bg-black text-white overflow-visible">
+    <section ref={ref} id="events" className="py-16 sm:py-28 md:py-36 bg-black text-white overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-16">
-        <div className="mb-12 sm:mb-20">
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-xs tracking-[0.4em] uppercase text-white/30 mb-4 sm:mb-6"
-          >
-            {lang === "ar" ? "من أعمالنا" : "FROM OUR WORK"}
-          </motion.p>
-          <div className="overflow-visible">
+        {/* Clean Minimal Header */}
+        <div className="mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <p className="text-xs tracking-[0.35em] uppercase text-[#cba135] mb-3">
+              {isAr ? "عالم الغدير" : "DISCOVER ALGHDEER"}
+            </p>
             <motion.h2
               style={{
                 scaleX: titleScaleX,
-                letterSpacing: titleStretchLetter,
-                transformOrigin: lang === "ar" ? "right center" : "left center",
+                transformOrigin: isAr ? "right center" : "left center",
               }}
-              className="text-5xl sm:text-7xl md:text-8xl lg:text-[10rem] font-black leading-[0.85] hero-kashida"
+              className="text-4xl sm:text-6xl md:text-7xl font-black leading-[1.1]"
             >
-              {lang === "ar" ? "فعالياتنا" : "OUR EVENTS"}
+              {isAr ? "فعالياتنا" : "OUR EVENTS"}
             </motion.h2>
           </div>
-          <motion.div
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full h-px bg-white/10 mt-8 sm:mt-12 origin-right rtl:origin-right ltr:origin-left"
-          />
+          <p className="text-white/50 text-xs sm:text-sm">
+            {isAr ? "اضغط على أي بطاقة لمشاهدة الفيديو الحي" : "Click any card to watch the live reel"}
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-6 mb-8 sm:mb-12">
+        {/* Webook.com Inspired Bento Layout (4 Square Cards + 1 Large Portal Hero Card) */}
+        <div
+          dir="ltr"
+          className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch"
+        >
+          {/* Left 2x2 Grid (6 cols) */}
+          <div className="lg:col-span-6 grid grid-cols-2 gap-3 sm:gap-4">
+            {/* Card 1: Oasis Gate (Aquarabia style) */}
+            <motion.button
+              type="button"
+              onClick={() => setActiveVideo(cards[0])}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-[#111] text-left focus:outline-none border border-white/10 hover:border-[#cba135]/60 transition-all"
+            >
+              <img
+                src={cards[0].image}
+                alt={cards[0].titleAr}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/20" />
+              <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/55 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-[#cba135] group-hover:text-black transition-all">
+                <Play size={13} className="fill-current ml-0.5" />
+              </div>
+              <div className="absolute bottom-3.5 inset-x-3.5 text-center" dir={isAr ? "rtl" : "ltr"}>
+                <span className="inline-block text-[10px] tracking-[0.2em] uppercase text-[#e6c86e] font-bold drop-shadow">
+                  {isAr ? cards[0].subAr : cards[0].subEn}
+                </span>
+                <h3 className="text-base sm:text-xl font-black text-white drop-shadow-md">
+                  {isAr ? cards[0].titleAr : cards[0].titleEn}
+                </h3>
+              </div>
+            </motion.button>
+
+            {/* Card 2: Safari & Dunes (MotoGP slanted poster style) */}
+            <motion.button
+              type="button"
+              onClick={() => setActiveVideo(cards[1])}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.08 }}
+              className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-[#111] text-left focus:outline-none border border-white/10 hover:border-[#cba135]/60 transition-all"
+            >
+              <img
+                src={cards[1].image}
+                alt={cards[1].titleAr}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-transparent to-black/75" />
+              {/* Top Motorsport Header Bar */}
+              <div className="absolute top-0 inset-x-0 bg-black/80 px-3 py-1.5 flex items-center justify-between text-[8px] sm:text-[9px] tracking-[0.18em] uppercase font-bold text-white/80">
+                <span>4X4 SAFARI</span>
+                <span className="text-[#cba135]">BURAYMAN • JED</span>
+              </div>
+              {/* Tilted Poster Title */}
+              <div className="absolute top-8 sm:top-10 inset-x-3 text-center transform -rotate-6">
+                <h3 className="text-base sm:text-2xl font-black uppercase tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)] leading-none">
+                  {isAr ? "تطعيس وسفاري" : "DUNE SAFARI"}
+                </h3>
+                <span className="inline-block mt-1 px-2 py-0.5 bg-[#cba135] text-black text-[9px] sm:text-[10px] font-black tracking-widest uppercase">
+                  {isAr ? "جيوب • دبابات" : "JEEPS • ATVS"}
+                </span>
+              </div>
+              <div className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/65 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-[#cba135] group-hover:text-black transition-all">
+                <Play size={13} className="fill-current ml-0.5" />
+              </div>
+            </motion.button>
+
+            {/* Card 3: Live Tarab Nights (Concert Poster style) */}
+            <motion.button
+              type="button"
+              onClick={() => setActiveVideo(cards[2])}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.14 }}
+              className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-[#111] text-center focus:outline-none border border-white/10 hover:border-[#cba135]/60 transition-all"
+            >
+              <img
+                src={cards[2].image}
+                alt={cards[2].titleAr}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-black/60" />
+              <div className="absolute top-3 inset-x-3 text-center">
+                <span className="text-[8px] sm:text-[9px] tracking-[0.25em] uppercase text-white/75 font-semibold block">
+                  ALGHDEER STAGE
+                </span>
+              </div>
+              <div className="absolute bottom-3.5 inset-x-3 flex flex-col items-center">
+                <h3 className="text-lg sm:text-2xl font-black text-white tracking-wider uppercase leading-none mb-1.5 drop-shadow">
+                  {isAr ? "ليالي الطرب" : "LIVE NIGHTS"}
+                </h3>
+                <span className="px-2.5 py-0.5 bg-[#cba135] text-black text-[9px] sm:text-[10px] font-black tracking-widest uppercase mb-2">
+                  {isAr ? "عروض حية وألعاب نارية" : "LIVE SHOWS & FIREWORKS"}
+                </span>
+                <img src="/logo-white.png" alt="ALGHDEER" className="h-3 sm:h-3.5 w-auto object-contain opacity-85" />
+              </div>
+            </motion.button>
+
+            {/* Card 4: Aerial Camp Oasis (Qiddiya style) */}
+            <motion.button
+              type="button"
+              onClick={() => setActiveVideo(cards[3])}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-[#111] text-left focus:outline-none border border-white/10 hover:border-[#cba135]/60 transition-all"
+            >
+              <img
+                src={cards[3].image}
+                alt={cards[3].titleAr}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
+              <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/55 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-[#cba135] group-hover:text-black transition-all">
+                <Play size={13} className="fill-current ml-0.5" />
+              </div>
+              <div className="absolute bottom-3.5 inset-x-3.5 text-center" dir={isAr ? "rtl" : "ltr"}>
+                <span className="inline-block text-[10px] tracking-[0.2em] uppercase text-[#e6c86e] font-bold">
+                  {isAr ? cards[3].subAr : cards[3].subEn}
+                </span>
+                <h3 className="text-base sm:text-xl font-black text-white">
+                  {isAr ? cards[3].titleAr : cards[3].titleEn}
+                </h3>
+              </div>
+            </motion.button>
+          </div>
+
+          {/* Right Large Portal Card (6 cols — "رحلتك إلى الغدير تبدأ هنا") */}
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.97 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="relative xl:col-span-3 aspect-video max-h-[min(56vh,560px)] sm:max-h-none sm:aspect-[16/9] xl:aspect-auto overflow-hidden border border-white/10 bg-black"
+            transition={{ duration: 0.7 }}
+            dir={isAr ? "rtl" : "ltr"}
+            className="lg:col-span-6 relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 group flex flex-col justify-between p-6 sm:p-10 md:p-12"
           >
-            <video
-              src={featured.mediaUrl}
-              poster={featured.thumbnailUrl}
-              autoPlay
-              muted
-              loop
-              playsInline
-              controls
-              className="absolute inset-0 w-full h-full object-contain sm:object-cover"
+            <img
+              src="/nano/wbk_portal_hero.jpg"
+              alt={isAr ? "رحلتك إلى الغدير تبدأ هنا" : "Your Journey to Alghdeer Starts Here"}
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
             />
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black via-black/10 to-transparent" />
-            <div className="absolute bottom-0 right-0 left-0 p-5 sm:p-8">
-              <span className="inline-flex text-[10px] tracking-[0.18em] uppercase px-3 py-1 bg-[#cba135] text-black font-bold mb-3">
-                {lang === "ar" ? "فيديو مميز" : "Featured Reel"}
-              </span>
-              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black mb-2">
-                {lang === "ar" ? featured.titleAr : featured.titleEn}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/25 to-black/85" />
+
+            {/* Top Centered Headline + Subtitle + Ticket-Notched Ribbon CTA */}
+            <div className="relative z-10 text-center max-w-lg mx-auto pt-2 sm:pt-4">
+              <h3 className="text-2xl sm:text-4xl md:text-[2.6rem] font-black text-white leading-[1.25] mb-2 sm:mb-3 drop-shadow-lg">
+                {isAr ? "رحلتك إلى الغدير تبدأ هنا" : "Your Journey to Alghdeer Starts Here"}
               </h3>
-              <p className="text-white/70 text-sm sm:text-base leading-relaxed max-w-md">
-                {lang === "ar" ? featured.captionAr : featured.captionEn}
+              <p className="text-white/85 text-xs sm:text-base md:text-lg font-medium leading-relaxed mb-5 sm:mb-6">
+                {isAr
+                  ? "احجز تجربتك وليلتك الخاصة الآن في مخيمات الغدير بجدة"
+                  : "Reserve your private night or corporate retreat at Alghdeer Camp"}
+              </p>
+
+              {/* Ticket-Notched Ribbon Button (matching Webook's "ابدأ رحلتك" ribbon) */}
+              <a
+                href="#contact"
+                className="relative inline-flex items-center justify-center px-8 sm:px-12 py-2.5 sm:py-3.5 bg-[#cba135] hover:bg-[#e0b848] text-black font-black text-sm sm:text-lg tracking-wide transition-all shadow-[0_10px_30px_rgba(203,161,53,0.4)]"
+              >
+                <span className="w-3 h-3 rounded-full bg-black/80 absolute -left-1.5 top-1/2 -translate-y-1/2" />
+                <span className="w-3 h-3 rounded-full bg-black/80 absolute -right-1.5 top-1/2 -translate-y-1/2" />
+                <span>{isAr ? "ابدأ رحلتك" : "Start Your Journey"}</span>
+              </a>
+            </div>
+
+            {/* Bottom Row: Brand Logo + Disclaimer */}
+            <div className="relative z-10 flex items-end justify-between gap-4 pt-6">
+              <img
+                src="/logo-dark-bg.png"
+                alt="ALGHDEER camp"
+                className="h-6 sm:h-8 w-auto object-contain"
+              />
+              <p className="text-[9px] sm:text-[11px] text-white/65 text-end leading-snug max-w-[200px]">
+                {isAr
+                  ? "*تُطبق الشروط والأحكام • متاح لحجوزات الشركات والعائلات"
+                  : "*Terms apply • Available for corporate & private bookings"}
               </p>
             </div>
-          </motion.div>
 
-          <div className="xl:col-span-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4 sm:gap-6">
-            {cards.map((event, i) => (
-              <motion.div
-                key={event.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: (i + 1) * 0.15 }}
-                className="group flex flex-col sm:flex-row gap-4 sm:gap-6 items-start border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] p-3 sm:p-4 transition-colors duration-500"
-              >
-                <div className="relative w-full sm:w-40 md:w-48 aspect-video sm:aspect-square overflow-hidden shrink-0">
-                  <img
-                    src={event.mediaUrl}
-                    alt={lang === "ar" ? event.titleAr : event.titleEn}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg sm:text-xl font-bold mb-2">{lang === "ar" ? event.titleAr : event.titleEn}</h3>
-                  <p className="text-white/60 text-xs sm:text-sm leading-relaxed line-clamp-2">
-                    {lang === "ar" ? event.captionAr : event.captionEn}
-                  </p>
-                  <a
-                    href={event.permalink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-3 text-[10px] tracking-[0.14em] uppercase text-[#cba135] hover:text-[#d4b458]"
-                  >
-                    {lang === "ar" ? "شاهد على إنستجرام" : "View on Instagram"}
-                  </a>
-                </div>
-              </motion.div>
-            ))}
+            {/* Decorative Sadu Gold Bottom Strip */}
+            <div className="absolute bottom-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#8a6412] via-[#cba135] to-[#f3db8b]" />
+          </motion.div>
+        </div>
+
+        {/* Social Links Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-6 mt-8 sm:mt-10 pt-6 border-t border-white/10">
+          <div className="flex items-center gap-8">
+            <a
+              href="https://www.instagram.com/alghdeer_sa"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 text-white/50 hover:text-[#cba135] transition-colors text-xs tracking-[0.2em] uppercase"
+            >
+              <span>Instagram @alghdeer_sa</span>
+            </a>
+            <a
+              href="https://www.tiktok.com/@alghdeer_sa"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 text-white/50 hover:text-[#cba135] transition-colors text-xs tracking-[0.2em] uppercase"
+            >
+              <TikTokIcon className="shrink-0" size={16} />
+              <span>TikTok</span>
+            </a>
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center gap-8 sm:gap-12">
-          <motion.a
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            href="https://www.instagram.com/alghdeer_sa"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 text-white/40 hover:text-white transition-colors text-xs sm:text-sm tracking-[0.2em] uppercase group"
-          >
-            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-            </svg>
-            @alghdeer_sa
-            <span className="w-0 group-hover:w-8 h-px bg-white transition-all duration-500" />
-          </motion.a>
-          <motion.a
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            href="https://www.tiktok.com/@alghdeer_sa"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 text-white/40 hover:text-white transition-colors text-xs sm:text-sm tracking-[0.2em] uppercase group"
-          >
-            <TikTokIcon className="shrink-0" size={20} />
-            TikTok
-            <span className="w-0 group-hover:w-8 h-px bg-white transition-all duration-500" />
-          </motion.a>
-        </div>
       </div>
+
+      {/* Clean Video Reel Modal */}
+      <AnimatePresence>
+        {activeVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setActiveVideo(null)}
+            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.94, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.94, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-2xl bg-[#0b0c10] border border-white/15 rounded-2xl overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                <div>
+                  <h4 className="text-sm sm:text-base font-bold text-white">
+                    {isAr ? activeVideo.titleAr : activeVideo.titleEn}
+                  </h4>
+                  <p className="text-[11px] text-[#cba135]">
+                    {isAr ? activeVideo.subAr : activeVideo.subEn}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsMuted((m) => !m)}
+                    className="px-3 py-1.5 bg-white/10 hover:bg-[#cba135] hover:text-black text-white text-xs rounded-md flex items-center gap-1.5 transition-colors"
+                  >
+                    {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                    <span>{isMuted ? (isAr ? "تشغيل الصوت" : "Unmute") : isAr ? "كتم" : "Mute"}</span>
+                  </button>
+                  <a
+                    href={activeVideo.permalink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 bg-white/10 hover:bg-[#cba135] hover:text-black text-white rounded-md transition-colors"
+                    aria-label="Instagram"
+                  >
+                    <ExternalLink size={15} />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setActiveVideo(null)}
+                    className="p-1.5 bg-white/10 hover:bg-white/25 text-white rounded-md transition-colors"
+                    aria-label="Close"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+              <div className="relative aspect-video bg-black">
+                <video
+                  src={activeVideo.videoUrl}
+                  autoPlay
+                  muted={isMuted}
+                  loop
+                  playsInline
+                  controls
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

@@ -7,28 +7,31 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export default function Philosophy() {
   const { lang } = useLanguage();
+  const isAr = lang === "ar";
   const prefersNarrowTitles = useMediaQuery("(max-width: 767px)");
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "center center"] });
-  const titleScaleXWide = useTransform(scrollYProgress, [0, 1], [0.8, 1.12]);
-  const titleScaleXNarrow = useTransform(scrollYProgress, [0, 1], [0.94, 1.06]);
+  const titleScaleXWide = useTransform(scrollYProgress, [0, 1], [0.92, 1.04]);
+  const titleScaleXNarrow = useTransform(scrollYProgress, [0, 1], [0.96, 1.02]);
 
   return (
     <section ref={ref} className="py-20 sm:py-32 md:py-40 bg-white text-black overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-16">
-        <div className="max-w-5xl mx-auto text-center">
-          <p className="text-xs tracking-[0.4em] uppercase text-black/30 mb-6 sm:mb-8">{lang === "ar" ? "فلسفتنا" : "OUR PHILOSOPHY"}</p>
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-xs tracking-[0.35em] uppercase text-[#a67c1e] font-bold mb-6 sm:mb-8">
+            {isAr ? "فلسفتنا" : "OUR PHILOSOPHY"}
+          </p>
 
           <motion.h2
             style={{
               scaleX: prefersNarrowTitles ? titleScaleXNarrow : titleScaleXWide,
               transformOrigin: "center center",
             }}
-            className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-black leading-[1.2] mb-8 sm:mb-12 px-1"
+            className="text-2xl sm:text-4xl md:text-5xl font-black leading-[1.6] mb-8 sm:mb-12 px-2"
           >
-            {lang === "ar"
-              ? "نؤمن أن الصحراء ليست مجرد مكان، بل هي تجربة تعيد تعريف معنى الهدوء والأصالة"
-              : "We believe the desert is not just a place, but an experience that redefines tranquility & authenticity"}
+            {isAr
+              ? "الصحراء في الغدير ليست مجرد مكان، بل مسرحٌ حي يصنع أرقى الذكريات تحت النجوم"
+              : "The desert at Alghdeer is not just a place — it is a living stage where unforgettable memories are crafted under the stars"}
           </motion.h2>
 
           <motion.div
@@ -36,7 +39,7 @@ export default function Philosophy() {
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-            className="w-16 sm:w-24 h-px bg-black/20 mx-auto"
+            className="w-16 sm:w-24 h-0.5 bg-[#cba135] mx-auto"
           />
         </div>
       </div>

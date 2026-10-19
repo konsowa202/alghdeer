@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 
 export default function Navbar() {
   const { lang, setLang, t } = useLanguage();
@@ -36,14 +35,17 @@ export default function Navbar() {
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-16">
         <div className="flex items-center justify-between">
-          {/* Logo - using YOUR logo.jpg */}
-          <a href="#home" className="flex items-center gap-2 sm:gap-3 group">
-            <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border border-[#cba135]/50 group-hover:border-[#d4b458] transition-colors">
-              <Image src="/logo.jpg" alt="الغدير" fill className="object-cover" />
-            </div>
-            <span className="text-lg sm:text-xl md:text-xl font-black text-white leading-none pt-0.5">
-              {lang === "ar" ? "الغدير" : "ALGHDEER"}
-            </span>
+          {/* Knocked-out transparent Nano Banana logo for dark backgrounds */}
+          <a
+            href="#home"
+            className="flex items-center gap-3 group shrink-0"
+            aria-label="Alghdeer Camp Home"
+          >
+            <img
+              src="/logo-dark-bg.png"
+              alt="ALGHDEER camp"
+              className="h-6 sm:h-7 md:h-8 lg:h-9 w-auto object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+            />
           </a>
 
           {/* Desktop Nav */}
@@ -52,10 +54,10 @@ export default function Navbar() {
               <a
                 key={link.href}
                 href={link.href}
-                className="text-white/50 hover:text-white transition-colors text-xs tracking-[0.15em] uppercase relative group"
+                className="text-white/60 hover:text-white transition-colors text-xs tracking-[0.15em] uppercase relative group"
               >
                 {link.name}
-                <span className="absolute -bottom-1 right-0 rtl:right-0 ltr:left-0 w-0 h-px bg-white group-hover:w-full transition-all duration-500" />
+                <span className="absolute -bottom-1 right-0 rtl:right-0 ltr:left-0 w-0 h-px bg-[#cba135] group-hover:w-full transition-all duration-500" />
               </a>
             ))}
           </div>
@@ -64,7 +66,7 @@ export default function Navbar() {
           <div className="hidden xl:flex items-center gap-4">
             <button
               onClick={() => setLang(lang === "en" ? "ar" : "en")}
-              className="text-white/50 hover:text-white transition-colors text-xs tracking-[0.15em] border border-white/10 px-3 py-1.5 hover:border-white/30"
+              className="text-white/60 hover:text-white transition-colors text-xs tracking-[0.15em] border border-white/10 px-3 py-1.5 hover:border-[#cba135]/50"
             >
               {lang === "en" ? "عربي" : "EN"}
             </button>
@@ -80,11 +82,11 @@ export default function Navbar() {
           <div className="xl:hidden flex items-center gap-3">
             <button
               onClick={() => setLang(lang === "en" ? "ar" : "en")}
-              className="text-white/50 text-xs border border-white/10 px-2 py-1"
+              className="text-white/60 text-xs border border-white/10 px-2 py-1"
             >
               {lang === "en" ? "ع" : "EN"}
             </button>
-            <button onClick={() => setIsOpen(!isOpen)} className="text-white p-1">
+            <button onClick={() => setIsOpen(!isOpen)} className="text-white p-1" aria-label="Toggle Menu">
               <div className="w-6 flex flex-col gap-1.5">
                 <motion.div animate={{ rotate: isOpen ? 45 : 0, y: isOpen ? 7 : 0 }} className="w-full h-px bg-white" />
                 <motion.div animate={{ opacity: isOpen ? 0 : 1 }} className="w-full h-px bg-white" />
@@ -121,7 +123,7 @@ export default function Navbar() {
               <a
                 href="#contact"
                 onClick={() => setIsOpen(false)}
-                className="mt-6 py-4 bg-white text-black text-center font-bold tracking-widest uppercase text-sm"
+                className="mt-6 py-4 bg-[#cba135] text-black text-center font-bold tracking-widest uppercase text-sm"
               >
                 {t("bookBtn")}
               </a>

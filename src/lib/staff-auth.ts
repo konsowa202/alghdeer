@@ -6,18 +6,23 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
+const ALLOWED_STAFF_EMAILS = [
+  "mahmoudkonsowa678@gmail.com",
+  "mahmoudkonsowa3030@gmail.com",
+];
+
 export function getStaffCredentials() {
-  const email =
-    process.env.STAFF_EMAIL?.trim() ||
-    "mahmoudkonsowa3030@gmail.com";
+  const envEmail = process.env.STAFF_EMAIL?.trim();
+  const primaryEmail = envEmail || "mahmoudkonsowa678@gmail.com";
   const password = process.env.STAFF_PASSWORD ?? "011025";
-  return { email: normalizeEmail(email), password };
+  return { email: normalizeEmail(primaryEmail), password };
 }
 
 export function validateStaffLogin(email: string, password: string): boolean {
-  const { email: expectedEmail, password: expectedPassword } =
+  const { email: primaryEmail, password: expectedPassword } =
     getStaffCredentials();
-  return (
-    normalizeEmail(email) === expectedEmail && password === expectedPassword
-  );
+  const norm = normalizeEmail(email);
+  const isValidEmail =
+    norm === primaryEmail || ALLOWED_STAFF_EMAILS.includes(norm);
+  return isValidEmail && password === expectedPassword;
 }
