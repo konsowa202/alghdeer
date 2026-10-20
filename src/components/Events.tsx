@@ -5,7 +5,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import TikTokIcon from "@/components/icons/TikTokIcon";
-import { Play, X, Volume2, VolumeX, ExternalLink } from "lucide-react";
+import LiquidButton from "@/components/ui/LiquidButton";
+import { Play, X, Volume2, VolumeX, ExternalLink, Sparkles } from "lucide-react";
 
 type BentoCardItem = {
   id: string;
@@ -258,15 +259,19 @@ export default function Events() {
                   : "Reserve your private night or corporate retreat at Alghdeer Camp"}
               </p>
 
-              {/* Ticket-Notched Ribbon Button (matching Webook's "ابدأ رحلتك" ribbon) */}
-              <a
-                href="#contact"
-                className="relative inline-flex items-center justify-center px-8 sm:px-12 py-2.5 sm:py-3.5 bg-[#cba135] hover:bg-[#e0b848] text-black font-black text-sm sm:text-lg tracking-wide transition-all shadow-[0_10px_30px_rgba(203,161,53,0.4)]"
-              >
-                <span className="w-3 h-3 rounded-full bg-black/80 absolute -left-1.5 top-1/2 -translate-y-1/2" />
-                <span className="w-3 h-3 rounded-full bg-black/80 absolute -right-1.5 top-1/2 -translate-y-1/2" />
-                <span>{isAr ? "ابدأ رحلتك" : "Start Your Journey"}</span>
-              </a>
+              {/* Liquid Golden CTA Ribbon Button */}
+              <div className="inline-block">
+                <LiquidButton
+                  href="#contact"
+                  variant="liquid-gold"
+                  size="lg"
+                  breathe={true}
+                  icon={<Sparkles size={18} />}
+                  className="font-black text-sm sm:text-base tracking-wider shadow-[0_15px_35px_rgba(203,161,53,0.55)]"
+                >
+                  {isAr ? "ابدأ رحلتك الآن" : "Start Your Journey"}
+                </LiquidButton>
+              </div>
             </div>
 
             {/* Bottom Row: Brand Logo + Disclaimer */}

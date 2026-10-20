@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
+import LiquidButton from "@/components/ui/LiquidButton";
 
 export default function Navbar() {
   const { lang, setLang, t } = useLanguage();
@@ -66,16 +67,13 @@ export default function Navbar() {
           <div className="hidden xl:flex items-center gap-4">
             <button
               onClick={() => setLang(lang === "en" ? "ar" : "en")}
-              className="text-white/60 hover:text-white transition-colors text-xs tracking-[0.15em] border border-white/10 px-3 py-1.5 hover:border-[#cba135]/50"
+              className="text-white/70 hover:text-white transition-colors text-xs tracking-[0.15em] border border-white/15 px-3 py-1.5 rounded-full backdrop-blur-md hover:border-[#cba135]/60 hover:text-[#f5df9a]"
             >
               {lang === "en" ? "عربي" : "EN"}
             </button>
-            <a
-              href="#contact"
-              className="px-5 py-2.5 bg-[#cba135] text-black text-xs font-bold tracking-[0.15em] uppercase hover:bg-[#d4b458] transition-all"
-            >
+            <LiquidButton href="#contact" variant="liquid-gold" size="sm" breathe={true}>
               {t("bookBtn")}
-            </a>
+            </LiquidButton>
           </div>
 
           {/* Mobile controls */}
@@ -120,13 +118,11 @@ export default function Navbar() {
                   {link.name}
                 </motion.a>
               ))}
-              <a
-                href="#contact"
-                onClick={() => setIsOpen(false)}
-                className="mt-6 py-4 bg-[#cba135] text-black text-center font-bold tracking-widest uppercase text-sm"
-              >
-                {t("bookBtn")}
-              </a>
+              <div className="mt-4">
+                <LiquidButton href="#contact" variant="liquid-gold" size="lg" className="w-full" onClick={() => setIsOpen(false)}>
+                  {t("bookBtn")}
+                </LiquidButton>
+              </div>
             </div>
           </motion.div>
         )}
