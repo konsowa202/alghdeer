@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import LiquidFlameCard from "@/components/ui/LiquidFlameCard";
+import LiquidGlassCard from "@/components/ui/LiquidGlassCard";
 import {
   Building2,
   Tent,
@@ -14,8 +14,6 @@ import {
   Gamepad2,
   ChevronRight,
   ChevronLeft,
-  Flame,
-  Sparkles,
   ArrowUpLeft,
 } from "lucide-react";
 
@@ -53,9 +51,9 @@ export default function Facilities() {
         ? "خيام بيضاء فسيحة ومجالس أرضية ومرتفعة بنقوش السدو حول منقل نار السمر تحت مظلات بوهيمية ساحرة."
         : "Spacious white canvas canopies and heritage majlis seating centered around a crackling campfire.",
       image: "/nano/nb_campfire_majlis.jpg",
-      tag: isAr ? "نار السمر • FIREPIT" : "CAMPFIRE MAJLIS",
-      badgeTone: "fire" as const,
-      icon: <Tent size={24} className="text-[#ff9500]" />,
+      tag: isAr ? "نار السمر • MAJLIS" : "CAMPFIRE MAJLIS",
+      badgeTone: "amber" as const,
+      icon: <Tent size={24} className="text-[#cba135]" />,
       features: isAr
         ? ["منقل نار حي", "نقوش سدو", "وسائد وثيرية", "إضاءة دافئة"]
         : ["Live Firepit", "Sadu Accents", "Plush Seating", "Warm Lighting"],
@@ -99,8 +97,8 @@ export default function Facilities() {
         : "Open-air stage designed for folklore bands, glowing LED performances, and night-sky fireworks.",
       image: "/nano/wbk_card_live_nights.jpg",
       tag: isAr ? "عروض حية • STAGE" : "LIVE SHOWS",
-      badgeTone: "fire" as const,
-      icon: <Music size={24} className="text-[#ff3700]" />,
+      badgeTone: "amber" as const,
+      icon: <Music size={24} className="text-[#ffd700]" />,
       features: isAr
         ? ["أنظمة صوت متقدمة", "إضاءة ليزر", "عروض تراثية", "ألعاب نارية"]
         : ["Pro Audio", "Laser Lighting", "Folk Shows", "Fireworks Sky"],
@@ -114,8 +112,8 @@ export default function Facilities() {
         : "Desert quad bikes, foosball tables, camel rides, youth challenges & mascots for kids.",
       image: "/nano/wbk_card_safari.jpg",
       tag: isAr ? "مغامرة وسفاري • SAFARI" : "DESERT SAFARI",
-      badgeTone: "fire" as const,
-      icon: <Gamepad2 size={24} className="text-[#ff7a00]" />,
+      badgeTone: "gold" as const,
+      icon: <Gamepad2 size={24} className="text-[#cba135]" />,
       features: isAr
         ? ["دبابات رملية", "طاولات فرفيرة", "ركوب جمال وخيل", "أنشطة عائلية"]
         : ["Quad ATVs", "Foosball Tables", "Camel Riding", "Family Games"],
@@ -167,21 +165,20 @@ export default function Facilities() {
 
   return (
     <section id="facilities" className="relative py-24 sm:py-36 bg-[#06070a] text-white overflow-hidden">
-      {/* Background Molten Ember Glow */}
-      <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] bg-[#ff4500]/10 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/4 w-[450px] h-[450px] bg-[#cba135]/10 rounded-full blur-[150px] pointer-events-none" />
+      {/* Background Subtle Accent Glow */}
+      <div className="absolute top-1/3 right-1/4 w-[450px] h-[450px] bg-[#cba135]/[0.03] rounded-full blur-[160px] pointer-events-none" />
 
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-16">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 flex flex-col items-center">
-          {/* Gamified Pill Tag */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ff5500]/10 border border-[#ff5500]/30 text-[#ff8c00] text-xs font-mono font-bold tracking-widest uppercase mb-4 shadow-[0_0_20px_rgba(255,85,0,0.2)]">
-            <Flame size={14} className="animate-pulse" />
+          {/* Subtle Gamified Tag */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-[#cba135] text-xs font-mono font-bold tracking-widest uppercase mb-4 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#cba135] animate-pulse" />
             <span>{isAr ? "مرافق وتجهيزات متكاملة" : "CAMP FACILITIES & RETREATS"}</span>
           </div>
 
           <h2 className="text-3xl sm:text-5xl md:text-6xl font-black mb-4 tracking-tight">
-            <span className="bg-gradient-to-r from-white via-[#ffe6a3] to-[#cba135] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-white via-[#fae5a5] to-[#cba135] bg-clip-text text-transparent">
               {isAr ? "مرافق المخيم" : "Camp Facilities"}
             </span>
           </h2>
@@ -191,7 +188,7 @@ export default function Facilities() {
               : "State-of-the-art facilities blending modern luxury with Arabian desert warmth."}
           </p>
 
-          <div className="w-24 sm:w-32 h-[2px] bg-gradient-to-r from-transparent via-[#ff8c00] to-transparent mx-auto mt-6" />
+          <div className="w-20 sm:w-28 h-px bg-gradient-to-r from-transparent via-[#cba135] to-transparent mx-auto mt-6" />
 
           {/* Interactive Gamified Filter Tabs */}
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-8 p-1.5 bg-white/[0.03] border border-white/10 rounded-full backdrop-blur-xl">
@@ -208,14 +205,14 @@ export default function Facilities() {
                   onClick={() => setActiveCategory(tab.id as FacilityCategory)}
                   className={`relative px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 ${
                     active
-                      ? "text-black shadow-[0_0_20px_rgba(255,140,0,0.5)]"
+                      ? "text-black shadow-[0_0_20px_rgba(203,161,53,0.4)]"
                       : "text-white/60 hover:text-white"
                   }`}
                 >
                   {active && (
                     <motion.div
                       layoutId="activeFacilityTab"
-                      className="absolute inset-0 bg-gradient-to-r from-[#ffd700] via-[#ff9500] to-[#ff4500] rounded-full -z-10"
+                      className="absolute inset-0 bg-gradient-to-r from-[#ffd700] via-[#fae5a5] to-[#cba135] rounded-full -z-10"
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                   )}
@@ -244,8 +241,7 @@ export default function Facilities() {
               exit={{ opacity: 0, x: isAr ? 30 : -30 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <LiquidFlameCard
-                glowColor={currentMobile.badgeTone === "gold" ? "gold" : "fire"}
+              <LiquidGlassCard
                 badgeText={currentMobile.tag}
                 badgeTone={currentMobile.badgeTone}
                 className="overflow-hidden min-h-[460px]"
@@ -289,7 +285,7 @@ export default function Facilities() {
                     ))}
                   </div>
                 </div>
-              </LiquidFlameCard>
+              </LiquidGlassCard>
             </motion.div>
           </AnimatePresence>
 
@@ -311,7 +307,7 @@ export default function Facilities() {
                   onClick={() => setActiveIndex(idx)}
                   className={`h-2 rounded-full transition-all duration-300 ${
                     idx === activeIndex
-                      ? "w-7 bg-gradient-to-r from-[#ffd700] to-[#ff4500]"
+                      ? "w-7 bg-gradient-to-r from-[#ffd700] to-[#cba135]"
                       : "w-2 bg-white/20"
                   }`}
                 />
@@ -329,7 +325,7 @@ export default function Facilities() {
         </div>
 
         {/* ============================================================ */}
-        {/* DESKTOP GRID VIEW (sm: and above) - Liquid Flame Holographic  */}
+        {/* DESKTOP GRID VIEW (sm: and above) - Liquid Glass Holographic */}
         {/* ============================================================ */}
         <motion.div
           layout
@@ -346,8 +342,7 @@ export default function Facilities() {
                 transition={{ duration: 0.4, delay: i * 0.05 }}
                 className="h-full"
               >
-                <LiquidFlameCard
-                  glowColor={fac.badgeTone === "gold" ? "gold" : "fire"}
+                <LiquidGlassCard
                   badgeText={fac.tag}
                   badgeTone={fac.badgeTone}
                   className="h-full min-h-[460px] cursor-pointer"
@@ -364,7 +359,7 @@ export default function Facilities() {
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0c0d12] via-[#0c0d12]/50 to-black/30 group-hover:via-[#0c0d12]/35 transition-colors duration-500" />
 
                     {/* Floating Corner Icon */}
-                    <div className="absolute bottom-3 right-4 z-10 w-12 h-12 rounded-2xl bg-black/70 backdrop-blur-md border border-white/15 flex items-center justify-center shadow-lg group-hover:border-[#ffd700]/50 group-hover:scale-105 transition-all duration-300">
+                    <div className="absolute bottom-3 right-4 z-10 w-12 h-12 rounded-2xl bg-black/70 backdrop-blur-md border border-white/15 flex items-center justify-center shadow-lg group-hover:border-[#cba135]/50 group-hover:scale-105 transition-all duration-300">
                       {fac.icon}
                     </div>
                   </div>
@@ -394,7 +389,7 @@ export default function Facilities() {
                       </div>
 
                       {/* Action Explore Link */}
-                      <div className="flex items-center justify-between text-xs font-bold text-[#ff9500] group-hover:text-[#ffd700] transition-colors">
+                      <div className="flex items-center justify-between text-xs font-bold text-[#cba135] group-hover:text-[#ffd700] transition-colors">
                         <span>{isAr ? "استكشف التجهيزات المتاحة" : "Explore amenities"}</span>
                         <ArrowUpLeft
                           size={16}
@@ -403,7 +398,7 @@ export default function Facilities() {
                       </div>
                     </div>
                   </div>
-                </LiquidFlameCard>
+                </LiquidGlassCard>
               </motion.div>
             ))}
           </AnimatePresence>
