@@ -4,17 +4,18 @@ import React, { useMemo, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { minPreferredDatetimeLocal } from "@/lib/format-datetime-local";
 import { MIN_LEAD_MS } from "@/lib/bookings-types";
-import {
-  downloadIcsFile,
-  downloadAppleWalletPass,
-  openGoogleWalletPass,
-} from "@/lib/calendar-wallet";
+import { downloadIcsFile } from "@/lib/calendar-wallet";
+import { downloadTicketImage } from "@/lib/ticket-canvas";
 import {
   CheckCircle2,
   Star,
   MessageCircle,
   RotateCcw,
   Calendar,
+  Download,
+  QrCode,
+  X,
+  ShieldCheck,
 } from "lucide-react";
 
 interface IssuedTicket {
@@ -26,37 +27,6 @@ interface IssuedTicket {
   preferredAt: string;
   rawDate: string;
   notes: string;
-}
-
-function AppleIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 170 170" fill="currentColor">
-      <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.58-7.7-11.64-13.98-5.99-9.13-10.43-19.46-13.32-30.98-2.89-11.53-4.34-22.39-4.34-32.58 0-14.46 3.73-26.47 11.19-36.03 7.46-9.56 16.73-14.4 27.81-14.52 4.13 0 9.04 1.16 14.74 3.49 5.7 2.33 9.4 3.55 11.09 3.66 1.8 0 5.61-1.28 11.44-3.83 5.83-2.55 10.45-3.77 13.86-3.66 10.23.64 18.66 4.34 25.29 11.11 6.63 6.76 10.66 14.86 12.09 24.31-9.24 5.54-13.75 13.25-13.53 23.13.22 9.46 4.29 17.26 12.21 23.4 3.81 2.93 8.05 5.05 12.73 6.36-1.96 5.87-4.13 11.69-6.52 17.47zM119.22 31.84c0-7.39 2.61-14.28 7.83-20.67 5.22-6.39 11.63-10.43 19.23-12.12 1.09 7.72-1.3 14.89-7.17 21.51-5.87 6.63-12.5 10.38-19.89 11.28z" />
-    </svg>
-  );
-}
-
-function GoogleWalletIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24">
-      <path
-        fill="#4285F4"
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-      />
-    </svg>
-  );
 }
 
 export default function ContactBookingForm() {
@@ -71,8 +41,22 @@ export default function ContactBookingForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [issuedTicket, setIssuedTicket] = useState<IssuedTicket | null>(null);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [downloadingImage, setDownloadingImage] = useState(false);
 
   const minLocal = useMemo(() => minPreferredDatetimeLocal(MIN_LEAD_MS), []);
+
+  async function handleDownloadImage() {
+    if (!issuedTicket) return;
+    setDownloadingImage(true);
+    try {
+      await downloadTicketImage(issuedTicket);
+    } catch {
+      // Fallback
+    } finally {
+      setDownloadingImage(false);
+    }
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -166,6 +150,12 @@ export default function ContactBookingForm() {
       )}`
     : "https://wa.me/966544493991";
 
+  const qrImageUrl = issuedTicket
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
+        `ALGHDEER-PASS:${issuedTicket.id}|GUEST:${issuedTicket.name}|DATE:${issuedTicket.preferredAt}|STATUS:CONFIRMED`
+      )}&color=0B0C10&bgcolor=f4ead2`
+    : "";
+
   return (
     <div className="relative w-full">
       {/* Outer Ticket Container (Exact Beige Retro Aesthetic) */}
@@ -243,40 +233,41 @@ export default function ContactBookingForm() {
                   ) : null}
                 </div>
 
-                {/* Wallet & Calendar Action Strip */}
+                {/* Wallet & Pass Actions (Authentic Digital Pass & Calendar) */}
                 <div className="pt-3 border-t border-[#1a1610]/20">
                   <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#1a1610]/70 mb-2">
-                    {isAr ? "حفظ التذكرة في المحفظة والتقويم:" : "Save to Wallet & Calendar:"}
+                    {isAr ? "حفظ التذكرة كبطاقة رقمية وفي التقويم:" : "Save Digital Pass & Calendar:"}
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {/* Apple Wallet */}
+                    {/* 1. Save Image to Photos / Gallery */}
                     <button
                       type="button"
-                      onClick={() => downloadAppleWalletPass(issuedTicket)}
-                      className="flex items-center justify-center gap-2 py-2.5 px-3 bg-black hover:bg-zinc-800 text-white rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
+                      disabled={downloadingImage}
+                      onClick={handleDownloadImage}
+                      className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#1a1610] hover:bg-black text-[#f4ead2] rounded-lg text-xs font-bold transition-all shadow-md cursor-pointer disabled:opacity-60"
                     >
-                      <AppleIcon className="w-3.5 h-3.5 fill-white" />
-                      <span>{isAr ? "محفظة Apple" : "Apple Wallet"}</span>
+                      <Download size={14} className="text-[#cba135]" />
+                      <span>{downloadingImage ? (isAr ? "جاري التوليد..." : "Saving...") : (isAr ? "حفظ التذكرة بالصور (PNG)" : "Save to Photos (PNG)")}</span>
                     </button>
 
-                    {/* Google Wallet */}
+                    {/* 2. Interactive Digital Wallet Pass Modal */}
                     <button
                       type="button"
-                      onClick={() => openGoogleWalletPass(issuedTicket)}
+                      onClick={() => setShowWalletModal(true)}
                       className="flex items-center justify-center gap-2 py-2.5 px-3 bg-white hover:bg-zinc-100 text-[#1a1610] border border-[#1a1610]/25 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
                     >
-                      <GoogleWalletIcon className="w-3.5 h-3.5" />
-                      <span>{isAr ? "Google Wallet" : "Google Wallet"}</span>
+                      <QrCode size={14} className="text-[#b5382a]" />
+                      <span>{isAr ? "بطاقة المحفظة (QR)" : "Digital Wallet Pass"}</span>
                     </button>
 
-                    {/* Calendar */}
+                    {/* 3. Native Phone Calendar */}
                     <button
                       type="button"
                       onClick={() => downloadIcsFile(issuedTicket)}
                       className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#1a1610]/10 hover:bg-[#1a1610]/15 text-[#1a1610] border border-[#1a1610]/25 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
                     >
                       <Calendar size={14} />
-                      <span>{isAr ? "إضافة للتقويم" : "Add to Calendar"}</span>
+                      <span>{isAr ? "إضافة لتقويم الهاتف" : "Add to Calendar"}</span>
                     </button>
                   </div>
                 </div>
@@ -515,6 +506,104 @@ export default function ContactBookingForm() {
           </form>
         )}
       </div>
+
+      {/* ============================================================ */}
+      {/* INTERACTIVE DIGITAL WALLET PASS MODAL (AUTHENTIC WALLET CARD) */}
+      {/* ============================================================ */}
+      {showWalletModal && issuedTicket ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="relative w-full max-w-sm bg-[#0B0C10] border border-[#cba135]/40 rounded-3xl overflow-hidden shadow-[0_25px_70px_rgba(0,0,0,0.9)] text-white animate-in fade-in zoom-in-95 duration-200">
+            {/* Top Close Button */}
+            <button
+              type="button"
+              onClick={() => setShowWalletModal(false)}
+              className="absolute top-4 end-4 z-20 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Wallet Pass Header */}
+            <div className="p-6 bg-gradient-to-b from-[#1a1610] to-[#0B0C10] border-b border-white/10 text-center">
+              <span className="inline-block text-[10px] font-mono tracking-[0.25em] text-[#cba135] uppercase font-bold mb-1">
+                ALGHDEER DIGITAL PASS
+              </span>
+              <h4 className="text-xl font-black text-white tracking-wide">
+                مخيمات الغدير الشتوية
+              </h4>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <span className="font-mono text-xs font-bold text-[#cba135] px-2.5 py-0.5 rounded-full bg-[#cba135]/15 border border-[#cba135]/30">
+                  № {issuedTicket.id}
+                </span>
+                <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
+                  <ShieldCheck size={13} />
+                  <span>معتمد في النظام</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Pass QR Code Body */}
+            <div className="p-6 text-center space-y-4">
+              <div className="inline-block p-3.5 bg-[#f4ead2] rounded-2xl shadow-inner">
+                {qrImageUrl ? (
+                  <img
+                    src={qrImageUrl}
+                    alt="Alghdeer Pass QR"
+                    className="w-44 h-44 object-contain rounded-lg"
+                  />
+                ) : (
+                  <div className="w-44 h-44 flex items-center justify-center text-[#1a1610] font-mono text-xs">
+                    № {issuedTicket.id}
+                  </div>
+                )}
+                <span className="block text-[10px] font-mono font-bold text-[#1a1610]/70 uppercase mt-2">
+                  SCAN AT VIP GATE
+                </span>
+              </div>
+
+              {/* Guest Details */}
+              <div className="text-xs space-y-1.5 font-sans pt-2 border-t border-white/10 text-start">
+                <div className="flex justify-between">
+                  <span className="text-white/50">{isAr ? "اسم الضيف:" : "Guest:"}</span>
+                  <span className="font-bold text-white">{issuedTicket.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/50">{isAr ? "الموعد:" : "Date:"}</span>
+                  <span className="font-bold text-[#fae5a5] text-[11px]">{issuedTicket.preferredAt}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/50">{isAr ? "عدد الضيوف:" : "Guests:"}</span>
+                  <span className="font-bold text-white">{issuedTicket.groupSize} أشخاص</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/50">{isAr ? "بوابة الدخول:" : "Gate:"}</span>
+                  <span className="font-bold text-[#cba135]">VIP MAIN GATE</span>
+                </div>
+              </div>
+
+              {/* Modal Action Buttons */}
+              <div className="space-y-2 pt-2">
+                <button
+                  type="button"
+                  onClick={handleDownloadImage}
+                  className="w-full py-2.5 px-4 rounded-xl bg-[#cba135] hover:bg-[#d4b458] text-black font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+                >
+                  <Download size={14} />
+                  <span>{isAr ? "حفظ التذكرة بالصور (PNG)" : "Save to Photos"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => downloadIcsFile(issuedTicket)}
+                  className="w-full py-2 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <Calendar size={14} />
+                  <span>{isAr ? "إضافة لتقويم الهاتف (Calendar)" : "Add to Calendar"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
