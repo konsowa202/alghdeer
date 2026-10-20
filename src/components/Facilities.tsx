@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import GlassCard from "@/components/ui/GlassCard";
+import LiquidFlameCard from "@/components/ui/LiquidFlameCard";
 import {
   Building2,
   Tent,
@@ -13,60 +14,125 @@ import {
   Gamepad2,
   ChevronRight,
   ChevronLeft,
+  Flame,
+  Sparkles,
+  ArrowUpLeft,
 } from "lucide-react";
 
+type FacilityCategory = "all" | "hospitality" | "tents" | "adventure";
+
 export default function Facilities() {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
   const isAr = lang === "ar";
+  const [activeCategory, setActiveCategory] = useState<FacilityCategory>("all");
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
 
   const facilities = [
     {
-      name: "fac1",
-      icon: <Building2 size={24} />,
-      subAr: "واجهات بانورامية مكيفة لاستضافة كبار الشخصيات والشركات",
-      subEn: "Climate-controlled panoramic glass lounge for VIPs & corporate galas",
+      id: "fac1",
+      category: "hospitality" as const,
+      title: isAr ? "القاعة الزجاجية (VIP)" : "VIP Panoramic Glass Lounge",
+      sub: isAr
+        ? "واجهات بانورامية مكيفة ومجهزة بالكامل لاستضافة كبار الشخصيات والشركات باجتماعات استراتيجية وخصوصية تامة."
+        : "Climate-controlled panoramic glass lounge for VIPs, board meetings & corporate galas.",
+      image: "/nano/nb_glass_pavilion.jpg",
+      tag: isAr ? "كبار الشخصيات • VIP" : "VIP PANORAMA",
+      badgeTone: "gold" as const,
+      icon: <Building2 size={24} className="text-[#ffd700]" />,
+      features: isAr
+        ? ["مكيفة بالكامل", "شاشات عرض", "صالون VIP", "خصوصية تامة"]
+        : ["Full AC", "AV Screens", "VIP Salon", "Full Privacy"],
     },
     {
-      name: "fac2",
-      icon: <Tent size={24} />,
-      subAr: "خيام بيضاء ومجالس أرضية ومرتفعة حول منقل النار",
-      subEn: "White desert tents and heritage majlis seating around the firepit",
+      id: "fac2",
+      category: "tents" as const,
+      title: isAr ? "المجالس والخيام البوهيمية" : "Bohemian Tents & Firepit Majlis",
+      sub: isAr
+        ? "خيام بيضاء فسيحة ومجالس أرضية ومرتفعة بنقوش السدو حول منقل نار السمر تحت مظلات بوهيمية ساحرة."
+        : "Spacious white canvas canopies and heritage majlis seating centered around a crackling campfire.",
+      image: "/nano/nb_campfire_majlis.jpg",
+      tag: isAr ? "نار السمر • FIREPIT" : "CAMPFIRE MAJLIS",
+      badgeTone: "fire" as const,
+      icon: <Tent size={24} className="text-[#ff9500]" />,
+      features: isAr
+        ? ["منقل نار حي", "نقوش سدو", "وسائد وثيرية", "إضاءة دافئة"]
+        : ["Live Firepit", "Sadu Accents", "Plush Seating", "Warm Lighting"],
     },
     {
-      name: "fac3",
-      icon: <Utensils size={24} />,
-      subAr: "طاولات ولائم مستديرة وسخانات بوفيه ذهبية ومحطات شواء",
-      subEn: "Round banquet tables, golden chafing buffets & live grill stations",
+      id: "fac3",
+      category: "hospitality" as const,
+      title: isAr ? "البوفيه الملكي والمشاوي" : "Royal Gala Buffet & Live Grills",
+      sub: isAr
+        ? "طاولات ولائم مستديرة، سخانات بوفيه ذهبية، ومحطات شواء حية مع أشهى الأطباق الحجازية والشرقية."
+        : "Round banquet tables, hammered gold chafing buffets & live open-fire grill stations.",
+      image: "/nano/nb_royal_banquet.jpg",
+      tag: isAr ? "ولائم فاخرة • GOURMET" : "ROYAL GOURMET",
+      badgeTone: "gold" as const,
+      icon: <Utensils size={24} className="text-[#ffd700]" />,
+      features: isAr
+        ? ["شواء مباشر", "سخانات ذهبية", "ولائم ملكية", "خدمة ضيافة 5★"]
+        : ["Live Grills", "Gold Chafers", "Royal Feast", "5★ Hospitality"],
     },
     {
-      name: "fac4",
-      icon: <Coffee size={24} />,
-      subAr: "تعاون مع أرقى الكافيهات المختصة (مثل 95° CELSIUS) والقهوة السعودية",
-      subEn: "Specialty coffee pop-ups (95° Celsius) & traditional Saudi coffee",
+      id: "fac4",
+      category: "hospitality" as const,
+      title: isAr ? "ركن القهوة المختصة" : "Specialty Coffee Bar & Saudi Dallah",
+      sub: isAr
+        ? "تعاون مع أرقى الكافيهات المختصة (مثل 95° CELSIUS) ودلال القهوة السعودية الأصيلة مع أجود التمور."
+        : "Partnered with premier specialty coffee roasters (95° Celsius) alongside authentic Saudi coffee.",
+      image: "/coffee.png",
+      tag: isAr ? "قهوة مختصة • 95°" : "SPECIALTY COFFEE",
+      badgeTone: "gold" as const,
+      icon: <Coffee size={24} className="text-[#e5b33d]" />,
+      features: isAr
+        ? ["V60 وإسبريسو", "دلال نحاسية", "تمر فاخر", "مشروبات شتوية"]
+        : ["V60 & Espresso", "Brass Dallah", "Premium Dates", "Winter Drinks"],
     },
     {
-      name: "fac5",
-      icon: <Music size={24} />,
-      subAr: "مسرح مفتوح للفرق التراثية والعروض المضيئة والألعاب النارية",
-      subEn: "Open-air stage for cultural bands, LED shows & night-sky fireworks",
+      id: "fac5",
+      category: "adventure" as const,
+      title: isAr ? "مسرح العروض والألعاب النارية" : "Live Festival Stage & Fireworks",
+      sub: isAr
+        ? "مسرح مفتوح مهيأ للفرق التراثية، استعراضات التنورة المضيئة، وأنظمة صوت وإضاءة سينمائية متطورة."
+        : "Open-air stage designed for folklore bands, glowing LED performances, and night-sky fireworks.",
+      image: "/nano/wbk_card_live_nights.jpg",
+      tag: isAr ? "عروض حية • STAGE" : "LIVE SHOWS",
+      badgeTone: "fire" as const,
+      icon: <Music size={24} className="text-[#ff3700]" />,
+      features: isAr
+        ? ["أنظمة صوت متقدمة", "إضاءة ليزر", "عروض تراثية", "ألعاب نارية"]
+        : ["Pro Audio", "Laser Lighting", "Folk Shows", "Fireworks Sky"],
     },
     {
-      name: "fac6",
-      icon: <Gamepad2 size={24} />,
-      subAr: "طاولات فرفيرة وتحديات شبابية وعروض شخصيات ومهرجين للأطفال",
-      subEn: "Foosball tables, youth games, giant mascots & camel rides for kids",
+      id: "fac6",
+      category: "adventure" as const,
+      title: isAr ? "حلبة السفاري والألعاب" : "Desert Safari, Quad Bikes & Youth Arena",
+      sub: isAr
+        ? "دبابات صحراوية 4x4، طاولات فرفيرة، ركوب خيل وجمال، وتحديات شبابية وعروض شخصيات للأطفال."
+        : "Desert quad bikes, foosball tables, camel rides, youth challenges & mascots for kids.",
+      image: "/nano/wbk_card_safari.jpg",
+      tag: isAr ? "مغامرة وسفاري • SAFARI" : "DESERT SAFARI",
+      badgeTone: "fire" as const,
+      icon: <Gamepad2 size={24} className="text-[#ff7a00]" />,
+      features: isAr
+        ? ["دبابات رملية", "طاولات فرفيرة", "ركوب جمال وخيل", "أنشطة عائلية"]
+        : ["Quad ATVs", "Foosball Tables", "Camel Riding", "Family Games"],
     },
   ];
 
-  // Auto-advance mobile carousel every 3.5 seconds when not hovered/touched
+  const filteredFacilities =
+    activeCategory === "all"
+      ? facilities
+      : facilities.filter((f) => f.category === activeCategory);
+
+  // Auto-advance mobile carousel every 4 seconds when not interacted
   useEffect(() => {
     if (isPaused) return;
     const timer = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % facilities.length);
-    }, 3500);
+    }, 4000);
     return () => clearInterval(timer);
   }, [isPaused, facilities.length]);
 
@@ -89,155 +155,259 @@ export default function Facilities() {
     const diff = e.changedTouches[0].clientX - touchStartXRef.current;
     if (Math.abs(diff) > 40) {
       if (diff > 0) {
-        // swipe right
         isAr ? handleNext() : handlePrev();
       } else {
-        // swipe left
         isAr ? handlePrev() : handleNext();
       }
     }
     touchStartXRef.current = null;
   };
 
-  const current = facilities[activeIndex];
+  const currentMobile = facilities[activeIndex];
 
   return (
-    <section id="facilities" className="relative py-20 sm:py-32 bg-gradient-to-b from-[#0b0c10] via-black to-[#0b0c10] text-white overflow-hidden">
+    <section id="facilities" className="relative py-24 sm:py-36 bg-[#06070a] text-white overflow-hidden">
+      {/* Background Molten Ember Glow */}
+      <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] bg-[#ff4500]/10 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-1/4 left-1/4 w-[450px] h-[450px] bg-[#cba135]/10 rounded-full blur-[150px] pointer-events-none" />
+
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-16">
-        <div className="text-center mb-10 sm:mb-14">
-          <p className="text-[10px] sm:text-xs tracking-[0.35em] uppercase text-[#cba135]/80 mb-3 font-semibold">
-            {isAr ? "تجهيزات مخيمات الغدير • بريمان" : "CAMP SPACES & AMENITIES • BURAYMAN"}
+        {/* Section Header */}
+        <div className="text-center mb-12 sm:mb-16 flex flex-col items-center">
+          {/* Gamified Pill Tag */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ff5500]/10 border border-[#ff5500]/30 text-[#ff8c00] text-xs font-mono font-bold tracking-widest uppercase mb-4 shadow-[0_0_20px_rgba(255,85,0,0.2)]">
+            <Flame size={14} className="animate-pulse" />
+            <span>{isAr ? "مرافق وتجهيزات متكاملة" : "CAMP FACILITIES & RETREATS"}</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl md:text-6xl font-black mb-4 tracking-tight">
+            <span className="bg-gradient-to-r from-white via-[#ffe6a3] to-[#cba135] bg-clip-text text-transparent">
+              {isAr ? "مرافق المخيم" : "Camp Facilities"}
+            </span>
+          </h2>
+          <p className="text-sm sm:text-base text-white/60 max-w-2xl mx-auto leading-relaxed">
+            {isAr
+              ? "مرافق متكاملة تجمع بين الفخامة العصرية وروح البادية، مجهزة بأحدث التقنيات لاستضافة كافة أنواع الفعاليات والمناسبات."
+              : "State-of-the-art facilities blending modern luxury with Arabian desert warmth."}
           </p>
-          <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-3 sm:mb-6">{t("facTitle")}</h2>
-          <div className="w-16 sm:w-24 h-px bg-gradient-to-r from-transparent via-[#cba135] to-transparent mx-auto" />
+
+          <div className="w-24 sm:w-32 h-[2px] bg-gradient-to-r from-transparent via-[#ff8c00] to-transparent mx-auto mt-6" />
+
+          {/* Interactive Gamified Filter Tabs */}
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-8 p-1.5 bg-white/[0.03] border border-white/10 rounded-full backdrop-blur-xl">
+            {[
+              { id: "all", label: isAr ? "جميع المرافق (6)" : "All (6)" },
+              { id: "hospitality", label: isAr ? "الضيافة والولائم" : "Hospitality & VIP" },
+              { id: "tents", label: isAr ? "الخيام والسمر" : "Tents & Majlis" },
+              { id: "adventure", label: isAr ? "العروض والمغامرة" : "Shows & Safari" },
+            ].map((tab) => {
+              const active = activeCategory === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveCategory(tab.id as FacilityCategory)}
+                  className={`relative px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 ${
+                    active
+                      ? "text-black shadow-[0_0_20px_rgba(255,140,0,0.5)]"
+                      : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="activeFacilityTab"
+                      className="absolute inset-0 bg-gradient-to-r from-[#ffd700] via-[#ff9500] to-[#ff4500] rounded-full -z-10"
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* ============================================================ */}
-        {/* MOBILE VIEW (< sm): Clean Frosted Carousel                    */}
+        {/* MOBILE CAROUSEL VIEW (< sm)                                   */}
         {/* ============================================================ */}
         <div
-          className="block sm:hidden"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
+          className="sm:hidden relative"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
         >
-          {/* Quick Icon Selector Tabs */}
-          <div className="flex items-center justify-center gap-2 mb-4 overflow-x-auto py-1 px-1">
-            {facilities.map((fac, idx) => (
-              <button
-                key={fac.name}
-                onClick={() => setActiveIndex(idx)}
-                aria-label={t(fac.name)}
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                  idx === activeIndex
-                    ? "bg-[#cba135] text-black shadow-[0_0_15px_rgba(203,161,53,0.5)] scale-105"
-                    : "bg-white/[0.04] text-white/50 border border-white/10 hover:text-white"
-                }`}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentMobile.id}
+              initial={{ opacity: 0, x: isAr ? -30 : 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: isAr ? 30 : -30 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              <LiquidFlameCard
+                glowColor={currentMobile.badgeTone === "gold" ? "gold" : "fire"}
+                badgeText={currentMobile.tag}
+                badgeTone={currentMobile.badgeTone}
+                className="overflow-hidden min-h-[460px]"
               >
-                {React.cloneElement(fac.icon, { size: 18 })}
-              </button>
-            ))}
-          </div>
-
-          {/* Active Facility Card */}
-          <div className="relative rounded-2xl p-6 text-center backdrop-blur-xl bg-gradient-to-b from-white/[0.06] to-transparent border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] overflow-hidden min-h-[210px] flex flex-col items-center justify-center">
-            {/* Top gold counter */}
-            <div className="flex items-center justify-between w-full mb-3 text-[11px] font-mono tracking-widest text-[#cba135]">
-              <span className="bg-white/[0.04] border border-white/10 px-2.5 py-0.5 rounded-full text-white/80">
-                0{activeIndex + 1} / 0{facilities.length}
-              </span>
-              <span className="text-white/40 text-[10px] uppercase tracking-wider">
-                {isAr ? "اسحب للتنقل" : "SWIPE"}
-              </span>
-            </div>
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeIndex}
-                initial={{ opacity: 0, x: isAr ? -20 : 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: isAr ? 20 : -20 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="flex flex-col items-center"
-              >
-                <div className="mb-3 w-13 h-13 rounded-full border border-[#cba135]/40 bg-[#cba135]/10 flex items-center justify-center text-[#cba135]">
-                  {React.cloneElement(current.icon, { size: 24 })}
+                {/* Background Image Container */}
+                <div className="relative h-56 w-full overflow-hidden">
+                  <Image
+                    src={currentMobile.image}
+                    alt={currentMobile.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0c0d12] via-[#0c0d12]/60 to-transparent" />
                 </div>
-                <h3 className="text-base font-bold tracking-wider uppercase text-white mb-2">
-                  {t(current.name)}
-                </h3>
-                <p className="text-xs text-white/70 leading-relaxed max-w-xs">
-                  {isAr ? current.subAr : current.subEn}
-                </p>
-              </motion.div>
-            </AnimatePresence>
 
-            {/* Left & Right Prev/Next buttons */}
+                {/* Content */}
+                <div className="p-6 flex flex-col justify-between flex-grow">
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-white/10 border border-white/15 flex items-center justify-center">
+                        {currentMobile.icon}
+                      </div>
+                      <h3 className="text-lg font-black text-white">
+                        {currentMobile.title}
+                      </h3>
+                    </div>
+                    <p className="text-xs text-white/70 leading-relaxed mb-4">
+                      {currentMobile.sub}
+                    </p>
+                  </div>
+
+                  {/* Feature chips */}
+                  <div className="flex flex-wrap gap-1.5 pt-3 border-t border-white/10">
+                    {currentMobile.features.map((feat, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 rounded-md text-[10px] font-medium bg-white/[0.06] text-white/80 border border-white/10"
+                      >
+                        {feat}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </LiquidFlameCard>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Mobile Prev / Next Controls */}
+          <div className="flex items-center justify-between mt-5 px-2">
             <button
               onClick={handlePrev}
-              aria-label="Previous"
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 border border-white/10 text-white/70 flex items-center justify-center active:scale-95"
+              aria-label="Previous facility"
+              className="w-10 h-10 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center active:scale-95"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={20} />
             </button>
+
+            {/* Dots */}
+            <div className="flex items-center gap-1.5">
+              {facilities.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveIndex(idx)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    idx === activeIndex
+                      ? "w-7 bg-gradient-to-r from-[#ffd700] to-[#ff4500]"
+                      : "w-2 bg-white/20"
+                  }`}
+                />
+              ))}
+            </div>
+
             <button
               onClick={handleNext}
-              aria-label="Next"
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 border border-white/10 text-white/70 flex items-center justify-center active:scale-95"
+              aria-label="Next facility"
+              className="w-10 h-10 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center active:scale-95"
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={20} />
             </button>
           </div>
-
-          {/* Dots Indicator */}
-          <div className="flex items-center justify-center gap-1.5 mt-4">
-            {facilities.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setActiveIndex(idx)}
-                aria-label={`Slide ${idx + 1}`}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  idx === activeIndex
-                    ? "w-6 bg-[#cba135]"
-                    : "w-2 bg-white/20 hover:bg-white/40"
-                }`}
-              />
-            ))}
-          </div>
         </div>
 
         {/* ============================================================ */}
-        {/* DESKTOP VIEW (sm: and above): Clean Frosted Glass Grid       */}
+        {/* DESKTOP GRID VIEW (sm: and above) - Liquid Flame Holographic  */}
         {/* ============================================================ */}
-        <div className="hidden sm:grid sm:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
-          {facilities.map((fac, i) => (
-            <motion.div
-              key={fac.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: i * 0.08 }}
-              className="h-full"
-            >
-              <GlassCard
-                ambientBlob={true}
-                enableTilt={true}
-                className="items-center text-center justify-between min-h-[250px]"
+        <motion.div
+          layout
+          className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+        >
+          <AnimatePresence>
+            {filteredFacilities.map((fac, i) => (
+              <motion.div
+                layout
+                key={fac.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
+                className="h-full"
               >
-                <div className="mb-5 w-14 h-14 rounded-full border border-[#cba135]/40 bg-white/[0.02] flex items-center justify-center text-[#cba135] group-hover/glass:border-[#cba135] group-hover/glass:bg-[#cba135] group-hover/glass:text-black transition-all duration-500">
-                  {fac.icon}
-                </div>
-                <h3 className="text-base sm:text-lg font-bold tracking-wider uppercase text-white mb-2">
-                  {t(fac.name)}
-                </h3>
-                <p className="text-xs sm:text-sm text-white/60 leading-relaxed max-w-xs">
-                  {isAr ? fac.subAr : fac.subEn}
-                </p>
-              </GlassCard>
-            </motion.div>
-          ))}
-        </div>
+                <LiquidFlameCard
+                  glowColor={fac.badgeTone === "gold" ? "gold" : "fire"}
+                  badgeText={fac.tag}
+                  badgeTone={fac.badgeTone}
+                  className="h-full min-h-[460px] cursor-pointer"
+                >
+                  {/* Visual Background with Zoom on Hover */}
+                  <div className="relative h-60 w-full overflow-hidden">
+                    <Image
+                      src={fac.image}
+                      alt={fac.title}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                    />
+                    {/* Deep Cinematic Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0d12] via-[#0c0d12]/50 to-black/30 group-hover:via-[#0c0d12]/35 transition-colors duration-500" />
+
+                    {/* Floating Corner Icon */}
+                    <div className="absolute bottom-3 right-4 z-10 w-12 h-12 rounded-2xl bg-black/70 backdrop-blur-md border border-white/15 flex items-center justify-center shadow-lg group-hover:border-[#ffd700]/50 group-hover:scale-105 transition-all duration-300">
+                      {fac.icon}
+                    </div>
+                  </div>
+
+                  {/* Card Content */}
+                  <div className="p-6 flex flex-col justify-between flex-grow relative z-10">
+                    <div>
+                      <h3 className="text-xl font-black text-white mb-2.5 group-hover:text-[#ffd700] transition-colors duration-300">
+                        {fac.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-white/65 leading-relaxed line-clamp-3 mb-5">
+                        {fac.sub}
+                      </p>
+                    </div>
+
+                    {/* Amenity Feature Chips */}
+                    <div className="pt-4 border-t border-white/[0.08] mt-auto">
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {fac.features.map((feat, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-white/[0.05] text-white/75 border border-white/[0.08] group-hover:border-white/20 transition-colors"
+                          >
+                            {feat}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Action Explore Link */}
+                      <div className="flex items-center justify-between text-xs font-bold text-[#ff9500] group-hover:text-[#ffd700] transition-colors">
+                        <span>{isAr ? "استكشف التجهيزات المتاحة" : "Explore amenities"}</span>
+                        <ArrowUpLeft
+                          size={16}
+                          className="group-hover:-translate-x-1 group-hover:-translate-y-1 transition-transform duration-300"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </LiquidFlameCard>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       </div>
     </section>
   );
