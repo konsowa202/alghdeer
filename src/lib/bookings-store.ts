@@ -56,6 +56,8 @@ export async function listBookings(): Promise<BookingRecord[]> {
 
 export type NewBookingInput = {
   name: string;
+  phone: string;
+  email?: string;
   company: string;
   groupSize: number;
   notes: string;
@@ -70,6 +72,8 @@ export async function appendBooking(input: NewBookingInput): Promise<BookingReco
     const row: BookingRecord = {
       id: randomUUID(),
       name: input.name,
+      phone: input.phone || "—",
+      email: input.email || "",
       company: input.company,
       groupSize: input.groupSize,
       notes: input.notes,
@@ -116,6 +120,8 @@ export function isPreferredAtValidForPublic(preferredAtIso: string): boolean {
 
 export function sanitizeBookingFields(body: Record<string, unknown>) {
   const name = String(body.name ?? "").trim().slice(0, 120);
+  const phone = String(body.phone ?? "").trim().slice(0, 50);
+  const email = String(body.email ?? "").trim().slice(0, 120);
   const company = String(body.company ?? "").trim().slice(0, 120);
   const notes = String(body.notes ?? "").trim().slice(0, 4000);
   const preferredAtRaw = String(body.preferredAt ?? "").trim();
@@ -125,5 +131,5 @@ export function sanitizeBookingFields(body: Record<string, unknown>) {
       ? Math.min(Math.floor(groupSize), 5000)
       : NaN;
 
-  return { name, company, notes, preferredAtRaw, groupSizeClean };
+  return { name, phone, email, company, notes, preferredAtRaw, groupSizeClean };
 }

@@ -13,6 +13,8 @@ export type BookingStatus =
 export type BookingRecord = {
   id: string;
   name: string;
+  phone: string;
+  email?: string;
   company: string;
   groupSize: number;
   notes: string;

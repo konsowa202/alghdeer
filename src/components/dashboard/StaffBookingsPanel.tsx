@@ -8,6 +8,7 @@ import {
   Banknote,
   BadgeCheck,
   Ban,
+  MessageCircle,
 } from "lucide-react";
 import type { BookingRecord, BookingStatus } from "@/lib/bookings-types";
 import { BOOKING_STATUS_LABELS } from "@/lib/bookings-types";
@@ -58,6 +59,7 @@ export default function StaffBookingsPanel() {
   }, [refresh]);
 
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
   const [groupSize, setGroupSize] = useState("");
   const [preferredLocal, setPreferredLocal] = useState("");
@@ -127,6 +129,7 @@ export default function StaffBookingsPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
+          phone: phone.trim(),
           company: company.trim(),
           groupSize: n,
           notes: notes.trim(),
@@ -142,6 +145,7 @@ export default function StaffBookingsPanel() {
       }
 
       setName("");
+      setPhone("");
       setCompany("");
       setGroupSize("");
       setPreferredLocal("");
@@ -184,6 +188,18 @@ export default function StaffBookingsPanel() {
           </div>
           <div>
             <label className="block text-white/40 text-xs tracking-wider mb-2">
+              رقم الجوال / الواتساب
+            </label>
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="05xxxxxxxx"
+              dir="ltr"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#cba135] text-right font-mono"
+            />
+          </div>
+          <div>
+            <label className="block text-white/40 text-xs tracking-wider mb-2">
               الشركة / الجهة
             </label>
             <input
@@ -205,7 +221,7 @@ export default function StaffBookingsPanel() {
               className="w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#cba135] [color-scheme:dark]"
             />
           </div>
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-white/40 text-xs tracking-wider mb-2">
               تاريخ ووقت المناسبة
             </label>
@@ -258,34 +274,73 @@ export default function StaffBookingsPanel() {
             </button>
           </div>
           {addError ? (
-            <p className="md:col-span-2 text-red-400 text-sm">{addError}</p>
+            <p className="text-red-400 text-sm md:col-span-2">{addError}</p>
           ) : null}
         </form>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
-        <StatChip label="إجمالي الطلبات" value={stats.total} icon={Clock} tone="neutral" />
-        <StatChip label="قيد المراجعة" value={stats.pending} icon={Clock} tone="amber" />
-        <StatChip label="مؤكد" value={stats.confirmed} icon={CheckCircle} tone="sky" />
-        <StatChip label="ديبوزيت" value={stats.deposit} icon={Banknote} tone="violet" />
-        <StatChip label="مكتمل" value={stats.completed} icon={BadgeCheck} tone="emerald" />
-        <StatChip label="ملغى" value={stats.cancelled} icon={Ban} tone="red" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <StatChip
+          label="إجمالي الطلبات"
+          value={stats.total}
+          icon={Clock}
+          tone="neutral"
+        />
+        <StatChip
+          label="قيد المراجعة"
+          value={stats.pending}
+          icon={Clock}
+          tone="amber"
+        />
+        <StatChip
+          label="مؤكد"
+          value={stats.confirmed}
+          icon={CheckCircle}
+          tone="sky"
+        />
+        <StatChip
+          label="الديبوزيت"
+          value={stats.deposit}
+          icon={Banknote}
+          tone="violet"
+        />
+        <StatChip
+          label="مكتمل"
+          value={stats.completed}
+          icon={BadgeCheck}
+          tone="emerald"
+        />
+        <StatChip
+          label="ملغى"
+          value={stats.cancelled}
+          icon={Ban}
+          tone="red"
+        />
       </div>
 
       <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
-        <div className="p-6 border-b border-white/10">
-          <h3 className="text-lg font-bold text-white">كل الحجوزات والطلبات</h3>
-          <p className="text-white/45 text-xs mt-1">
-            يشمل طلبات الموقع والإدخال اليدوي. الملف:{" "}
-            <code className="text-white/60">data/bookings.json</code> على السيرفر.
-          </p>
+        <div className="p-6 border-b border-white/10 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-white">قائمة الحجوزات والتذاكر</h3>
+            <p className="text-white/45 text-xs mt-1">
+              يتم حفظ التذاكر فورياً في قاعدة البيانات السحابية.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            className="px-4 py-2 text-xs font-bold bg-white/10 hover:bg-white/15 text-white rounded-lg transition-colors"
+          >
+            تحديث القائمة
+          </button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-right min-w-[900px]" dir="rtl">
+          <table className="w-full text-right min-w-[950px]" dir="rtl">
             <thead className="bg-white/5 text-white/60 text-sm font-medium">
               <tr>
                 <th className="px-3 py-3">المصدر</th>
                 <th className="px-3 py-3">العميل</th>
+                <th className="px-3 py-3">الجوال / واتساب</th>
                 <th className="px-3 py-3">الشركة</th>
                 <th className="px-3 py-3">الموعد</th>
                 <th className="px-3 py-3">العدد</th>
@@ -297,7 +352,7 @@ export default function StaffBookingsPanel() {
               {rows.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-10 text-center text-white/35 text-sm"
                   >
                     لا توجد طلبات بعد.
@@ -306,6 +361,7 @@ export default function StaffBookingsPanel() {
               ) : (
                 rows.map((order) => {
                   const isBusy = busyId === order.id;
+                  const cleanPhone = (order.phone || "").replace(/\D/g, "");
                   return (
                     <tr
                       key={order.id}
@@ -316,6 +372,21 @@ export default function StaffBookingsPanel() {
                       </td>
                       <td className="px-3 py-3 font-medium text-white">
                         {order.name}
+                      </td>
+                      <td className="px-3 py-3 text-xs whitespace-nowrap">
+                        {cleanPhone ? (
+                          <a
+                            href={`https://wa.me/${cleanPhone.startsWith("05") ? "966" + cleanPhone.slice(1) : cleanPhone}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-mono font-bold"
+                          >
+                            <MessageCircle size={14} />
+                            <span>{order.phone}</span>
+                          </a>
+                        ) : (
+                          <span className="text-white/40">—</span>
+                        )}
                       </td>
                       <td className="px-3 py-3 text-white/65">
                         {order.company || "—"}

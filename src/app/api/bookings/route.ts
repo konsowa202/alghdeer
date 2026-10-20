@@ -42,6 +42,8 @@ export async function POST(req: Request) {
   const staff = isStaffSession();
   const {
     name,
+    phone,
+    email,
     company,
     notes,
     preferredAtRaw,
@@ -51,6 +53,13 @@ export async function POST(req: Request) {
   if (!name || !Number.isFinite(groupSizeClean)) {
     return NextResponse.json(
       { error: "Missing or invalid fields" },
+      { status: 400 }
+    );
+  }
+
+  if (!staff && !phone) {
+    return NextResponse.json(
+      { error: "يرجى إدخال رقم الجوال للتواصل وتأكيد الحجز." },
       { status: 400 }
     );
   }
@@ -66,7 +75,7 @@ export async function POST(req: Request) {
 
   if (!staff && !isPreferredAtValidForPublic(preferredAtIso)) {
     return NextResponse.json(
-          {
+      {
         error:
           "موعد المناسبة يجب أن يكون بعد 24 ساعة على الأقل من الآن.",
       },
@@ -82,6 +91,8 @@ export async function POST(req: Request) {
 
   const booking = await appendBooking({
     name,
+    phone,
+    email,
     company,
     notes,
     groupSize: groupSizeClean,
@@ -93,6 +104,10 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     id: booking.id,
+    name: booking.name,
+    phone: booking.phone,
+    groupSize: booking.groupSize,
+    preferredAt: booking.preferredAt,
     status: booking.status,
   });
 }

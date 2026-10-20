@@ -5,12 +5,9 @@ import { useLanguage } from "@/context/LanguageContext";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import LiquidButton from "@/components/ui/LiquidButton";
-import FloatingEmbers from "@/components/ui/FloatingEmbers";
-import { Sparkles, Compass } from "lucide-react";
 
 export default function Hero() {
   const { t, lang } = useLanguage();
-  const isAr = lang === "ar";
   const narrow = useMediaQuery("(max-width: 767px)");
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
@@ -53,26 +50,11 @@ export default function Hero() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent rtl:bg-gradient-to-l" />
       </motion.div>
 
-      {/* Floating Campfire Embers & Desert Stars for Living Breathing Feel */}
-      <FloatingEmbers count={24} />
-
       <motion.div
         style={{ opacity, y }}
         className="sticky top-0 h-screen flex items-center z-10"
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-16 text-center">
-          {/* Gamified Live Beacon Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.2 }}
-            className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full backdrop-blur-xl bg-white/[0.07] border border-white/20 text-[#f5df9a] text-[11px] sm:text-xs font-bold tracking-wider mb-5 shadow-[0_0_25px_rgba(203,161,53,0.3)] select-none"
-          >
-            <span className="w-2 h-2 rounded-full bg-[#cba135] animate-ping" />
-            <Sparkles size={13} className="text-[#f3da8c] animate-pulse" />
-            <span>{isAr ? "واحة شتوية فاخرة • بريمان، جدة" : "LUXURY WINTER OASIS • JEDDAH"}</span>
-          </motion.div>
-
           <div className="overflow-visible mb-4 sm:mb-6">
             <motion.div
               initial={{ y: "80%", opacity: 0 }}
@@ -107,7 +89,7 @@ export default function Hero() {
             {t("heroSub")}
           </motion.p>
 
-          {/* Liquid Interactive Buttons with Spring Physics & Gamified Touch */}
+          {/* Clean, Refined Liquid Buttons with Zero AI Clutter */}
           <motion.div
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
@@ -120,8 +102,6 @@ export default function Hero() {
               variant="liquid-gold"
               size="lg"
               breathe={true}
-              icon={<Sparkles size={16} />}
-              iconPosition="left"
             >
               {t("inquireBtn")}
             </LiquidButton>
@@ -131,8 +111,6 @@ export default function Hero() {
               href="#events"
               variant="liquid-glass"
               size="lg"
-              icon={<Compass size={16} />}
-              iconPosition="right"
             >
               {t("exploreBtn")}
             </LiquidButton>
