@@ -45,6 +45,7 @@ export async function POST(req: Request) {
 
     const staff = isStaffSession();
     const {
+      id,
       name,
       phone,
       email,
@@ -74,6 +75,7 @@ export async function POST(req: Request) {
     }
 
     const booking = await appendBooking({
+      id,
       name,
       phone: phone || "—",
       email: email || "",

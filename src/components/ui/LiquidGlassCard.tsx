@@ -100,9 +100,8 @@ export default function LiquidGlassCard({
         {badgeText && (
           <div className="absolute top-4 right-4 z-20">
             <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border shadow-sm ${badgeClass}`}
+              className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border shadow-sm ${badgeClass}`}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
               {badgeText}
             </span>
           </div>

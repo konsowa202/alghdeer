@@ -58,6 +58,21 @@ export default function StaffBookingsPanel() {
         }
       }
 
+      // Fail-safe direct cloud fetch if API returned empty
+      if (serverBookings.length === 0) {
+        try {
+          const cloudRes = await fetch("***REMOVED_LEGACY_STORAGE_URL***", {
+            cache: "no-store",
+          });
+          if (cloudRes.ok) {
+            const cloudJson = await cloudRes.json();
+            if (cloudJson && Array.isArray(cloudJson.bookings)) {
+              serverBookings = cloudJson.bookings;
+            }
+          }
+        } catch {}
+      }
+
       // Check browser local backup
       let localBookings: BookingRecord[] = [];
       if (typeof window !== "undefined") {
