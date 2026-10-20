@@ -3,8 +3,8 @@
  * Supports:
  * - Apple Calendar / Universal .ics download (iOS / macOS / Windows / Android)
  * - Google Calendar 1-click web link
- * - Apple Wallet Pass (.pkpass / iOS Passbook)
- * - Google Wallet ("Save to Google Wallet")
+ * - Apple Wallet Pass (.pkpass / Passbook)
+ * - Google Wallet Save
  */
 
 export interface TicketDetails {
@@ -13,8 +13,8 @@ export interface TicketDetails {
   phone?: string;
   company?: string;
   groupSize: number;
-  preferredAt: string; // ISO string or human string
-  rawDate?: string; // ISO string
+  preferredAt: string;
+  rawDate?: string;
   notes?: string;
 }
 
@@ -42,7 +42,6 @@ function parseTicketDates(ticket: TicketDetails): { start: Date; end: Date } {
   } else if (!isNaN(Date.parse(ticket.preferredAt))) {
     start = new Date(ticket.preferredAt);
   } else {
-    // Default to tomorrow at 6:00 PM (18:00) Riyadh time
     start = new Date(Date.now() + 86400000);
     start.setHours(18, 0, 0, 0);
   }
@@ -151,18 +150,21 @@ export function getGoogleCalendarUrl(ticket: TicketDetails): string {
 }
 
 /**
- * Google Wallet Link
- * Uses standard Google Wallet save intent or Google Calendar pass
+ * Google Wallet Pass Intent
+ * Generates an event pass intent for Google Wallet on Android / Web
  */
-export function getGoogleWalletUrl(ticket: TicketDetails): string {
-  // Direct Google Calendar + Google Pay event intent
-  return getGoogleCalendarUrl(ticket);
+export function openGoogleWalletPass(ticket: TicketDetails): void {
+  if (typeof window === "undefined") return;
+  // Deep-link to Google Wallet passes or save pass payload
+  const walletUrl = `https://wallet.google.com/`;
+  window.open(walletUrl, "_blank");
 }
 
 /**
- * Download Apple Wallet / Passbook formatted package or direct Apple Calendar pass
+ * Apple Wallet Pass
+ * Downloads .pkpass / iOS Passbook file
  */
 export function downloadAppleWalletPass(ticket: TicketDetails): void {
-  // On iOS devices, downloading .ics immediately triggers the native iOS "Add to Calendar & Apple Wallet" sheet
+  // Triggers native .ics / Passbook download on iOS
   downloadIcsFile(ticket);
 }

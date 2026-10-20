@@ -8,19 +8,16 @@ import {
   downloadIcsFile,
   getGoogleCalendarUrl,
   downloadAppleWalletPass,
-  getGoogleWalletUrl,
-  type TicketDetails,
+  openGoogleWalletPass,
 } from "@/lib/calendar-wallet";
 import {
   CheckCircle2,
-  Star,
   MessageCircle,
   ExternalLink,
   RotateCcw,
   Calendar,
   Download,
   CalendarCheck,
-  Smartphone,
 } from "lucide-react";
 
 interface IssuedTicket {
@@ -92,8 +89,8 @@ export default function ContactBookingForm() {
 
     setLoading(true);
 
-    // Generate local unique ticket serial
-    const generatedSerial = "ALG-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+    // Generate local unique ticket serial (e.g. ALG-4796)
+    const generatedSerial = "ALG-" + Math.floor(1000 + Math.random() * 9000);
     const guestCount = Number(groupSize) > 0 ? Number(groupSize) : 10;
     const formattedDate = preferredLocal
       ? new Date(preferredLocal).toLocaleString(isAr ? "ar-SA" : "en-US", {
@@ -106,12 +103,24 @@ export default function ContactBookingForm() {
       ? new Date(preferredLocal).toISOString()
       : new Date().toISOString();
 
+    const ticketObj: IssuedTicket = {
+      id: generatedSerial,
+      name: name.trim(),
+      phone: phone.trim() || "—",
+      company: company.trim() || "—",
+      groupSize: guestCount,
+      preferredAt: formattedDate,
+      rawDate: rawIsoDate,
+      notes: notes.trim(),
+    };
+
     try {
-      // 1. Post to API to store in database/dashboard
+      // 1. Post to API to store in database/dashboard with EXACT generatedSerial
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          id: generatedSerial,
           name: name.trim(),
           phone: phone.trim() || "—",
           company: company.trim() || "—",
@@ -121,36 +130,24 @@ export default function ContactBookingForm() {
         }),
       }).catch(() => null);
 
-      let finalId = generatedSerial;
       if (res && res.ok) {
         const data = await res.json().catch(() => ({}));
-        if (data.id) finalId = String(data.id).slice(0, 8).toUpperCase();
+        if (data.id) ticketObj.id = String(data.id);
       }
-
-      const ticketObj: IssuedTicket = {
-        id: finalId,
-        name: name.trim(),
-        phone: phone.trim() || "—",
-        company: company.trim() || "—",
-        groupSize: guestCount,
-        preferredAt: formattedDate,
-        rawDate: rawIsoDate,
-        notes: notes.trim(),
-      };
 
       setIssuedTicket(ticketObj);
 
-      // Save to localStorage so it is immediately visible in dashboard on this browser
+      // Save to localStorage backup
       if (typeof window !== "undefined") {
         try {
           const localArr = JSON.parse(localStorage.getItem("alghdeer_local_bookings") || "[]");
           localArr.unshift({
-            id: finalId,
-            name: name.trim(),
-            phone: phone.trim() || "—",
-            company: company.trim() || "—",
-            groupSize: guestCount,
-            notes: notes.trim(),
+            id: ticketObj.id,
+            name: ticketObj.name,
+            phone: ticketObj.phone,
+            company: ticketObj.company,
+            groupSize: ticketObj.groupSize,
+            notes: ticketObj.notes,
             preferredAt: rawIsoDate,
             status: "pending",
             source: "website",
@@ -160,7 +157,7 @@ export default function ContactBookingForm() {
         } catch {}
       }
 
-      // Auto-trigger calendar file download for seamless instant import
+      // Auto-download .ics calendar invite
       try {
         downloadIcsFile(ticketObj);
         setCalendarDownloaded(true);
@@ -173,8 +170,8 @@ export default function ContactBookingForm() {
   const ticketNumber = issuedTicket
     ? issuedTicket.id.startsWith("ALG-")
       ? `№ ${issuedTicket.id}`
-      : `№ ALG-2026-${issuedTicket.id}`
-    : "№ 2026";
+      : `№ ALG-${issuedTicket.id}`
+    : "№ ALG-2026";
 
   const directWaUrl = issuedTicket
     ? `https://wa.me/966544493991?text=${encodeURIComponent(
@@ -184,130 +181,154 @@ export default function ContactBookingForm() {
 
   return (
     <div className="relative w-full">
-      {/* Outer Ticket Container */}
-      <div className="relative bg-[#f4ead2] text-[#1a1610] rounded-none shadow-[0_20px_60px_rgba(0,0,0,0.65)] overflow-hidden">
-        {/* 4 Corner Cutout Notches */}
-        <span className="pointer-events-none absolute -top-4 -left-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
-        <span className="pointer-events-none absolute -top-4 -right-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
-        <span className="pointer-events-none absolute -bottom-4 -left-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
-        <span className="pointer-events-none absolute -bottom-4 -right-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
+      {/* Outer Luxury VIP Pass Container (Dark Obsidian & Gold) */}
+      <div className="relative bg-[#0c0d12] text-white rounded-3xl border border-[#cba135]/40 shadow-[0_25px_70px_rgba(0,0,0,0.85)] overflow-hidden">
+        {/* Ticket Perforation Cutout Notches */}
+        <span className="pointer-events-none absolute top-1/2 -left-4 -translate-y-1/2 w-8 h-8 rounded-full bg-black border border-[#cba135]/30 z-20" />
+        <span className="pointer-events-none absolute top-1/2 -right-4 -translate-y-1/2 w-8 h-8 rounded-full bg-black border border-[#cba135]/30 z-20" />
 
         {issuedTicket ? (
           /* ============================================================ */
-          /* TICKET ISSUED SUCCESS VIEW                                   */
+          /* TICKET ISSUED SUCCESS VIEW: LUXURY VIP PASS                   */
           /* ============================================================ */
-          <div className="p-6 sm:p-10 md:p-12 text-center border-2 border-[#1a1610]/25 m-3 sm:m-4 space-y-6">
-            <div className="flex justify-center text-[#25D366]">
-              <CheckCircle2 size={54} strokeWidth={1.75} />
+          <div className="p-6 sm:p-10 md:p-12 text-center m-2 sm:m-4 space-y-7 relative z-10">
+            <div className="flex justify-center text-[#cba135]">
+              <CheckCircle2 size={50} strokeWidth={1.75} />
             </div>
 
             <div>
-              <span className="inline-block px-3 py-1 bg-[#1a1610] text-[#f4ead2] text-xs font-mono font-bold tracking-widest uppercase mb-2">
-                {ticketNumber} • VIP PASS
+              <span className="inline-block px-3 py-1 bg-[#cba135]/15 border border-[#cba135]/40 text-[#fae5a5] text-xs font-mono font-bold tracking-widest uppercase mb-2 rounded-full">
+                {ticketNumber} • VIP INVITATION
               </span>
-              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-wider text-[#1a1610]">
-                {isAr ? "تم إصدار التذكرة وتسجيلها بنجاح" : "YOUR VIP TICKET IS ISSUED"}
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-wider text-white">
+                {isAr ? "تم إصدار تذكرة الحجز بنجاح" : "YOUR VIP TICKET IS ISSUED"}
               </h3>
-              <p className="text-xs sm:text-sm text-[#1a1610]/70 mt-1">
+              <p className="text-xs sm:text-sm text-white/60 mt-1 max-w-md mx-auto">
                 {isAr
-                  ? "يمكنك الآن حفظ التذكرة في محفظتك الإلكترونية وتقويمك قبل إرسال التأكيد"
-                  : "Save your ticket to your mobile wallet and calendar before WhatsApp confirmation."}
+                  ? "احفظ التذكرة في محفظتك الإلكترونية وتقويمك أولاً، ثم أكد الحجز عبر الواتساب"
+                  : "Save your ticket to Apple Wallet, Google Wallet or Calendar, then confirm via WhatsApp."}
               </p>
             </div>
 
-            {/* Ticket Summary Card */}
-            <div className="max-w-lg mx-auto bg-white/80 border border-[#1a1610]/20 p-5 sm:p-6 text-start space-y-3 font-sans shadow-sm rounded-lg">
-              <div className="flex justify-between items-center border-b border-[#1a1610]/15 pb-2">
-                <span className="text-xs text-[#1a1610]/70 font-bold">{isAr ? "رقم التذكرة:" : "Ticket No:"}</span>
-                <span className="font-mono font-bold text-[#b5382a]">{ticketNumber}</span>
-              </div>
-              <div className="flex justify-between items-center border-b border-[#1a1610]/15 pb-2">
-                <span className="text-xs text-[#1a1610]/70 font-bold">{isAr ? "اسم الضيف:" : "Guest Name:"}</span>
-                <span className="font-bold text-[#1a1610]">{issuedTicket.name}</span>
-              </div>
-              {issuedTicket.phone !== "—" && (
-                <div className="flex justify-between items-center border-b border-[#1a1610]/15 pb-2">
-                  <span className="text-xs text-[#1a1610]/70 font-bold">{isAr ? "رقم الجوال:" : "Phone:"}</span>
-                  <span dir="ltr" className="font-mono font-bold text-[#1a1610]">{issuedTicket.phone}</span>
+            {/* The Authentic Digital VIP Pass Card */}
+            <div className="max-w-lg mx-auto bg-white/[0.03] border border-white/15 p-6 text-start space-y-4 rounded-2xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+              <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#cba135] block">
+                    ALGHDEER WINTER CAMPS
+                  </span>
+                  <span className="text-xs text-white/60 font-medium">
+                    {isAr ? "تذكرة دخول وحجز VIP" : "VIP Event Entry Pass"}
+                  </span>
                 </div>
-              )}
-              {issuedTicket.company !== "—" && (
-                <div className="flex justify-between items-center border-b border-[#1a1610]/15 pb-2">
-                  <span className="text-xs text-[#1a1610]/70 font-bold">{isAr ? "الجهة / المناسبة:" : "Occasion:"}</span>
-                  <span className="font-bold text-[#1a1610]">{issuedTicket.company}</span>
-                </div>
-              )}
-              <div className="flex justify-between items-center border-b border-[#1a1610]/15 pb-2">
-                <span className="text-xs text-[#1a1610]/70 font-bold">{isAr ? "موعد الفعالية:" : "Event Date:"}</span>
-                <span className="font-bold text-xs text-[#1a1610]">{issuedTicket.preferredAt}</span>
+                <span className="font-mono font-black text-lg text-[#ffd700] tracking-wider">
+                  {ticketNumber}
+                </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-[#1a1610]/70 font-bold">{isAr ? "عدد الضيوف:" : "Guests:"}</span>
-                <span className="font-bold text-[#1a1610]">{issuedTicket.groupSize} {isAr ? "شخص" : "guests"}</span>
+
+              <div className="grid grid-cols-2 gap-4 text-xs font-sans">
+                <div>
+                  <span className="text-white/40 block mb-1">{isAr ? "اسم الضيف:" : "Guest Name:"}</span>
+                  <span className="font-bold text-white text-sm">{issuedTicket.name}</span>
+                </div>
+                {issuedTicket.phone !== "—" && (
+                  <div>
+                    <span className="text-white/40 block mb-1">{isAr ? "رقم الجوال:" : "Phone:"}</span>
+                    <span dir="ltr" className="font-mono font-bold text-white text-sm">{issuedTicket.phone}</span>
+                  </div>
+                )}
+                {issuedTicket.company !== "—" && (
+                  <div>
+                    <span className="text-white/40 block mb-1">{isAr ? "الجهة / المناسبة:" : "Occasion:"}</span>
+                    <span className="font-bold text-white">{issuedTicket.company}</span>
+                  </div>
+                )}
+                <div>
+                  <span className="text-white/40 block mb-1">{isAr ? "عدد الضيوف:" : "Guests:"}</span>
+                  <span className="font-bold text-white">{issuedTicket.groupSize} {isAr ? "شخص" : "guests"}</span>
+                </div>
+              </div>
+
+              <div className="border-t border-white/10 pt-3">
+                <span className="text-white/40 text-xs block mb-1">{isAr ? "موعد الفعالية:" : "Event Date:"}</span>
+                <span className="font-bold text-sm text-[#fae5a5]">{issuedTicket.preferredAt}</span>
+              </div>
+
+              {/* Barcode representation */}
+              <div className="border-t border-white/10 pt-4 flex flex-col items-center">
+                <div className="flex items-end gap-[2px] h-9 bg-white/10 p-1.5 rounded">
+                  {[3, 1, 4, 2, 5, 2, 1, 4, 3, 2, 5, 1, 3, 4, 2, 1, 5, 3, 2, 4, 1, 3, 2, 4, 2, 5, 1, 3].map(
+                    (h, i) => (
+                      <span
+                        key={i}
+                        className="bg-white/80"
+                        style={{
+                          width: i % 3 === 0 ? "2.5px" : "1.5px",
+                          height: `${(h / 5) * 100}%`,
+                        }}
+                      />
+                    )
+                  )}
+                </div>
+                <span className="font-mono text-[9px] tracking-widest text-white/40 mt-1 uppercase">
+                  {issuedTicket.id} • JEDDAH VIP
+                </span>
               </div>
             </div>
 
             {/* ============================================================ */}
-            {/* WALLET & CALENDAR ACTION SECTION (BEFORE WHATSAPP)            */}
+            {/* WALLET & CALENDAR ACTION BAR (SEAMLESS LUXURY DESIGN)         */}
             {/* ============================================================ */}
-            <div className="max-w-lg mx-auto bg-[#1a1610]/05 border-2 border-dashed border-[#1a1610]/20 p-5 rounded-xl space-y-4">
-              <div className="text-center">
-                <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#1a1610]/60 block mb-1">
-                  {isAr ? "✦ الخطوة الأولى: احفظ التذكرة في هاتفك" : "✦ STEP 1: SAVE TICKET TO YOUR DEVICE"}
-                </span>
-                <p className="text-xs font-bold text-[#1a1610]">
-                  {isAr
-                    ? "أضف التذكرة إلى Apple Wallet أو Google Wallet وتقويم جهازك"
-                    : "Add to Apple Wallet, Google Wallet, or your device calendar"}
-                </p>
-              </div>
+            <div className="max-w-lg mx-auto space-y-3">
+              <span className="text-[11px] font-mono uppercase tracking-widest text-[#cba135]/80 block font-bold">
+                {isAr ? "✦ إضافة التذكرة إلى محفظتك والتقويم ✦" : "✦ ADD TICKET TO WALLET & CALENDAR ✦"}
+              </span>
 
-              {/* 3 Main Action Badges: Apple Wallet / Google Wallet / Calendar */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {/* 1. Apple Wallet Button */}
+              {/* Apple Wallet & Google Wallet Badges */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* 1. Apple Wallet */}
                 <button
                   type="button"
                   onClick={() => {
                     downloadAppleWalletPass(issuedTicket);
                     setCalendarDownloaded(true);
                   }}
-                  className="flex items-center justify-center gap-2 py-3 px-4 bg-black text-white hover:bg-neutral-800 rounded-xl font-bold text-xs shadow-md transition-all active:scale-95"
+                  className="flex items-center justify-center gap-2.5 py-3.5 px-5 bg-black hover:bg-neutral-900 border border-white/20 rounded-2xl font-bold text-xs text-white shadow-lg transition-all active:scale-95"
                 >
                   <AppleIcon className="w-4 h-4 fill-white" />
                   <span>{isAr ? "إضافة إلى Apple Wallet" : "Add to Apple Wallet"}</span>
                 </button>
 
-                {/* 2. Google Wallet Button */}
-                <a
-                  href={getGoogleWalletUrl(issuedTicket)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 py-3 px-4 bg-white text-[#1f1f1f] hover:bg-neutral-100 border border-neutral-300 rounded-xl font-bold text-xs shadow-md transition-all active:scale-95"
+                {/* 2. Google Wallet */}
+                <button
+                  type="button"
+                  onClick={() => openGoogleWalletPass(issuedTicket)}
+                  className="flex items-center justify-center gap-2.5 py-3.5 px-5 bg-neutral-900 hover:bg-neutral-800 border border-white/20 rounded-2xl font-bold text-xs text-white shadow-lg transition-all active:scale-95"
                 >
                   <GoogleWalletIcon className="w-4 h-4" />
                   <span>{isAr ? "حفظ في Google Wallet" : "Save to Google Wallet"}</span>
-                </a>
+                </button>
               </div>
 
-              {/* 3. Automatic Calendar Options */}
-              <div className="pt-2 border-t border-[#1a1610]/10 flex flex-wrap items-center justify-center gap-2">
+              {/* 3. Calendar Links */}
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => {
                     downloadIcsFile(issuedTicket);
                     setCalendarDownloaded(true);
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/70 hover:bg-white text-[#1a1610] text-[11px] font-bold rounded-lg border border-[#1a1610]/15 transition-all shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.05] hover:bg-white/10 text-white/80 text-[11px] font-bold rounded-lg border border-white/10 transition-all"
                 >
                   <Download size={13} />
-                  <span>{isAr ? "تنزيل ملف التقويم (iCal / Outlook)" : "Download iCal (.ics)"}</span>
+                  <span>{isAr ? "تنزيل ملف التقويم (.ics)" : "Download iCal (.ics)"}</span>
                 </button>
 
                 <a
                   href={getGoogleCalendarUrl(issuedTicket)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-white/70 hover:bg-white text-[#1a1610] text-[11px] font-bold rounded-lg border border-[#1a1610]/15 transition-all shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.05] hover:bg-white/10 text-white/80 text-[11px] font-bold rounded-lg border border-white/10 transition-all"
                 >
                   <Calendar size={13} />
                   <span>{isAr ? "تقويم Google Calendar" : "Google Calendar"}</span>
@@ -315,7 +336,7 @@ export default function ContactBookingForm() {
               </div>
 
               {calendarDownloaded && (
-                <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-100/80 py-1.5 px-3 rounded-md">
+                <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 py-1.5 px-3 rounded-lg border border-emerald-500/20">
                   <CalendarCheck size={14} />
                   <span>{isAr ? "تم إرسال موعد التذكرة إلى جهازك بنجاح!" : "Event saved to your device!"}</span>
                 </div>
@@ -323,18 +344,18 @@ export default function ContactBookingForm() {
             </div>
 
             {/* ============================================================ */}
-            {/* WHATSAPP CONFIRMATION SECTION (STEP 2)                        */}
+            {/* FINAL STEP: WHATSAPP CONFIRMATION                            */}
             {/* ============================================================ */}
-            <div className="max-w-md mx-auto space-y-3 pt-2">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#1a1610]/60 block">
-                {isAr ? "✦ الخطوة الثانية والأخيرة: تثبيت الحجز" : "✦ FINAL STEP: CONFIRM BOOKING"}
+            <div className="max-w-md mx-auto space-y-3 pt-4 border-t border-white/10">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-white/50 block">
+                {isAr ? "✦ الخطوة الأخيرة: تثبيت وتأكيد الحجز ✦" : "✦ FINAL STEP: CONFIRM BOOKING ✦"}
               </span>
 
               <a
                 href={directWaUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2.5 w-full py-4 px-6 bg-[#25D366] hover:bg-[#1faa53] text-black font-black text-sm tracking-wider uppercase rounded-full shadow-xl transition-all active:scale-98"
+                className="flex items-center justify-center gap-2.5 w-full py-4 px-6 bg-[#25D366] hover:bg-[#1faa53] text-black font-black text-sm tracking-wider uppercase rounded-full shadow-2xl transition-all active:scale-98"
               >
                 <MessageCircle size={22} className="fill-black text-transparent" />
                 <span>{isAr ? "فتح محادثة الواتساب وتأكيد الحجز الآن" : "Confirm via WhatsApp Now"}</span>
@@ -346,7 +367,7 @@ export default function ContactBookingForm() {
                   setIssuedTicket(null);
                   setCalendarDownloaded(false);
                 }}
-                className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 text-xs text-[#1a1610]/70 hover:text-[#1a1610] underline font-bold tracking-wider"
+                className="inline-flex items-center justify-center gap-1.5 w-full py-2 text-xs text-white/50 hover:text-white underline font-bold tracking-wider"
               >
                 <RotateCcw size={13} />
                 <span>{isAr ? "إصدار تذكرة إضافية" : "Issue Another Ticket"}</span>
@@ -354,11 +375,11 @@ export default function ContactBookingForm() {
             </div>
 
             {/* Staff Dashboard Shortcut */}
-            <div className="pt-4 border-t border-[#1a1610]/15 text-[11px] text-[#1a1610]/60">
+            <div className="pt-3 border-t border-white/[0.08] text-[11px] text-white/40">
               <span>{isAr ? "إدارة المخيم: تظهر جميع التذاكر فورياً في " : "Staff: All tickets appear in "}</span>
               <a
                 href="/dashboard"
-                className="font-bold text-[#b5382a] hover:underline inline-flex items-center gap-1"
+                className="font-bold text-[#cba135] hover:underline inline-flex items-center gap-1"
               >
                 <span>{isAr ? "لوحة تحكم الحجوزات" : "Staff Dashboard"}</span>
                 <ExternalLink size={11} />
@@ -367,48 +388,48 @@ export default function ContactBookingForm() {
           </div>
         ) : (
           /* ============================================================ */
-          /* TICKET INPUT FORM                                            */
+          /* TICKET INPUT FORM: LUXURY OBSIDIAN & GOLD PASS               */
           /* ============================================================ */
           <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-12">
-            {/* Main Ticket Area (8 cols) */}
-            <div className="md:col-span-8 p-5 sm:p-7 md:p-8">
-              <div className="border-2 border-[#1a1610]/30 p-4 sm:p-6 relative">
-                {/* Ticket Header Bar */}
-                <div className="flex items-center justify-between border-b-2 border-[#1a1610]/20 pb-3 mb-5">
+            {/* Main Form Area (8 cols) */}
+            <div className="md:col-span-8 p-6 sm:p-8 md:p-10">
+              <div className="border border-white/10 rounded-2xl p-5 sm:p-7 relative bg-white/[0.02]">
+                {/* Header Bar */}
+                <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-xs tracking-widest uppercase bg-[#1a1610] text-[#f4ead2] px-2 py-0.5">
+                    <span className="font-mono font-bold text-xs tracking-widest uppercase bg-[#cba135] text-black px-2.5 py-0.5 rounded">
                       PASS № 2026
                     </span>
-                    <span className="text-[10px] font-mono tracking-wider uppercase text-[#1a1610]/60 hidden sm:inline">
+                    <span className="text-[10px] font-mono tracking-wider uppercase text-white/50 hidden sm:inline">
                       • JEDDAH, BURAYMAN
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-[11px] font-mono font-bold text-[#b5382a]">
-                    <span>VIP INVITATION</span>
-                  </div>
+                  <span className="text-[11px] font-mono font-bold text-[#cba135] tracking-wider uppercase">
+                    VIP INVITATION
+                  </span>
                 </div>
 
-                {/* Event Title on Ticket */}
+                {/* Event Title */}
                 <div className="mb-6">
-                  <span className="text-[10px] font-mono tracking-widest uppercase text-[#1a1610]/60 block mb-1">
+                  <span className="text-[10px] font-mono tracking-widest uppercase text-[#cba135] block mb-1">
                     EVENT ACCESS • تصريح حضور فعالية
                   </span>
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight text-[#1a1610] leading-none">
+                  <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white leading-none">
                     {isAr ? "مخيمات الغدير الشتوية" : "ALGHDEER WINTER CAMPS"}
                   </h3>
-                  <p className="text-xs text-[#1a1610]/70 mt-1 font-sans">
+                  <p className="text-xs text-white/60 mt-1 font-sans">
                     {isAr
                       ? "أمسيات شتوية فاخرة • طابع بوهيمي عصري • بريمان، جدة"
                       : "Luxury Winter Nights • Modern Bohemian • Burayman, Jeddah"}
                   </p>
                 </div>
 
-                {/* Form Fields Styled as Ticket Metadata */}
+                {/* Form Inputs */}
                 <div className="space-y-4">
                   {/* Row 1: Name & Phone */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-mono uppercase tracking-wider text-[#1a1610]/70 mb-1 font-bold">
+                      <label className="block text-[11px] font-mono uppercase tracking-wider text-white/70 mb-1.5 font-bold">
                         {isAr ? "اسم الضيف / العميل *" : "GUEST NAME *"}
                       </label>
                       <input
@@ -417,11 +438,11 @@ export default function ContactBookingForm() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder={isAr ? "الاسم الكريم" : "Your full name"}
-                        className="w-full bg-white/70 border-b-2 border-[#1a1610]/40 focus:border-[#1a1610] focus:bg-white px-3 py-2 text-sm text-[#1a1610] placeholder-[#1a1610]/40 outline-none font-sans font-medium transition-colors"
+                        className="w-full bg-white/[0.04] border border-white/15 rounded-xl focus:border-[#cba135] focus:bg-white/[0.07] px-3.5 py-2.5 text-sm text-white placeholder-white/30 outline-none font-sans font-medium transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-mono uppercase tracking-wider text-[#1a1610]/70 mb-1 font-bold">
+                      <label className="block text-[11px] font-mono uppercase tracking-wider text-white/70 mb-1.5 font-bold">
                         {isAr ? "رقم الجوال (واتساب) *" : "PHONE (WHATSAPP) *"}
                       </label>
                       <input
@@ -431,7 +452,7 @@ export default function ContactBookingForm() {
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="05xxxxxxxx"
                         dir="ltr"
-                        className="w-full bg-white/70 border-b-2 border-[#1a1610]/40 focus:border-[#1a1610] focus:bg-white px-3 py-2 text-sm text-[#1a1610] placeholder-[#1a1610]/40 outline-none font-mono font-medium transition-colors text-right"
+                        className="w-full bg-white/[0.04] border border-white/15 rounded-xl focus:border-[#cba135] focus:bg-white/[0.07] px-3.5 py-2.5 text-sm text-white placeholder-white/30 outline-none font-mono font-medium transition-all text-right"
                       />
                     </div>
                   </div>
@@ -439,7 +460,7 @@ export default function ContactBookingForm() {
                   {/* Row 2: Company/Occasion & Guests */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-mono uppercase tracking-wider text-[#1a1610]/70 mb-1 font-bold">
+                      <label className="block text-[11px] font-mono uppercase tracking-wider text-white/70 mb-1.5 font-bold">
                         {isAr ? "الجهة / نوع المناسبة" : "COMPANY / OCCASION"}
                       </label>
                       <input
@@ -447,17 +468,17 @@ export default function ContactBookingForm() {
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
                         placeholder={isAr ? "عائلي / شركة / مناسبة خاصة" : "Family / Corporate / Private"}
-                        className="w-full bg-white/70 border-b-2 border-[#1a1610]/40 focus:border-[#1a1610] focus:bg-white px-3 py-2 text-sm text-[#1a1610] placeholder-[#1a1610]/40 outline-none font-sans font-medium transition-colors"
+                        className="w-full bg-white/[0.04] border border-white/15 rounded-xl focus:border-[#cba135] focus:bg-white/[0.07] px-3.5 py-2.5 text-sm text-white placeholder-white/30 outline-none font-sans font-medium transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-mono uppercase tracking-wider text-[#1a1610]/70 mb-1 font-bold">
+                      <label className="block text-[11px] font-mono uppercase tracking-wider text-white/70 mb-1.5 font-bold">
                         {isAr ? "عدد الضيوف المتوقع *" : "EXPECTED GUESTS *"}
                       </label>
                       <select
                         value={groupSize}
                         onChange={(e) => setGroupSize(e.target.value)}
-                        className="w-full bg-white/70 border-b-2 border-[#1a1610]/40 focus:border-[#1a1610] focus:bg-white px-3 py-2 text-sm text-[#1a1610] outline-none font-sans font-medium transition-colors"
+                        className="w-full bg-[#14151b] border border-white/15 rounded-xl focus:border-[#cba135] px-3.5 py-2.5 text-sm text-white outline-none font-sans font-medium transition-all"
                       >
                         <option value="5">5 {isAr ? "أشخاص" : "guests"}</option>
                         <option value="10">10 {isAr ? "أشخاص" : "guests"}</option>
@@ -471,7 +492,7 @@ export default function ContactBookingForm() {
 
                   {/* Row 3: Preferred Date & Time */}
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-[#1a1610]/70 mb-1 font-bold">
+                    <label className="block text-[11px] font-mono uppercase tracking-wider text-white/70 mb-1.5 font-bold">
                       {isAr ? "الموعد المقترح للفعالية" : "PREFERRED DATE & TIME"}
                     </label>
                     <input
@@ -479,13 +500,13 @@ export default function ContactBookingForm() {
                       min={minLocal}
                       value={preferredLocal}
                       onChange={(e) => setPreferredLocal(e.target.value)}
-                      className="w-full bg-white/70 border-b-2 border-[#1a1610]/40 focus:border-[#1a1610] focus:bg-white px-3 py-2 text-sm text-[#1a1610] outline-none font-sans font-medium transition-colors"
+                      className="w-full bg-white/[0.04] border border-white/15 rounded-xl focus:border-[#cba135] focus:bg-white/[0.07] px-3.5 py-2.5 text-sm text-white outline-none font-sans font-medium transition-all"
                     />
                   </div>
 
                   {/* Row 4: Notes (Optional) */}
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-[#1a1610]/70 mb-1 font-bold">
+                    <label className="block text-[11px] font-mono uppercase tracking-wider text-white/70 mb-1.5 font-bold">
                       {isAr ? "ملاحظات خاصة (اختياري)" : "SPECIAL REQUESTS (OPTIONAL)"}
                     </label>
                     <textarea
@@ -497,35 +518,35 @@ export default function ContactBookingForm() {
                           ? "أي تفاصيل إضافية (بوفيه، قاعة زجاجية، ألعاب أطفال...)"
                           : "Any specific arrangements (catering, VIP lounge...)"
                       }
-                      className="w-full bg-white/70 border-b-2 border-[#1a1610]/40 focus:border-[#1a1610] focus:bg-white px-3 py-2 text-sm text-[#1a1610] placeholder-[#1a1610]/40 outline-none font-sans font-medium transition-colors resize-none"
+                      className="w-full bg-white/[0.04] border border-white/15 rounded-xl focus:border-[#cba135] focus:bg-white/[0.07] px-3.5 py-2.5 text-sm text-white placeholder-white/30 outline-none font-sans font-medium transition-all resize-none"
                     />
                   </div>
 
                   {error && (
-                    <div className="p-2.5 bg-red-100 border border-red-300 text-red-700 text-xs font-bold rounded">
+                    <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-300 text-xs font-bold rounded-xl">
                       {error}
                     </div>
                   )}
 
-                  {/* Submit Button inside Ticket */}
+                  {/* Submit Button */}
                   <div className="pt-2">
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-4 px-6 bg-[#1a1610] hover:bg-black text-[#f4ead2] font-black text-sm tracking-wider uppercase shadow-xl transition-all flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50"
+                      className="w-full py-4 px-6 bg-gradient-to-r from-[#d4a73b] via-[#f3da8c] to-[#c1942a] text-[#0b0c10] font-black text-sm tracking-wider uppercase rounded-xl shadow-[0_10px_30px_rgba(203,161,53,0.3)] hover:shadow-[0_15px_40px_rgba(203,161,53,0.5)] transition-all flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50"
                     >
                       {loading ? (
                         <span>{isAr ? "جاري إصدار التذكرة..." : "ISSUING PASS..."}</span>
                       ) : (
                         <>
-                          <span>{isAr ? "إصدار تذكرة الحجز والتقويم" : "ISSUE VIP TICKET & PASS"}</span>
-                          <span className="text-[#b5382a] font-mono">→</span>
+                          <span>{isAr ? "إصدار تذكرة الحجز" : "ISSUE VIP TICKET"}</span>
+                          <span className="font-mono text-base">→</span>
                         </>
                       )}
                     </button>
-                    <p className="text-[10px] text-center text-[#1a1610]/60 mt-2 font-mono">
+                    <p className="text-[10px] text-center text-white/50 mt-2 font-mono">
                       {isAr
-                        ? "✦ سيتم حفظ التذكرة وتجهيز خيارات Apple Wallet و Google Wallet والتقويم"
+                        ? "✦ سيتم تسجيل التذكرة وتجهيز خيارات Apple Wallet و Google Wallet والتقويم"
                         : "✦ Ticket will be generated with Apple Wallet, Google Wallet & Calendar sync"}
                     </p>
                   </div>
@@ -533,62 +554,58 @@ export default function ContactBookingForm() {
               </div>
             </div>
 
-            {/* Perforated Stub / Ticket Tear-Off Area (4 cols) */}
-            <div className="md:col-span-4 border-t-2 md:border-t-0 md:border-r-2 border-dashed border-[#1a1610]/30 p-5 sm:p-7 flex flex-col justify-between bg-[#ece0c4] relative">
-              {/* Circular Notches Along the Perforation line */}
-              <span className="hidden md:block absolute -top-4 -right-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
-              <span className="hidden md:block absolute -bottom-4 -right-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
-
+            {/* Stub Area (4 cols) */}
+            <div className="md:col-span-4 border-t border-white/10 md:border-t-0 md:border-r border-dashed md:border-white/20 p-6 sm:p-8 flex flex-col justify-between bg-white/[0.01]">
               <div>
-                <span className="text-[10px] font-mono tracking-widest uppercase text-[#1a1610]/60 block mb-1">
+                <span className="text-[10px] font-mono tracking-widest uppercase text-[#cba135] block mb-1">
                   STUB • قسيمة الدخول
                 </span>
-                <h4 className="font-mono font-bold text-sm uppercase text-[#1a1610] mb-3">
+                <h4 className="font-mono font-bold text-sm uppercase text-white mb-4">
                   ALGHDEER VIP
                 </h4>
-                <div className="space-y-2 text-xs font-mono text-[#1a1610]/80 border-b border-[#1a1610]/15 pb-4 mb-4">
+                <div className="space-y-2.5 text-xs font-mono text-white/70 border-b border-white/10 pb-4 mb-4">
                   <div className="flex justify-between">
-                    <span className="text-[#1a1610]/50">ZONE:</span>
-                    <span className="font-bold">BURAYMAN</span>
+                    <span className="text-white/40">ZONE:</span>
+                    <span className="font-bold text-white">BURAYMAN</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#1a1610]/50">GATE:</span>
-                    <span className="font-bold">VIP MAIN</span>
+                    <span className="text-white/40">GATE:</span>
+                    <span className="font-bold text-white">VIP MAIN</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#1a1610]/50">SEASON:</span>
-                    <span className="font-bold">WINTER 2026</span>
+                    <span className="text-white/40">SEASON:</span>
+                    <span className="font-bold text-white">WINTER 2026</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#1a1610]/50">STATUS:</span>
-                    <span className="font-bold text-[#b5382a]">RESERVED</span>
+                    <span className="text-white/40">STATUS:</span>
+                    <span className="font-bold text-emerald-400">RESERVED</span>
                   </div>
                 </div>
 
                 {/* Simulated Barcode */}
                 <div className="my-4 text-center">
-                  <div className="flex justify-center items-end gap-[2px] h-14 bg-white/60 p-2 border border-[#1a1610]/20">
+                  <div className="flex justify-center items-end gap-[2px] h-12 bg-white/[0.03] p-2 border border-white/10 rounded-lg">
                     {[3, 1, 4, 2, 5, 2, 1, 4, 3, 2, 5, 1, 3, 4, 2, 1, 5, 3, 2, 4, 1, 3, 2, 4, 2, 5, 1, 3].map(
                       (h, i) => (
                         <span
                           key={i}
-                          className="bg-[#1a1610]"
+                          className="bg-white/70"
                           style={{
-                            width: i % 3 === 0 ? "3px" : "1.5px",
+                            width: i % 3 === 0 ? "2.5px" : "1.5px",
                             height: `${(h / 5) * 100}%`,
                           }}
                         />
                       )
                     )}
                   </div>
-                  <span className="font-mono text-[9px] tracking-widest text-[#1a1610]/60 uppercase mt-1 block">
+                  <span className="font-mono text-[9px] tracking-widest text-white/40 uppercase mt-1.5 block">
                     № ALG-2026-VIP-PASS
                   </span>
                 </div>
               </div>
 
-              {/* Bottom Notice */}
-              <div className="text-[10px] text-[#1a1610]/60 font-mono leading-relaxed pt-3 border-t border-[#1a1610]/15">
+              {/* Notice */}
+              <div className="text-[10px] text-white/45 font-mono leading-relaxed pt-3 border-t border-white/10">
                 {isAr
                   ? "يُرجى إبراز هذه التذكرة أو رقم الحجز عند الوصول للبوابة."
                   : "Please present this pass or serial upon arrival at the main gate."}

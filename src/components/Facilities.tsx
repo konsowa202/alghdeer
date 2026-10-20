@@ -173,7 +173,6 @@ export default function Facilities() {
         <div className="text-center mb-12 sm:mb-16 flex flex-col items-center">
           {/* Subtle Gamified Tag */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-[#cba135] text-xs font-mono font-bold tracking-widest uppercase mb-4 shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#cba135] animate-pulse" />
             <span>{isAr ? "مرافق وتجهيزات متكاملة" : "CAMP FACILITIES & RETREATS"}</span>
           </div>
 

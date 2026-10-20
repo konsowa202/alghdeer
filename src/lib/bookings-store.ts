@@ -5,12 +5,12 @@ import { randomUUID } from "crypto";
 import type { BookingRecord, BookingStatus, BookingSource } from "./bookings-types";
 import { MIN_LEAD_MS } from "./bookings-types";
 
-// Persistent Cloud Database URL (Rest JSON Bin shared across all serverless invocations and devices)
-const CLOUD_DB_URL = "https://extendsclass.com/api/json-storage/bin/daddacf";
+// Persistent Cloud Database URL (CORS-enabled REST JSON Bin shared across all serverless invocations and devices)
+export const CLOUD_DB_URL = "https://extendsclass.com/api/json-storage/bin/daddacf";
 
-// Writable file path in OS temp directory (works on Vercel Serverless / Lambda)
+// Writable file path in OS temp directory
 const TMP_DATA_FILE = path.join(os.tmpdir(), "alghdeer-bookings.json");
-// Local development path
+// Local project data directory
 const LOCAL_DATA_DIR = path.join(process.cwd(), "data");
 const LOCAL_DATA_FILE = path.join(LOCAL_DATA_DIR, "bookings.json");
 
@@ -34,29 +34,45 @@ function enqueue<T>(fn: () => Promise<T>): Promise<T> {
   return run;
 }
 
-function isBookingRecord(x: unknown): x is BookingRecord {
-  if (!x || typeof x !== "object") return false;
-  const o = x as Record<string, unknown>;
-  return (
-    typeof o.id === "string" &&
-    typeof o.name === "string" &&
-    typeof o.company === "string" &&
-    typeof o.notes === "string" &&
-    typeof o.groupSize === "number" &&
-    typeof o.preferredAt === "string" &&
-    typeof o.status === "string" &&
-    typeof o.source === "string" &&
-    typeof o.createdAt === "string"
-  );
+export function normalizeRecord(o: any): BookingRecord {
+  if (!o || typeof o !== "object") {
+    return {
+      id: "ALG-" + randomUUID().substring(0, 6).toUpperCase(),
+      name: "ضيف",
+      phone: "—",
+      email: "",
+      company: "—",
+      groupSize: 10,
+      notes: "",
+      preferredAt: new Date().toISOString(),
+      status: "pending",
+      source: "website",
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  return {
+    id: String(o.id || "ALG-" + randomUUID().substring(0, 6).toUpperCase()),
+    name: String(o.name || "ضيف"),
+    phone: String(o.phone || "—"),
+    email: String(o.email || ""),
+    company: String(o.company || "—"),
+    groupSize: Number.isFinite(Number(o.groupSize)) && Number(o.groupSize) >= 1 ? Number(o.groupSize) : 10,
+    notes: String(o.notes || ""),
+    preferredAt: String(o.preferredAt || new Date().toISOString()),
+    status: (o.status || "pending") as BookingStatus,
+    source: (o.source || "website") as BookingSource,
+    createdAt: String(o.createdAt || new Date().toISOString()),
+  };
 }
 
 /**
  * Fetch latest bookings from persistent cloud database with timeout protection
  */
-async function fetchFromCloudDB(): Promise<BookingRecord[] | null> {
+export async function fetchFromCloudDB(): Promise<BookingRecord[] | null> {
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 3500);
+    const timer = setTimeout(() => controller.abort(), 4000);
 
     const res = await fetch(CLOUD_DB_URL, {
       method: "GET",
@@ -69,7 +85,7 @@ async function fetchFromCloudDB(): Promise<BookingRecord[] | null> {
     if (!res.ok) return null;
     const json = await res.json();
     if (json && Array.isArray(json.bookings)) {
-      return json.bookings.filter(isBookingRecord);
+      return json.bookings.map(normalizeRecord);
     }
   } catch (err) {
     // Cloud fetch timeout or network error - fallback to disk/memory
@@ -80,10 +96,10 @@ async function fetchFromCloudDB(): Promise<BookingRecord[] | null> {
 /**
  * Save bookings to persistent cloud database
  */
-async function saveToCloudDB(rows: BookingRecord[]): Promise<void> {
+export async function saveToCloudDB(rows: BookingRecord[]): Promise<void> {
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4000);
+    const timer = setTimeout(() => controller.abort(), 5000);
 
     await fetch(CLOUD_DB_URL, {
       method: "PUT",
@@ -105,7 +121,7 @@ async function readFromDisk(): Promise<BookingRecord[]> {
     const raw = await fs.readFile(TMP_DATA_FILE, "utf8");
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.filter(isBookingRecord);
+      return parsed.map(normalizeRecord);
     }
   } catch {}
 
@@ -114,7 +130,7 @@ async function readFromDisk(): Promise<BookingRecord[]> {
     const raw = await fs.readFile(LOCAL_DATA_FILE, "utf8");
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.filter(isBookingRecord);
+      return parsed.map(normalizeRecord);
     }
   } catch {}
 
@@ -124,12 +140,12 @@ async function readFromDisk(): Promise<BookingRecord[]> {
 async function writeToDisk(rows: BookingRecord[]): Promise<void> {
   const jsonStr = JSON.stringify(rows, null, 2);
 
-  // 1. Write to OS temp directory (always writable on Vercel / Linux / Windows)
+  // 1. Write to OS temp directory
   try {
     await fs.writeFile(TMP_DATA_FILE, jsonStr, "utf8");
   } catch {}
 
-  // 2. Try writing to local project data directory (works in local dev, ignored if Vercel is read-only)
+  // 2. Write to local project data directory
   try {
     await fs.mkdir(LOCAL_DATA_DIR, { recursive: true });
     await fs.writeFile(LOCAL_DATA_FILE, jsonStr, "utf8");
@@ -159,6 +175,7 @@ export async function listBookings(): Promise<BookingRecord[]> {
 }
 
 export type NewBookingInput = {
+  id?: string;
   name: string;
   phone?: string;
   email?: string;
@@ -174,7 +191,7 @@ export async function appendBooking(input: NewBookingInput): Promise<BookingReco
   return enqueue(async () => {
     const rows = await listBookings();
     const row: BookingRecord = {
-      id: "ALG-" + randomUUID().substring(0, 6).toUpperCase(),
+      id: input.id ? String(input.id).trim() : "ALG-" + randomUUID().substring(0, 6).toUpperCase(),
       name: input.name || "ضيف",
       phone: input.phone || "—",
       email: input.email || "",
@@ -187,7 +204,14 @@ export async function appendBooking(input: NewBookingInput): Promise<BookingReco
       createdAt: new Date().toISOString(),
     };
 
-    rows.unshift(row);
+    // Prepend or update if ID exists
+    const existingIdx = rows.findIndex((r) => r.id === row.id);
+    if (existingIdx !== -1) {
+      rows[existingIdx] = row;
+    } else {
+      rows.unshift(row);
+    }
+
     globalThis.__alghdeer_bookings_memory__ = rows;
 
     // Parallel persist to disk and cloud database
@@ -243,6 +267,7 @@ export function isPreferredAtValidForPublic(preferredAtIso: string): boolean {
 }
 
 export function sanitizeBookingFields(body: Record<string, unknown>) {
+  const id = body.id ? String(body.id).trim().slice(0, 40) : undefined;
   const name = String(body.name ?? "").trim().slice(0, 120);
   const phone = String(body.phone ?? "").trim().slice(0, 40);
   const email = String(body.email ?? "").trim().slice(0, 160);
@@ -255,5 +280,5 @@ export function sanitizeBookingFields(body: Record<string, unknown>) {
       ? Math.min(Math.floor(rawSize), 5000)
       : 10;
 
-  return { name, phone, email, company, notes, preferredAtRaw, groupSizeClean };
+  return { id, name, phone, email, company, notes, preferredAtRaw, groupSizeClean };
 }
