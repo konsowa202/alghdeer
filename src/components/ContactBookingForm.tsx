@@ -6,18 +6,15 @@ import { minPreferredDatetimeLocal } from "@/lib/format-datetime-local";
 import { MIN_LEAD_MS } from "@/lib/bookings-types";
 import {
   downloadIcsFile,
-  getGoogleCalendarUrl,
   downloadAppleWalletPass,
   openGoogleWalletPass,
 } from "@/lib/calendar-wallet";
 import {
   CheckCircle2,
+  Star,
   MessageCircle,
-  ExternalLink,
   RotateCcw,
   Calendar,
-  Download,
-  CalendarCheck,
 } from "lucide-react";
 
 interface IssuedTicket {
@@ -73,7 +70,6 @@ export default function ContactBookingForm() {
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [calendarDownloaded, setCalendarDownloaded] = useState(false);
   const [issuedTicket, setIssuedTicket] = useState<IssuedTicket | null>(null);
 
   const minLocal = useMemo(() => minPreferredDatetimeLocal(MIN_LEAD_MS), []);
@@ -103,19 +99,8 @@ export default function ContactBookingForm() {
       ? new Date(preferredLocal).toISOString()
       : new Date().toISOString();
 
-    const ticketObj: IssuedTicket = {
-      id: generatedSerial,
-      name: name.trim(),
-      phone: phone.trim() || "—",
-      company: company.trim() || "—",
-      groupSize: guestCount,
-      preferredAt: formattedDate,
-      rawDate: rawIsoDate,
-      notes: notes.trim(),
-    };
-
     try {
-      // 1. Post to API to store in database/dashboard with EXACT generatedSerial
+      // 1. Post to API to store in database/dashboard
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -130,485 +115,401 @@ export default function ContactBookingForm() {
         }),
       }).catch(() => null);
 
+      let finalId = generatedSerial;
       if (res && res.ok) {
         const data = await res.json().catch(() => ({}));
-        if (data.id) ticketObj.id = String(data.id);
+        if (data.id) {
+          finalId = String(data.id);
+        }
       }
 
-      setIssuedTicket(ticketObj);
-
-      // Save to localStorage backup
+      // 2. Save directly to browser localStorage as an instant fail-safe
       if (typeof window !== "undefined") {
         try {
-          const localArr = JSON.parse(localStorage.getItem("alghdeer_local_bookings") || "[]");
-          localArr.unshift({
-            id: ticketObj.id,
-            name: ticketObj.name,
-            phone: ticketObj.phone,
-            company: ticketObj.company,
-            groupSize: ticketObj.groupSize,
-            notes: ticketObj.notes,
+          const localKey = "alghdeer_local_bookings";
+          const existing = JSON.parse(localStorage.getItem(localKey) || "[]");
+          const newRecord = {
+            id: finalId,
+            name: name.trim(),
+            phone: phone.trim() || "—",
+            company: company.trim() || "—",
+            groupSize: guestCount,
             preferredAt: rawIsoDate,
+            notes: notes.trim(),
             status: "pending",
             source: "website",
             createdAt: new Date().toISOString(),
-          });
-          localStorage.setItem("alghdeer_local_bookings", JSON.stringify(localArr.slice(0, 50)));
+          };
+          const updated = [newRecord, ...existing.filter((x: any) => x?.id !== finalId)];
+          localStorage.setItem(localKey, JSON.stringify(updated.slice(0, 50)));
         } catch {}
       }
 
-      // Auto-download .ics calendar invite
-      try {
-        downloadIcsFile(ticketObj);
-        setCalendarDownloaded(true);
-      } catch {}
+      setIssuedTicket({
+        id: finalId,
+        name: name.trim(),
+        phone: phone.trim() || "—",
+        company: company.trim() || "—",
+        groupSize: guestCount,
+        preferredAt: formattedDate,
+        rawDate: rawIsoDate,
+        notes: notes.trim(),
+      });
     } finally {
       setLoading(false);
     }
   }
 
-  const ticketNumber = issuedTicket
-    ? issuedTicket.id.startsWith("ALG-")
-      ? `№ ${issuedTicket.id}`
-      : `№ ALG-${issuedTicket.id}`
-    : "№ ALG-2026";
-
   const directWaUrl = issuedTicket
     ? `https://wa.me/966544493991?text=${encodeURIComponent(
-        `مرحباً مخيمات الغدير 🏕️\nأرغب بتأكيد حجز تذكرتي برقم:\n${ticketNumber}\n• اسم الضيف: ${issuedTicket.name}\n${issuedTicket.phone !== "—" ? `• رقم الجوال: ${issuedTicket.phone}\n` : ""}${issuedTicket.company !== "—" ? `• المناسبة/الجهة: ${issuedTicket.company}\n` : ""}• عدد الضيوف: ${issuedTicket.groupSize} شخص\n• موعد الفعالية: ${issuedTicket.preferredAt}\n${issuedTicket.notes ? `• ملاحظات: ${issuedTicket.notes}\n` : ""}يرجى تأكيد الحجز وإرسال تفاصيل التجهيزات والموقع.`
+        `مرحباً مخيمات الغدير 🏕️\nأرغب بتأكيد حجز تذكرتي برقم:\n№ ${issuedTicket.id}\n• اسم الضيف: ${issuedTicket.name}\n${issuedTicket.phone !== "—" ? `• رقم الجوال: ${issuedTicket.phone}\n` : ""}${issuedTicket.company !== "—" ? `• المناسبة/الجهة: ${issuedTicket.company}\n` : ""}• عدد الضيوف: ${issuedTicket.groupSize} شخص\n• موعد الفعالية: ${issuedTicket.preferredAt}\n${issuedTicket.notes ? `• ملاحظات: ${issuedTicket.notes}\n` : ""}يرجى تأكيد الحجز وإرسال تفاصيل التجهيزات والموقع.`
       )}`
     : "https://wa.me/966544493991";
 
   return (
     <div className="relative w-full">
-      {/* Outer Luxury VIP Pass Container (Dark Obsidian & Gold) */}
-      <div className="relative bg-[#0c0d12] text-white rounded-3xl border border-[#cba135]/40 shadow-[0_25px_70px_rgba(0,0,0,0.85)] overflow-hidden">
-        {/* Ticket Perforation Cutout Notches */}
-        <span className="pointer-events-none absolute top-1/2 -left-4 -translate-y-1/2 w-8 h-8 rounded-full bg-black border border-[#cba135]/30 z-20" />
-        <span className="pointer-events-none absolute top-1/2 -right-4 -translate-y-1/2 w-8 h-8 rounded-full bg-black border border-[#cba135]/30 z-20" />
+      {/* Outer Ticket Container (Exact Beige Retro Aesthetic) */}
+      <div className="relative bg-[#f4ead2] text-[#1a1610] rounded-none shadow-[0_20px_60px_rgba(0,0,0,0.65)] overflow-hidden">
+        {/* 4 Corner Cutout Notches */}
+        <span className="pointer-events-none absolute -top-4 -left-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
+        <span className="pointer-events-none absolute -top-4 -right-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
+        <span className="pointer-events-none absolute -bottom-4 -left-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
+        <span className="pointer-events-none absolute -bottom-4 -right-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
 
         {issuedTicket ? (
           /* ============================================================ */
-          /* TICKET ISSUED SUCCESS VIEW: LUXURY VIP PASS                   */
+          /* TICKET ISSUED SUCCESS VIEW (AUTHENTIC RETRO TICKET PRESERVED) */
           /* ============================================================ */
-          <div className="p-6 sm:p-10 md:p-12 text-center m-2 sm:m-4 space-y-7 relative z-10">
-            <div className="flex justify-center text-[#cba135]">
-              <CheckCircle2 size={50} strokeWidth={1.75} />
-            </div>
-
-            <div>
-              <span className="inline-block px-3 py-1 bg-[#cba135]/15 border border-[#cba135]/40 text-[#fae5a5] text-xs font-mono font-bold tracking-widest uppercase mb-2 rounded-full">
-                {ticketNumber} • VIP INVITATION
-              </span>
-              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-wider text-white">
-                {isAr ? "تم إصدار تذكرة الحجز بنجاح" : "YOUR VIP TICKET IS ISSUED"}
-              </h3>
-              <p className="text-xs sm:text-sm text-white/60 mt-1 max-w-md mx-auto">
-                {isAr
-                  ? "احفظ التذكرة في محفظتك الإلكترونية وتقويمك أولاً، ثم أكد الحجز عبر الواتساب"
-                  : "Save your ticket to Apple Wallet, Google Wallet or Calendar, then confirm via WhatsApp."}
-              </p>
-            </div>
-
-            {/* The Authentic Digital VIP Pass Card */}
-            <div className="max-w-lg mx-auto bg-white/[0.03] border border-white/15 p-6 text-start space-y-4 rounded-2xl shadow-xl relative overflow-hidden backdrop-blur-xl">
-              <div className="flex justify-between items-center border-b border-white/10 pb-3">
-                <div>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#cba135] block">
-                    ALGHDEER WINTER CAMPS
-                  </span>
-                  <span className="text-xs text-white/60 font-medium">
-                    {isAr ? "تذكرة دخول وحجز VIP" : "VIP Event Entry Pass"}
+          <div className="grid grid-cols-1 md:grid-cols-12">
+            {/* Main Ticket Area (8 cols) */}
+            <div className="md:col-span-8 p-5 sm:p-7 md:p-8 flex flex-col justify-between">
+              <div className="border-2 border-[#1a1610]/30 p-4 sm:p-6 relative">
+                {/* Header Bar */}
+                <div className="flex items-center justify-between border-b-2 border-[#1a1610]/20 pb-3 mb-4">
+                  <div className="flex items-center gap-1.5 text-[#b5382a]">
+                    <Star size={14} className="fill-current" />
+                    <Star size={16} className="fill-[#1a1610] text-[#1a1610]" />
+                    <Star size={14} className="fill-current" />
+                  </div>
+                  <div className="text-center">
+                    <span className="block text-[10px] tracking-[0.3em] uppercase font-bold text-[#1a1610]/60">
+                      VIP PASS CONFIRMED • تذكرة معتمدة
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-black tracking-[0.12em] uppercase text-[#1a1610] leading-tight">
+                      {isAr ? "تم إصدار تذكرتك بنجاح" : "ALGHDEER VIP TICKET"}
+                    </h3>
+                  </div>
+                  <span dir="ltr" className="text-xs font-mono font-black text-[#b5382a]">
+                    № {issuedTicket.id}
                   </span>
                 </div>
-                <span className="font-mono font-black text-lg text-[#ffd700] tracking-wider">
-                  {ticketNumber}
-                </span>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4 text-xs font-sans">
-                <div>
-                  <span className="text-white/40 block mb-1">{isAr ? "اسم الضيف:" : "Guest Name:"}</span>
-                  <span className="font-bold text-white text-sm">{issuedTicket.name}</span>
-                </div>
-                {issuedTicket.phone !== "—" && (
-                  <div>
-                    <span className="text-white/40 block mb-1">{isAr ? "رقم الجوال:" : "Phone:"}</span>
-                    <span dir="ltr" className="font-mono font-bold text-white text-sm">{issuedTicket.phone}</span>
+                {/* Status Callout Banner */}
+                <div className="mb-4 p-2.5 bg-[#1a1610]/[0.06] border border-[#1a1610]/15 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={18} className="text-emerald-700 shrink-0" />
+                    <span className="text-xs font-bold text-[#1a1610]">
+                      {isAr ? "تم تسجيل الحجز في قاعدة بيانات المخيم" : "Saved to Camp Database & Dashboard"}
+                    </span>
                   </div>
-                )}
-                {issuedTicket.company !== "—" && (
-                  <div>
-                    <span className="text-white/40 block mb-1">{isAr ? "الجهة / المناسبة:" : "Occasion:"}</span>
-                    <span className="font-bold text-white">{issuedTicket.company}</span>
+                  <span className="text-[10px] font-mono uppercase font-bold px-2 py-0.5 bg-[#b5382a] text-[#f4ead2]">
+                    CONFIRMED
+                  </span>
+                </div>
+
+                {/* Details Table */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs mb-4">
+                  <div className="border-b border-[#1a1610]/15 pb-1.5">
+                    <span className="text-[10px] font-bold text-[#1a1610]/60 block">{isAr ? "اسم الضيف:" : "Guest Name:"}</span>
+                    <span className="font-bold text-sm text-[#1a1610]">{issuedTicket.name}</span>
                   </div>
-                )}
+                  <div className="border-b border-[#1a1610]/15 pb-1.5">
+                    <span className="text-[10px] font-bold text-[#1a1610]/60 block">{isAr ? "الجهة / المناسبة:" : "Occasion:"}</span>
+                    <span className="font-bold text-sm text-[#1a1610]">{issuedTicket.company !== "—" ? issuedTicket.company : (isAr ? "حجز مناسبة خاصة" : "Private Booking")}</span>
+                  </div>
+                  <div className="border-b border-[#1a1610]/15 pb-1.5">
+                    <span className="text-[10px] font-bold text-[#1a1610]/60 block">{isAr ? "عدد الضيوف:" : "Guests:"}</span>
+                    <span className="font-bold text-sm text-[#1a1610]">{issuedTicket.groupSize} {isAr ? "شخص" : "Guests"}</span>
+                  </div>
+                  <div className="border-b border-[#1a1610]/15 pb-1.5">
+                    <span className="text-[10px] font-bold text-[#1a1610]/60 block">{isAr ? "موعد الفعالية:" : "Date & Time:"}</span>
+                    <span className="font-bold text-sm text-[#1a1610]">{issuedTicket.preferredAt}</span>
+                  </div>
+                  {issuedTicket.notes ? (
+                    <div className="sm:col-span-2 border-b border-[#1a1610]/15 pb-1.5">
+                      <span className="text-[10px] font-bold text-[#1a1610]/60 block">{isAr ? "ملاحظات وتجهيزات خاصة:" : "Special Notes:"}</span>
+                      <span className="font-medium text-xs text-[#1a1610]">{issuedTicket.notes}</span>
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Wallet & Calendar Action Strip */}
+                <div className="pt-3 border-t border-[#1a1610]/20">
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#1a1610]/70 mb-2">
+                    {isAr ? "حفظ التذكرة في المحفظة والتقويم:" : "Save to Wallet & Calendar:"}
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {/* Apple Wallet */}
+                    <button
+                      type="button"
+                      onClick={() => downloadAppleWalletPass(issuedTicket)}
+                      className="flex items-center justify-center gap-2 py-2.5 px-3 bg-black hover:bg-zinc-800 text-white rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
+                    >
+                      <AppleIcon className="w-3.5 h-3.5 fill-white" />
+                      <span>{isAr ? "محفظة Apple" : "Apple Wallet"}</span>
+                    </button>
+
+                    {/* Google Wallet */}
+                    <button
+                      type="button"
+                      onClick={() => openGoogleWalletPass(issuedTicket)}
+                      className="flex items-center justify-center gap-2 py-2.5 px-3 bg-white hover:bg-zinc-100 text-[#1a1610] border border-[#1a1610]/25 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
+                    >
+                      <GoogleWalletIcon className="w-3.5 h-3.5" />
+                      <span>{isAr ? "Google Wallet" : "Google Wallet"}</span>
+                    </button>
+
+                    {/* Calendar */}
+                    <button
+                      type="button"
+                      onClick={() => downloadIcsFile(issuedTicket)}
+                      className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#1a1610]/10 hover:bg-[#1a1610]/15 text-[#1a1610] border border-[#1a1610]/25 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
+                    >
+                      <Calendar size={14} />
+                      <span>{isAr ? "إضافة للتقويم" : "Add to Calendar"}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Perforated Tear-Off Stub (4 cols) */}
+            <div className="md:col-span-4 relative bg-[#b5382a] text-[#f4ead2] p-5 sm:p-7 flex flex-col justify-between border-t-2 md:border-t-0 md:border-s-2 border-dashed border-[#0B0C10]/40">
+              {/* Perforation Semi-Circle Notches */}
+              <span className="hidden md:block pointer-events-none absolute -top-4 -start-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
+              <span className="hidden md:block pointer-events-none absolute -bottom-4 -start-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
+
+              <div className="text-center border-2 border-[#f4ead2]/35 p-4 flex flex-col justify-between h-full space-y-4">
                 <div>
-                  <span className="text-white/40 block mb-1">{isAr ? "عدد الضيوف:" : "Guests:"}</span>
-                  <span className="font-bold text-white">{issuedTicket.groupSize} {isAr ? "شخص" : "guests"}</span>
+                  <span className="text-[10px] tracking-[0.28em] uppercase font-bold text-[#f4ead2]/80 block mb-1">
+                    ADMIT VIP PASS
+                  </span>
+                  <img
+                    src="/logo-white.png"
+                    alt="ALGHDEER camp"
+                    className="h-5 w-auto object-contain mx-auto mb-2"
+                  />
+                  <div className="my-2 py-2 border-y border-[#f4ead2]/25 text-xs space-y-1">
+                    <p className="font-bold truncate">{issuedTicket.name}</p>
+                    <p className="text-[11px] text-[#f4ead2]/80">
+                      {issuedTicket.groupSize} {isAr ? "ضيوف" : "Guests"}
+                    </p>
+                    <p className="font-mono text-xs font-bold text-amber-200">
+                      № {issuedTicket.id}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="border-t border-white/10 pt-3">
-                <span className="text-white/40 text-xs block mb-1">{isAr ? "موعد الفعالية:" : "Event Date:"}</span>
-                <span className="font-bold text-sm text-[#fae5a5]">{issuedTicket.preferredAt}</span>
-              </div>
-
-              {/* Barcode representation */}
-              <div className="border-t border-white/10 pt-4 flex flex-col items-center">
-                <div className="flex items-end gap-[2px] h-9 bg-white/10 p-1.5 rounded">
-                  {[3, 1, 4, 2, 5, 2, 1, 4, 3, 2, 5, 1, 3, 4, 2, 1, 5, 3, 2, 4, 1, 3, 2, 4, 2, 5, 1, 3].map(
-                    (h, i) => (
-                      <span
-                        key={i}
-                        className="bg-white/80"
-                        style={{
-                          width: i % 3 === 0 ? "2.5px" : "1.5px",
-                          height: `${(h / 5) * 100}%`,
-                        }}
-                      />
-                    )
-                  )}
-                </div>
-                <span className="font-mono text-[9px] tracking-widest text-white/40 mt-1 uppercase">
-                  {issuedTicket.id} • JEDDAH VIP
-                </span>
-              </div>
-            </div>
-
-            {/* ============================================================ */}
-            {/* WALLET & CALENDAR ACTION BAR (SEAMLESS LUXURY DESIGN)         */}
-            {/* ============================================================ */}
-            <div className="max-w-lg mx-auto space-y-3">
-              <span className="text-[11px] font-mono uppercase tracking-widest text-[#cba135]/80 block font-bold">
-                {isAr ? "✦ إضافة التذكرة إلى محفظتك والتقويم ✦" : "✦ ADD TICKET TO WALLET & CALENDAR ✦"}
-              </span>
-
-              {/* Apple Wallet & Google Wallet Badges */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* 1. Apple Wallet */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    downloadAppleWalletPass(issuedTicket);
-                    setCalendarDownloaded(true);
+                {/* Barcode Graphic */}
+                <div
+                  aria-hidden
+                  className="my-2 h-9 w-full opacity-90"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(90deg, #f4ead2 0px, #f4ead2 2px, transparent 2px, transparent 5px, #f4ead2 5px, #f4ead2 6px, transparent 6px, transparent 9px, #f4ead2 9px, #f4ead2 13px, transparent 13px, transparent 15px)",
                   }}
-                  className="flex items-center justify-center gap-2.5 py-3.5 px-5 bg-black hover:bg-neutral-900 border border-white/20 rounded-2xl font-bold text-xs text-white shadow-lg transition-all active:scale-95"
-                >
-                  <AppleIcon className="w-4 h-4 fill-white" />
-                  <span>{isAr ? "إضافة إلى Apple Wallet" : "Add to Apple Wallet"}</span>
-                </button>
+                />
 
-                {/* 2. Google Wallet */}
-                <button
-                  type="button"
-                  onClick={() => openGoogleWalletPass(issuedTicket)}
-                  className="flex items-center justify-center gap-2.5 py-3.5 px-5 bg-neutral-900 hover:bg-neutral-800 border border-white/20 rounded-2xl font-bold text-xs text-white shadow-lg transition-all active:scale-95"
-                >
-                  <GoogleWalletIcon className="w-4 h-4" />
-                  <span>{isAr ? "حفظ في Google Wallet" : "Save to Google Wallet"}</span>
-                </button>
-              </div>
+                {/* Confirm via WhatsApp CTA */}
+                <div className="space-y-2 pt-1">
+                  <a
+                    href={directWaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3.5 px-4 rounded-full bg-[#25D366] hover:bg-[#1faa53] text-black font-black text-xs tracking-wider uppercase transition-all duration-300 shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <MessageCircle size={18} className="fill-black text-transparent shrink-0" />
+                    <span>{isAr ? "فتح محادثة الواتساب وتأكيد الحجز" : "Confirm via WhatsApp"}</span>
+                  </a>
 
-              {/* 3. Calendar Links */}
-              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    downloadIcsFile(issuedTicket);
-                    setCalendarDownloaded(true);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.05] hover:bg-white/10 text-white/80 text-[11px] font-bold rounded-lg border border-white/10 transition-all"
-                >
-                  <Download size={13} />
-                  <span>{isAr ? "تنزيل ملف التقويم (.ics)" : "Download iCal (.ics)"}</span>
-                </button>
-
-                <a
-                  href={getGoogleCalendarUrl(issuedTicket)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.05] hover:bg-white/10 text-white/80 text-[11px] font-bold rounded-lg border border-white/10 transition-all"
-                >
-                  <Calendar size={13} />
-                  <span>{isAr ? "تقويم Google Calendar" : "Google Calendar"}</span>
-                </a>
-              </div>
-
-              {calendarDownloaded && (
-                <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 py-1.5 px-3 rounded-lg border border-emerald-500/20">
-                  <CalendarCheck size={14} />
-                  <span>{isAr ? "تم إرسال موعد التذكرة إلى جهازك بنجاح!" : "Event saved to your device!"}</span>
+                  <button
+                    type="button"
+                    onClick={() => setIssuedTicket(null)}
+                    className="inline-flex items-center justify-center gap-1.5 w-full py-2 text-[11px] text-[#f4ead2]/80 hover:text-white underline font-bold tracking-wider cursor-pointer"
+                  >
+                    <RotateCcw size={12} />
+                    <span>{isAr ? "إصدار تذكرة إضافية" : "Issue Another Ticket"}</span>
+                  </button>
                 </div>
-              )}
-            </div>
-
-            {/* ============================================================ */}
-            {/* FINAL STEP: WHATSAPP CONFIRMATION                            */}
-            {/* ============================================================ */}
-            <div className="max-w-md mx-auto space-y-3 pt-4 border-t border-white/10">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-white/50 block">
-                {isAr ? "✦ الخطوة الأخيرة: تثبيت وتأكيد الحجز ✦" : "✦ FINAL STEP: CONFIRM BOOKING ✦"}
-              </span>
-
-              <a
-                href={directWaUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2.5 w-full py-4 px-6 bg-[#25D366] hover:bg-[#1faa53] text-black font-black text-sm tracking-wider uppercase rounded-full shadow-2xl transition-all active:scale-98"
-              >
-                <MessageCircle size={22} className="fill-black text-transparent" />
-                <span>{isAr ? "فتح محادثة الواتساب وتأكيد الحجز الآن" : "Confirm via WhatsApp Now"}</span>
-              </a>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIssuedTicket(null);
-                  setCalendarDownloaded(false);
-                }}
-                className="inline-flex items-center justify-center gap-1.5 w-full py-2 text-xs text-white/50 hover:text-white underline font-bold tracking-wider"
-              >
-                <RotateCcw size={13} />
-                <span>{isAr ? "إصدار تذكرة إضافية" : "Issue Another Ticket"}</span>
-              </button>
-            </div>
-
-            {/* Staff Dashboard Shortcut */}
-            <div className="pt-3 border-t border-white/[0.08] text-[11px] text-white/40">
-              <span>{isAr ? "إدارة المخيم: تظهر جميع التذاكر فورياً في " : "Staff: All tickets appear in "}</span>
-              <a
-                href="/dashboard"
-                className="font-bold text-[#cba135] hover:underline inline-flex items-center gap-1"
-              >
-                <span>{isAr ? "لوحة تحكم الحجوزات" : "Staff Dashboard"}</span>
-                <ExternalLink size={11} />
-              </a>
+              </div>
             </div>
           </div>
         ) : (
           /* ============================================================ */
-          /* TICKET INPUT FORM: LUXURY OBSIDIAN & GOLD PASS               */
+          /* TICKET INPUT FORM                                            */
           /* ============================================================ */
           <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-12">
-            {/* Main Form Area (8 cols) */}
-            <div className="md:col-span-8 p-6 sm:p-8 md:p-10">
-              <div className="border border-white/10 rounded-2xl p-5 sm:p-7 relative bg-white/[0.02]">
-                {/* Header Bar */}
-                <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-xs tracking-widest uppercase bg-[#cba135] text-black px-2.5 py-0.5 rounded">
-                      PASS № 2026
-                    </span>
-                    <span className="text-[10px] font-mono tracking-wider uppercase text-white/50 hidden sm:inline">
-                      • JEDDAH, BURAYMAN
-                    </span>
+            {/* Main Ticket Area (8 cols) */}
+            <div className="md:col-span-8 p-5 sm:p-7 md:p-8">
+              <div className="border-2 border-[#1a1610]/30 p-4 sm:p-6 relative">
+                {/* Ticket Header Bar */}
+                <div className="flex items-center justify-between border-b-2 border-[#1a1610]/20 pb-3 mb-5">
+                  <div className="flex items-center gap-1.5 text-[#b5382a]">
+                    <Star size={14} className="fill-current" />
+                    <Star size={16} className="fill-[#1a1610] text-[#1a1610]" />
+                    <Star size={14} className="fill-current" />
                   </div>
-                  <span className="text-[11px] font-mono font-bold text-[#cba135] tracking-wider uppercase">
-                    VIP INVITATION
+                  <div className="text-center">
+                    <span className="block text-[10px] tracking-[0.3em] uppercase font-bold text-[#1a1610]/60">
+                      ADMIT ONE EVENT • تذكرة حجز
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-black tracking-[0.12em] uppercase text-[#1a1610] leading-tight">
+                      {isAr ? "تذكرة مخيم الغدير" : "ALGHDEER VIP TICKET"}
+                    </h3>
+                  </div>
+                  <span dir="ltr" className="text-[11px] font-mono font-bold text-[#1a1610]/60">
+                    № 2026
                   </span>
                 </div>
 
-                {/* Event Title */}
-                <div className="mb-6">
-                  <span className="text-[10px] font-mono tracking-widest uppercase text-[#cba135] block mb-1">
-                    EVENT ACCESS • تصريح حضور فعالية
-                  </span>
-                  <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white leading-none">
-                    {isAr ? "مخيمات الغدير الشتوية" : "ALGHDEER WINTER CAMPS"}
-                  </h3>
-                  <p className="text-xs text-white/60 mt-1 font-sans">
-                    {isAr
-                      ? "أمسيات شتوية فاخرة • طابع بوهيمي عصري • بريمان، جدة"
-                      : "Luxury Winter Nights • Modern Bohemian • Burayman, Jeddah"}
-                  </p>
-                </div>
-
-                {/* Form Inputs */}
-                <div className="space-y-4">
-                  {/* Row 1: Name & Phone */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-mono uppercase tracking-wider text-white/70 mb-1.5 font-bold">
-                        {isAr ? "اسم الضيف / العميل *" : "GUEST NAME *"}
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder={isAr ? "الاسم الكريم" : "Your full name"}
-                        className="w-full bg-white/[0.04] border border-white/15 rounded-xl focus:border-[#cba135] focus:bg-white/[0.07] px-3.5 py-2.5 text-sm text-white placeholder-white/30 outline-none font-sans font-medium transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-mono uppercase tracking-wider text-white/70 mb-1.5 font-bold">
-                        {isAr ? "رقم الجوال (واتساب) *" : "PHONE (WHATSAPP) *"}
-                      </label>
-                      <input
-                        type="tel"
-                        required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="05xxxxxxxx"
-                        dir="ltr"
-                        className="w-full bg-white/[0.04] border border-white/15 rounded-xl focus:border-[#cba135] focus:bg-white/[0.07] px-3.5 py-2.5 text-sm text-white placeholder-white/30 outline-none font-mono font-medium transition-all text-right"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Row 2: Company/Occasion & Guests */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-mono uppercase tracking-wider text-white/70 mb-1.5 font-bold">
-                        {isAr ? "الجهة / نوع المناسبة" : "COMPANY / OCCASION"}
-                      </label>
-                      <input
-                        type="text"
-                        value={company}
-                        onChange={(e) => setCompany(e.target.value)}
-                        placeholder={isAr ? "عائلي / شركة / مناسبة خاصة" : "Family / Corporate / Private"}
-                        className="w-full bg-white/[0.04] border border-white/15 rounded-xl focus:border-[#cba135] focus:bg-white/[0.07] px-3.5 py-2.5 text-sm text-white placeholder-white/30 outline-none font-sans font-medium transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-mono uppercase tracking-wider text-white/70 mb-1.5 font-bold">
-                        {isAr ? "عدد الضيوف المتوقع *" : "EXPECTED GUESTS *"}
-                      </label>
-                      <select
-                        value={groupSize}
-                        onChange={(e) => setGroupSize(e.target.value)}
-                        className="w-full bg-[#14151b] border border-white/15 rounded-xl focus:border-[#cba135] px-3.5 py-2.5 text-sm text-white outline-none font-sans font-medium transition-all"
-                      >
-                        <option value="5">5 {isAr ? "أشخاص" : "guests"}</option>
-                        <option value="10">10 {isAr ? "أشخاص" : "guests"}</option>
-                        <option value="20">20 {isAr ? "شخص" : "guests"}</option>
-                        <option value="35">35 {isAr ? "شخص" : "guests"}</option>
-                        <option value="50">50 {isAr ? "شخص" : "guests"}</option>
-                        <option value="100">100+ {isAr ? "شخص (حفل كبير)" : "guests"}</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Row 3: Preferred Date & Time */}
+                {/* Form Inputs Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="block text-[11px] font-mono uppercase tracking-wider text-white/70 mb-1.5 font-bold">
-                      {isAr ? "الموعد المقترح للفعالية" : "PREFERRED DATE & TIME"}
+                    <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
+                      {isAr ? "اسم الضيف *" : "Guest Name *"}
                     </label>
                     <input
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder={isAr ? "الاسم الكريم" : "Your full name"}
+                      className="w-full bg-transparent border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] py-1.5 text-sm font-bold text-[#1a1610] placeholder:text-[#1a1610]/30 focus:outline-none transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
+                      {isAr ? "الجهة / المناسبة (اختياري)" : "Occasion / Company (Optional)"}
+                    </label>
+                    <input
+                      value={company}
+                      onChange={(e) => setCompany(e.target.value)}
+                      placeholder={isAr ? "عائلة / شركة / تخرج" : "Family / Company / Private"}
+                      className="w-full bg-transparent border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] py-1.5 text-sm font-bold text-[#1a1610] placeholder:text-[#1a1610]/30 focus:outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
+                      {isAr ? "رقم الجوال / الواتساب (اختياري)" : "Phone / WhatsApp (Optional)"}
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder={isAr ? "05xxxxxxxx" : "+966 5x xxx xxxx"}
+                      dir="ltr"
+                      className="w-full bg-transparent border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] py-1.5 text-sm font-bold text-[#1a1610] placeholder:text-[#1a1610]/30 focus:outline-none transition-colors text-right rtl:text-right ltr:text-left font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
+                      {t("groupSizeLabel")} *
+                    </label>
+                    <input
+                      required
+                      type="number"
+                      min={1}
+                      value={groupSize}
+                      onChange={(e) => setGroupSize(e.target.value)}
+                      placeholder="10"
+                      className="w-full bg-transparent border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] py-1.5 text-sm font-bold text-[#1a1610] placeholder:text-[#1a1610]/30 focus:outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
+                      {t("dateLabel")} *
+                    </label>
+                    <input
+                      required
                       type="datetime-local"
                       min={minLocal}
                       value={preferredLocal}
                       onChange={(e) => setPreferredLocal(e.target.value)}
-                      className="w-full bg-white/[0.04] border border-white/15 rounded-xl focus:border-[#cba135] focus:bg-white/[0.07] px-3.5 py-2.5 text-sm text-white outline-none font-sans font-medium transition-all"
+                      className="w-full bg-[#1a1610]/[0.05] border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] px-2 py-1 text-xs sm:text-sm font-bold text-[#1a1610] focus:outline-none transition-colors"
                     />
                   </div>
-
-                  {/* Row 4: Notes (Optional) */}
                   <div>
-                    <label className="block text-[11px] font-mono uppercase tracking-wider text-white/70 mb-1.5 font-bold">
-                      {isAr ? "ملاحظات خاصة (اختياري)" : "SPECIAL REQUESTS (OPTIONAL)"}
+                    <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
+                      {isAr ? "ملاحظات خاصة (اختياري)" : "Special Requests (Optional)"}
                     </label>
-                    <textarea
-                      rows={2}
+                    <input
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder={
-                        isAr
-                          ? "أي تفاصيل إضافية (بوفيه، قاعة زجاجية، ألعاب أطفال...)"
-                          : "Any specific arrangements (catering, VIP lounge...)"
-                      }
-                      className="w-full bg-white/[0.04] border border-white/15 rounded-xl focus:border-[#cba135] focus:bg-white/[0.07] px-3.5 py-2.5 text-sm text-white placeholder-white/30 outline-none font-sans font-medium transition-all resize-none"
+                      placeholder={isAr ? "أي تجهيزات أو طلبات خاصة..." : "Any special catering or setup notes..."}
+                      className="w-full bg-transparent border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] py-1.5 text-sm font-bold text-[#1a1610] placeholder:text-[#1a1610]/30 focus:outline-none transition-colors"
                     />
                   </div>
-
-                  {error && (
-                    <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-300 text-xs font-bold rounded-xl">
-                      {error}
-                    </div>
-                  )}
-
-                  {/* Submit Button */}
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full py-4 px-6 bg-gradient-to-r from-[#d4a73b] via-[#f3da8c] to-[#c1942a] text-[#0b0c10] font-black text-sm tracking-wider uppercase rounded-xl shadow-[0_10px_30px_rgba(203,161,53,0.3)] hover:shadow-[0_15px_40px_rgba(203,161,53,0.5)] transition-all flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50"
-                    >
-                      {loading ? (
-                        <span>{isAr ? "جاري إصدار التذكرة..." : "ISSUING PASS..."}</span>
-                      ) : (
-                        <>
-                          <span>{isAr ? "إصدار تذكرة الحجز" : "ISSUE VIP TICKET"}</span>
-                          <span className="font-mono text-base">→</span>
-                        </>
-                      )}
-                    </button>
-                    <p className="text-[10px] text-center text-white/50 mt-2 font-mono">
-                      {isAr
-                        ? "✦ سيتم تسجيل التذكرة وتجهيز خيارات Apple Wallet و Google Wallet والتقويم"
-                        : "✦ Ticket will be generated with Apple Wallet, Google Wallet & Calendar sync"}
-                    </p>
-                  </div>
                 </div>
+
+                {error ? (
+                  <p className="text-[#b5382a] text-xs font-bold mt-2" role="alert">
+                    {error}
+                  </p>
+                ) : null}
               </div>
             </div>
 
-            {/* Stub Area (4 cols) */}
-            <div className="md:col-span-4 border-t border-white/10 md:border-t-0 md:border-r border-dashed md:border-white/20 p-6 sm:p-8 flex flex-col justify-between bg-white/[0.01]">
-              <div>
-                <span className="text-[10px] font-mono tracking-widest uppercase text-[#cba135] block mb-1">
-                  STUB • قسيمة الدخول
-                </span>
-                <h4 className="font-mono font-bold text-sm uppercase text-white mb-4">
-                  ALGHDEER VIP
-                </h4>
-                <div className="space-y-2.5 text-xs font-mono text-white/70 border-b border-white/10 pb-4 mb-4">
-                  <div className="flex justify-between">
-                    <span className="text-white/40">ZONE:</span>
-                    <span className="font-bold text-white">BURAYMAN</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/40">GATE:</span>
-                    <span className="font-bold text-white">VIP MAIN</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/40">SEASON:</span>
-                    <span className="font-bold text-white">WINTER 2026</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/40">STATUS:</span>
-                    <span className="font-bold text-emerald-400">RESERVED</span>
-                  </div>
-                </div>
+            {/* Perforated Tear-Off Stub (4 cols) */}
+            <div className="md:col-span-4 relative bg-[#b5382a] text-[#f4ead2] p-5 sm:p-7 flex flex-col justify-between border-t-2 md:border-t-0 md:border-s-2 border-dashed border-[#0B0C10]/40">
+              {/* Perforation Semi-Circle Notches */}
+              <span className="hidden md:block pointer-events-none absolute -top-4 -start-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
+              <span className="hidden md:block pointer-events-none absolute -bottom-4 -start-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
 
-                {/* Simulated Barcode */}
-                <div className="my-4 text-center">
-                  <div className="flex justify-center items-end gap-[2px] h-12 bg-white/[0.03] p-2 border border-white/10 rounded-lg">
-                    {[3, 1, 4, 2, 5, 2, 1, 4, 3, 2, 5, 1, 3, 4, 2, 1, 5, 3, 2, 4, 1, 3, 2, 4, 2, 5, 1, 3].map(
-                      (h, i) => (
-                        <span
-                          key={i}
-                          className="bg-white/70"
-                          style={{
-                            width: i % 3 === 0 ? "2.5px" : "1.5px",
-                            height: `${(h / 5) * 100}%`,
-                          }}
-                        />
-                      )
-                    )}
-                  </div>
-                  <span className="font-mono text-[9px] tracking-widest text-white/40 uppercase mt-1.5 block">
-                    № ALG-2026-VIP-PASS
+              <div className="text-center border-2 border-[#f4ead2]/35 p-4 flex flex-col justify-between h-full">
+                <div>
+                  <span className="text-[10px] tracking-[0.28em] uppercase font-bold text-[#f4ead2]/80 block mb-1">
+                    ADMIT VIP
                   </span>
+                  <img
+                    src="/logo-white.png"
+                    alt="ALGHDEER camp"
+                    className="h-5 w-auto object-contain mx-auto mb-3"
+                  />
+                  <div className="my-3 py-2 border-y border-[#f4ead2]/25 text-xs space-y-1">
+                    <p className="font-bold truncate">
+                      {name ? name : isAr ? "اسم الضيف" : "Guest Name"}
+                    </p>
+                    <p className="text-[11px] text-[#f4ead2]/80 truncate">
+                      {company ? company : isAr ? "حجز مناسبة خاصة" : "Private Occasion"}
+                    </p>
+                    <p className="text-[11px] text-[#f4ead2]/80">
+                      {groupSize ? `${groupSize} ${isAr ? "ضيف" : "Guests"}` : isAr ? "10 ضيوف" : "10 Guests"}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Notice */}
-              <div className="text-[10px] text-white/45 font-mono leading-relaxed pt-3 border-t border-white/10">
-                {isAr
-                  ? "يُرجى إبراز هذه التذكرة أو رقم الحجز عند الوصول للبوابة."
-                  : "Please present this pass or serial upon arrival at the main gate."}
+                {/* Barcode Graphic */}
+                <div
+                  aria-hidden
+                  className="my-3 h-9 w-full opacity-85"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(90deg, #f4ead2 0px, #f4ead2 2px, transparent 2px, transparent 5px, #f4ead2 5px, #f4ead2 6px, transparent 6px, transparent 9px, #f4ead2 9px, #f4ead2 13px, transparent 13px, transparent 15px)",
+                  }}
+                />
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3.5 rounded-full bg-[#1a1610] hover:bg-black text-[#f4ead2] font-black text-xs tracking-[0.2em] uppercase transition-all duration-300 disabled:opacity-50 shadow-lg border border-[#f4ead2]/25 cursor-pointer"
+                >
+                  {loading ? (isAr ? "جاري إصدار التذكرة..." : "Issuing...") : (isAr ? "إصدار تذكرة الحجز" : "Issue Ticket Now")}
+                </button>
               </div>
             </div>
           </form>

@@ -6,7 +6,6 @@ import Events from "@/components/Events";
 import About from "@/components/About";
 import Experiences from "@/components/Experiences";
 import Services from "@/components/Services";
-import Stats from "@/components/Stats";
 import Facilities from "@/components/Facilities";
 import FullImage from "@/components/FullImage";
 import Philosophy from "@/components/Philosophy";
@@ -33,9 +32,7 @@ export default function Home() {
       <Services />
       {/* 7. Full Image Parallax */}
       <FullImage />
-      {/* 8. Stats (white) */}
-      <Stats />
-      {/* 9. Facilities (dark) */}
+      {/* 8. Facilities (dark) */}
       <Facilities />
       {/* 10. Philosophy (white) */}
       <Philosophy />
