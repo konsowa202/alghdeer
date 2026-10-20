@@ -20,14 +20,20 @@ export default function StaffLoginPage() {
         body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
         setError(
-          res.status === 401
-            ? "بيانات الدخول غير صحيحة."
-            : "تعذر تسجيل الدخول. حاول مرة أخرى."
+          data.error ||
+            (res.status === 401
+              ? "بيانات الدخول غير صحيحة."
+              : "تعذر تسجيل الدخول. حاول مرة أخرى.")
         );
         return;
       }
       window.location.href = "/dashboard";
+    } catch {
+      setError("تعذر الاتصال بالخادم. تحقق من الإنترنت وحاول مجدداً.");
     } finally {
       setLoading(false);
     }

@@ -22,6 +22,7 @@ interface IssuedTicket {
   id: string;
   name: string;
   phone: string;
+  email: string;
   company: string;
   groupSize: number;
   preferredAt: string;
@@ -34,10 +35,12 @@ export default function ContactBookingForm() {
   const isAr = lang === "ar";
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [groupSize, setGroupSize] = useState("10");
   const [preferredLocal, setPreferredLocal] = useState("");
   const [notes, setNotes] = useState("");
+  const [website, setWebsite] = useState(""); // honeypot — must stay empty
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [issuedTicket, setIssuedTicket] = useState<IssuedTicket | null>(null);
@@ -91,13 +94,28 @@ export default function ContactBookingForm() {
         body: JSON.stringify({
           id: generatedSerial,
           name: name.trim(),
-          phone: phone.trim() || "—",
-          company: company.trim() || "—",
+          phone: phone.trim(),
+          email: email.trim(),
+          company: company.trim(),
           groupSize: guestCount,
           notes: notes.trim(),
           preferredAt: rawIsoDate,
+          website, // honeypot — always empty for humans
         }),
       }).catch(() => null);
+
+      // Server-side validation failed (400) or rate-limited (429):
+      // show the message and let the guest fix the form — no ticket yet.
+      if (res && !res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(
+          data.error ||
+            (isAr
+              ? "تعذر إرسال الطلب. حاول مرة أخرى أو تواصل واتساب."
+              : "Could not submit. Please retry or contact us on WhatsApp.")
+        );
+        return;
+      }
 
       let finalId = generatedSerial;
       if (res && res.ok) {
@@ -107,32 +125,11 @@ export default function ContactBookingForm() {
         }
       }
 
-      // 2. Save directly to browser localStorage as an instant fail-safe
-      if (typeof window !== "undefined") {
-        try {
-          const localKey = "alghdeer_local_bookings";
-          const existing = JSON.parse(localStorage.getItem(localKey) || "[]");
-          const newRecord = {
-            id: finalId,
-            name: name.trim(),
-            phone: phone.trim() || "—",
-            company: company.trim() || "—",
-            groupSize: guestCount,
-            preferredAt: rawIsoDate,
-            notes: notes.trim(),
-            status: "pending",
-            source: "website",
-            createdAt: new Date().toISOString(),
-          };
-          const updated = [newRecord, ...existing.filter((x: any) => x?.id !== finalId)];
-          localStorage.setItem(localKey, JSON.stringify(updated.slice(0, 50)));
-        } catch {}
-      }
-
       setIssuedTicket({
         id: finalId,
         name: name.trim(),
         phone: phone.trim() || "—",
+        email: email.trim(),
         company: company.trim() || "—",
         groupSize: guestCount,
         preferredAt: formattedDate,
@@ -146,7 +143,7 @@ export default function ContactBookingForm() {
 
   const directWaUrl = issuedTicket
     ? `https://wa.me/966544493991?text=${encodeURIComponent(
-        `مرحباً مخيمات الغدير 🏕️\nأرغب بتأكيد حجز تذكرتي برقم:\n№ ${issuedTicket.id}\n• اسم الضيف: ${issuedTicket.name}\n${issuedTicket.phone !== "—" ? `• رقم الجوال: ${issuedTicket.phone}\n` : ""}${issuedTicket.company !== "—" ? `• المناسبة/الجهة: ${issuedTicket.company}\n` : ""}• عدد الضيوف: ${issuedTicket.groupSize} شخص\n• موعد الفعالية: ${issuedTicket.preferredAt}\n${issuedTicket.notes ? `• ملاحظات: ${issuedTicket.notes}\n` : ""}يرجى تأكيد الحجز وإرسال تفاصيل التجهيزات والموقع.`
+        `مرحباً مخيمات الغدير 🏕️\nأرغب بتأكيد حجز تذكرتي برقم:\n№ ${issuedTicket.id}\n• اسم الضيف: ${issuedTicket.name}\n${issuedTicket.phone !== "—" ? `• رقم الجوال: ${issuedTicket.phone}\n` : ""}${issuedTicket.email ? `• البريد: ${issuedTicket.email}\n` : ""}${issuedTicket.company !== "—" ? `• المناسبة/الجهة: ${issuedTicket.company}\n` : ""}• عدد الضيوف: ${issuedTicket.groupSize} شخص\n• موعد الفعالية: ${issuedTicket.preferredAt}\n${issuedTicket.notes ? `• ملاحظات: ${issuedTicket.notes}\n` : ""}يرجى تأكيد الحجز وإرسال تفاصيل التجهيزات والموقع.`
       )}`
     : "https://wa.me/966544493991";
 
@@ -436,16 +433,43 @@ export default function ContactBookingForm() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
-                      {isAr ? "ملاحظات خاصة (اختياري)" : "Special Requests (Optional)"}
+                      {isAr ? "البريد الإلكتروني (اختياري)" : "Email (Optional)"}
                     </label>
                     <input
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder={isAr ? "أي تجهيزات أو طلبات خاصة..." : "Any special catering or setup notes..."}
-                      className="w-full bg-transparent border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] py-1.5 text-sm font-bold text-[#1a1610] placeholder:text-[#1a1610]/30 focus:outline-none transition-colors"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={isAr ? "name@email.com" : "name@email.com"}
+                      dir="ltr"
+                      className="w-full bg-transparent border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] py-1.5 text-sm font-bold text-[#1a1610] placeholder:text-[#1a1610]/30 focus:outline-none transition-colors text-right rtl:text-right ltr:text-left"
                     />
                   </div>
                 </div>
+
+                <div className="mb-2">
+                  <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
+                    {isAr ? "ملاحظات خاصة (اختياري)" : "Special Requests (Optional)"}
+                  </label>
+                  <input
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder={isAr ? "أي تجهيزات أو طلبات خاصة..." : "Any special catering or setup notes..."}
+                    className="w-full bg-transparent border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] py-1.5 text-sm font-bold text-[#1a1610] placeholder:text-[#1a1610]/30 focus:outline-none transition-colors"
+                  />
+                </div>
+
+                {/* Honeypot — invisible to humans, bots fill it and get filtered server-side */}
+                <input
+                  type="text"
+                  name="website"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  className="absolute opacity-0 pointer-events-none h-0 w-0"
+                  style={{ position: "absolute", left: "-9999px" }}
+                />
 
                 {error ? (
                   <p className="text-[#b5382a] text-xs font-bold mt-2" role="alert">

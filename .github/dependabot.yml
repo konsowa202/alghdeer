@@ -1,0 +1,21 @@
+version: 2
+updates:
+  # Keep npm dependencies continuously updated
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    groups:
+      nextjs:
+        patterns:
+          - "next"
+          - "react"
+          - "react-dom"
+  # Keep GitHub Actions (if any) updated too
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
