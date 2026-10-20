@@ -1,438 +1,207 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
+import React, { useState, type ComponentType } from "react";
 import {
   CheckCircle,
   Clock,
-  Trash2,
   Banknote,
   BadgeCheck,
   Ban,
   MessageCircle,
+  Search,
+  RefreshCw,
+  BellRing,
+  Volume2,
+  VolumeX,
+  Eye,
+  CalendarPlus,
 } from "lucide-react";
 import type { BookingRecord, BookingStatus } from "@/lib/bookings-types";
 import { BOOKING_STATUS_LABELS } from "@/lib/bookings-types";
+import {
+  useBookingsController,
+  useBookingsFilter,
+  formatWhen,
+  waHref,
+  StatusBadge,
+  type StatusFilter,
+} from "./booking-shared";
+import BookingDetailSheet from "./BookingDetailSheet";
+import AddBookingForm from "./AddBookingForm";
 
-function formatWhen(iso: string) {
-  const d = new Date(iso);
-  if (!Number.isFinite(d.getTime())) return "—";
-  return d.toLocaleString("ar-SA", {
-    timeZone: "Asia/Riyadh",
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
-
-function statusBadgeClass(s: BookingStatus) {
-  switch (s) {
-    case "confirmed":
-      return "bg-sky-500/20 text-sky-300";
-    case "deposit":
-      return "bg-violet-500/20 text-violet-300";
-    case "completed":
-      return "bg-emerald-500/20 text-emerald-400";
-    case "cancelled":
-      return "bg-red-500/20 text-red-400";
-    default:
-      return "bg-amber-500/20 text-amber-400";
-  }
-}
+const FILTER_TABS: { key: StatusFilter; label: string }[] = [
+  { key: "all", label: "الكل" },
+  { key: "pending", label: "قيد المراجعة" },
+  { key: "confirmed", label: "مؤكد" },
+  { key: "deposit", label: "الديبوزيت" },
+  { key: "completed", label: "مكتمل" },
+  { key: "cancelled", label: "ملغى" },
+];
 
 export default function StaffBookingsPanel() {
-  const [rows, setRows] = useState<BookingRecord[]>([]);
-  const [loadError, setLoadError] = useState("");
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const controller = useBookingsController();
+  const { query, setQuery, statusFilter, setStatusFilter, filtered } =
+    useBookingsFilter(controller.rows);
+  const [selected, setSelected] = useState<BookingRecord | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
-  const refresh = useCallback(async () => {
-    setLoadError("");
-    try {
-      const res = await fetch("/api/bookings", {
-        credentials: "include",
-        cache: "no-store",
-      });
-      let serverBookings: BookingRecord[] = [];
-      if (res.ok) {
-        const data = (await res.json()) as { bookings?: BookingRecord[] };
-        if (Array.isArray(data.bookings)) {
-          serverBookings = data.bookings;
-        }
-      }
+  const {
+    rows,
+    loading,
+    loadError,
+    busyId,
+    unauthorized,
+    stats,
+    newCount,
+    clearNewCount,
+    soundOn,
+    setSoundOn,
+    refresh,
+    setStatus,
+  } = controller;
 
-      // Fail-safe direct cloud fetch if API returned empty
-      if (serverBookings.length === 0) {
-        try {
-          const cloudRes = await fetch("https://extendsclass.com/api/json-storage/bin/daddacf", {
-            cache: "no-store",
-          });
-          if (cloudRes.ok) {
-            const cloudJson = await cloudRes.json();
-            if (cloudJson && Array.isArray(cloudJson.bookings)) {
-              serverBookings = cloudJson.bookings;
-            }
-          }
-        } catch {}
-      }
+  // Keep the open detail sheet in sync with live data
+  const selectedLive = selected
+    ? rows.find((r) => r.id === selected.id) ?? selected
+    : null;
 
-      // Check browser local backup
-      let localBookings: BookingRecord[] = [];
-      if (typeof window !== "undefined") {
-        try {
-          const raw = localStorage.getItem("alghdeer_local_bookings");
-          if (raw) localBookings = JSON.parse(raw);
-        } catch {}
-      }
-
-      // Merge unique by ID (server takes precedence for updated statuses)
-      const map = new Map<string, BookingRecord>();
-      for (const b of localBookings) {
-        if (b && b.id) map.set(b.id, b);
-      }
-      for (const b of serverBookings) {
-        if (b && b.id) map.set(b.id, b);
-      }
-
-      const merged = Array.from(map.values()).sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-
-      setRows(merged);
-    } catch {
-      setLoadError("تعذر تحديث الحجوزات، تأكد من الاتصال بالإنترنت.");
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-    // Auto-refresh every 10 seconds for live updates
-    const interval = setInterval(() => {
-      void refresh();
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [refresh]);
-
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [company, setCompany] = useState("");
-  const [groupSize, setGroupSize] = useState("");
-  const [preferredLocal, setPreferredLocal] = useState("");
-  const [notes, setNotes] = useState("");
-  const [addStatus, setAddStatus] = useState<BookingStatus>("pending");
-  const [adding, setAdding] = useState(false);
-  const [addError, setAddError] = useState("");
-
-  const stats = useMemo(() => {
-    const total = rows.length;
-    const pending = rows.filter((r) => r.status === "pending").length;
-    const confirmed = rows.filter((r) => r.status === "confirmed").length;
-    const deposit = rows.filter((r) => r.status === "deposit").length;
-    const completed = rows.filter((r) => r.status === "completed").length;
-    const cancelled = rows.filter((r) => r.status === "cancelled").length;
-    return { total, pending, confirmed, deposit, completed, cancelled };
-  }, [rows]);
-
-  async function setStatus(id: string, status: BookingStatus) {
-    setBusyId(id);
-    try {
-      // Optimistic local update
-      setRows((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, status } : r))
-      );
-
-      // Update localStorage backup if exists
-      if (typeof window !== "undefined") {
-        try {
-          const raw = localStorage.getItem("alghdeer_local_bookings");
-          if (raw) {
-            const list: BookingRecord[] = JSON.parse(raw);
-            const idx = list.findIndex((x) => x.id === id);
-            if (idx !== -1) {
-              list[idx].status = status;
-              localStorage.setItem("alghdeer_local_bookings", JSON.stringify(list));
-            }
-          }
-        } catch {}
-      }
-
-      const res = await fetch(`/api/bookings/${id}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      if (res.ok) await refresh();
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  async function remove(id: string) {
-    if (!confirm("حذف هذا السجل نهائياً؟")) return;
-    setBusyId(id);
-    try {
-      // Optimistic local remove
-      setRows((prev) => prev.filter((r) => r.id !== id));
-
-      if (typeof window !== "undefined") {
-        try {
-          const raw = localStorage.getItem("alghdeer_local_bookings");
-          if (raw) {
-            const list: BookingRecord[] = JSON.parse(raw);
-            const filtered = list.filter((x) => x.id !== id);
-            localStorage.setItem("alghdeer_local_bookings", JSON.stringify(filtered));
-          }
-        } catch {}
-      }
-
-      const res = await fetch(`/api/bookings/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (res.ok) await refresh();
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  async function addBooking(e: React.FormEvent) {
-    e.preventDefault();
-    setAddError("");
-    setAdding(true);
-    try {
-      const d = new Date(preferredLocal);
-      if (!Number.isFinite(d.getTime())) {
-        setAddError("اختر تاريخاً ووقتاً صالحين.");
-        return;
-      }
-      const n = Number(groupSize);
-      if (!Number.isFinite(n) || n < 1) {
-        setAddError("أدخل عدداً صحيحاً للمجموعة.");
-        return;
-      }
-
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          phone: phone.trim(),
-          company: company.trim(),
-          groupSize: n,
-          notes: notes.trim(),
-          preferredAt: d.toISOString(),
-          status: addStatus,
-        }),
-      });
-
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) {
-        setAddError(data.error || "فشل الحفظ.");
-        return;
-      }
-
-      setName("");
-      setPhone("");
-      setCompany("");
-      setGroupSize("");
-      setPreferredLocal("");
-      setNotes("");
-      setAddStatus("pending");
-      await refresh();
-    } finally {
-      setAdding(false);
-    }
+  if (unauthorized) {
+    return (
+      <div className="bg-red-500/10 border border-red-500/25 rounded-2xl p-8 text-center">
+        <p className="text-red-300 font-bold mb-2">انتهت الجلسة</p>
+        <p className="text-white/50 text-sm mb-4">
+          سجل الدخول مرة أخرى لمتابعة إدارة الحجوزات.
+        </p>
+        <a
+          href="/dashboard/login"
+          className="inline-block px-6 py-2.5 bg-[#cba135] text-black font-bold rounded-lg"
+        >
+          تسجيل الدخول
+        </a>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-8">
-      {loadError ? (
-        <p className="text-red-400 text-sm">{loadError}</p>
+    <div className="space-y-6">
+      {newCount > 0 ? (
+        <button
+          type="button"
+          onClick={clearNewCount}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold text-sm animate-pulse"
+        >
+          <BellRing size={18} />
+          {newCount === 1 ? "وصل حجز جديد من الموقع" : `وصل ${newCount} حجوزات جديدة من الموقع`}
+        </button>
       ) : null}
 
-      <div className="bg-white/5 rounded-2xl border border-white/10 p-6 sm:p-8">
-        <h3 className="text-lg font-bold text-white mb-2">
-          تسجيل حجز أو استفسار (يدوي)
-        </h3>
-        <p className="text-white/45 text-sm mb-6">
-          إدخال من الفريق بعد التواصل؛ يُخزَّن مع طلبات الموقع في نفس القائمة.
-        </p>
-        <form
-          onSubmit={addBooking}
-          className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6"
-          dir="rtl"
-        >
-          <div>
-            <label className="block text-white/40 text-xs tracking-wider mb-2">
-              اسم العميل
-            </label>
-            <input
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#cba135]"
-            />
-          </div>
-          <div>
-            <label className="block text-white/40 text-xs tracking-wider mb-2">
-              رقم الجوال / الواتساب
-            </label>
-            <input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="05xxxxxxxx"
-              dir="ltr"
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#cba135] text-right font-mono"
-            />
-          </div>
-          <div>
-            <label className="block text-white/40 text-xs tracking-wider mb-2">
-              الشركة / الجهة
-            </label>
-            <input
-              value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#cba135]"
-            />
-          </div>
-          <div>
-            <label className="block text-white/40 text-xs tracking-wider mb-2">
-              عدد الأشخاص
-            </label>
-            <input
-              required
-              type="number"
-              min={1}
-              value={groupSize}
-              onChange={(e) => setGroupSize(e.target.value)}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#cba135] [color-scheme:dark]"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-white/40 text-xs tracking-wider mb-2">
-              تاريخ ووقت المناسبة
-            </label>
-            <input
-              required
-              type="datetime-local"
-              value={preferredLocal}
-              onChange={(e) => setPreferredLocal(e.target.value)}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#cba135] [color-scheme:dark]"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-white/40 text-xs tracking-wider mb-2">
-              ملاحظات وطلبات خاصة
-            </label>
-            <textarea
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#cba135] resize-none"
-            />
-          </div>
-          <div className="md:col-span-2 flex flex-wrap items-end gap-4">
-            <div className="min-w-[180px]">
-              <label className="block text-white/40 text-xs tracking-wider mb-2">
-                الحالة عند الإدخال
-              </label>
-              <select
-                value={addStatus}
-                onChange={(e) =>
-                  setAddStatus(e.target.value as BookingStatus)
-                }
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#cba135]"
-              >
-                {(Object.keys(BOOKING_STATUS_LABELS) as BookingStatus[]).map(
-                  (k) => (
-                    <option key={k} value={k}>
-                      {BOOKING_STATUS_LABELS[k]}
-                    </option>
-                  )
-                )}
-              </select>
-            </div>
-            <button
-              type="submit"
-              disabled={adding}
-              className="px-8 py-3 bg-[#cba135] text-black font-bold rounded-lg hover:bg-[#d4b458] transition-colors mt-6 md:mt-0 disabled:opacity-50"
-            >
-              {adding ? "جاري الحفظ…" : "حفظ في النظام"}
-            </button>
-          </div>
-          {addError ? (
-            <p className="text-red-400 text-sm md:col-span-2">{addError}</p>
-          ) : null}
-        </form>
-      </div>
+      {loadError ? <p className="text-red-400 text-sm">{loadError}</p> : null}
 
+      {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <StatChip
-          label="إجمالي الطلبات"
-          value={stats.total}
-          icon={Clock}
-          tone="neutral"
-        />
-        <StatChip
-          label="قيد المراجعة"
-          value={stats.pending}
-          icon={Clock}
-          tone="amber"
-        />
-        <StatChip
-          label="مؤكد"
-          value={stats.confirmed}
-          icon={CheckCircle}
-          tone="sky"
-        />
-        <StatChip
-          label="الديبوزيت"
-          value={stats.deposit}
-          icon={Banknote}
-          tone="violet"
-        />
-        <StatChip
-          label="مكتمل"
-          value={stats.completed}
-          icon={BadgeCheck}
-          tone="emerald"
-        />
-        <StatChip
-          label="ملغى"
-          value={stats.cancelled}
-          icon={Ban}
-          tone="red"
-        />
+        <StatChip label="إجمالي الطلبات" value={stats.total} icon={Clock} tone="neutral" />
+        <StatChip label="اليوم" value={stats.today} icon={CalendarPlus} tone="gold" />
+        <StatChip label="قيد المراجعة" value={stats.pending} icon={Clock} tone="amber" />
+        <StatChip label="مؤكد" value={stats.confirmed} icon={CheckCircle} tone="sky" />
+        <StatChip label="الديبوزيت" value={stats.deposit} icon={Banknote} tone="violet" />
+        <StatChip label="مكتمل / ملغى" value={`${stats.completed} / ${stats.cancelled}`} icon={BadgeCheck} tone="emerald" />
       </div>
 
-      <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
-        <div className="p-6 border-b border-white/10 flex flex-wrap items-center justify-between gap-4">
+      {/* Manual entry (collapsible) */}
+      <div className="bg-white/5 rounded-2xl border border-white/10 p-6 sm:p-8">
+        <div className="flex items-center justify-between gap-4 mb-1">
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-white">قائمة الحجوزات والتذاكر</h3>
-              <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                سحابي مباشر
-              </span>
-            </div>
-            <p className="text-white/45 text-xs mt-1">
-              يتم المزامنة والتحديث اللحظي تلقائياً كل 10 ثوانٍ مع قاعدة البيانات السحابية.
+            <h3 className="text-lg font-bold text-white">
+              تسجيل حجز أو استفسار (يدوي)
+            </h3>
+            <p className="text-white/45 text-sm mt-1">
+              إدخال من الفريق بعد التواصل؛ يُخزَّن مع طلبات الموقع في نفس القائمة.
             </p>
           </div>
           <button
             type="button"
-            onClick={() => void refresh()}
-            className="px-4 py-2 text-xs font-bold bg-white/10 hover:bg-white/15 text-white rounded-lg transition-colors"
+            onClick={() => setShowAddForm((v) => !v)}
+            className="px-4 py-2 text-xs font-bold bg-white/10 hover:bg-white/15 text-white rounded-lg transition-colors shrink-0"
           >
-            تحديث القائمة
+            {showAddForm ? "إخفاء النموذج" : "إظهار النموذج"}
           </button>
         </div>
+        {showAddForm ? (
+          <div className="mt-6">
+            <AddBookingForm controller={controller} />
+          </div>
+        ) : null}
+      </div>
+
+      {/* Bookings table */}
+      <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+        <div className="p-5 border-b border-white/10 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold text-white">قائمة الحجوزات</h3>
+              <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                تحديث كل 10 ثوانٍ
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSoundOn(!soundOn)}
+                title={soundOn ? "كتم صوت التنبيه" : "تفعيل صوت التنبيه"}
+                className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/15 text-white/70 flex items-center justify-center transition-colors"
+              >
+                {soundOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
+              </button>
+              <button
+                type="button"
+                onClick={() => void refresh()}
+                className="h-9 px-4 text-xs font-bold bg-white/10 hover:bg-white/15 text-white rounded-lg transition-colors inline-flex items-center gap-2"
+              >
+                <RefreshCw size={14} />
+                تحديث
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[220px]">
+              <Search
+                size={16}
+                className="absolute start-3 top-1/2 -translate-y-1/2 text-white/30"
+              />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="بحث بالاسم أو الجوال أو رقم التذكرة أو الملاحظات…"
+                className="w-full ps-9 pe-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#cba135]"
+              />
+            </div>
+            <div className="flex gap-1.5 overflow-x-auto">
+              {FILTER_TABS.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setStatusFilter(t.key)}
+                  className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
+                    statusFilter === t.key
+                      ? "bg-[#cba135] text-black"
+                      : "bg-white/5 text-white/60 hover:bg-white/10"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full text-right min-w-[950px]" dir="rtl">
+          <table className="w-full text-right min-w-[900px]" dir="rtl">
             <thead className="bg-white/5 text-white/60 text-sm font-medium">
               <tr>
                 <th className="px-3 py-3">المصدر</th>
                 <th className="px-3 py-3">العميل</th>
                 <th className="px-3 py-3">الجوال / واتساب</th>
-                <th className="px-3 py-3">الشركة</th>
                 <th className="px-3 py-3">الموعد</th>
                 <th className="px-3 py-3">العدد</th>
                 <th className="px-3 py-3">الحالة</th>
@@ -440,108 +209,125 @@ export default function StaffBookingsPanel() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
-              {rows.length === 0 ? (
+              {loading && rows.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={8}
-                    className="px-4 py-10 text-center text-white/35 text-sm"
-                  >
-                    لا توجد طلبات بعد.
+                  <td colSpan={7} className="px-4 py-10 text-center text-white/35 text-sm">
+                    جاري التحميل…
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-10 text-center text-white/35 text-sm">
+                    {rows.length === 0
+                      ? "لا توجد طلبات بعد."
+                      : "لا توجد نتائج مطابقة للبحث أو الفلتر."}
                   </td>
                 </tr>
               ) : (
-                rows.map((order) => {
-                  const isBusy = busyId === order.id;
-                  const cleanPhone = (order.phone || "").replace(/\D/g, "");
-                  return (
-                    <tr
-                      key={order.id}
-                      className="hover:bg-white/[0.03] transition-colors align-top"
-                    >
-                      <td className="px-3 py-3 text-white/70 text-xs whitespace-nowrap">
-                        {order.source === "website" ? "موقع" : "فريق"}
-                      </td>
-                      <td className="px-3 py-3 font-medium text-white">
-                        {order.name}
-                      </td>
-                      <td className="px-3 py-3 text-xs whitespace-nowrap">
-                        {cleanPhone ? (
-                          <a
-                            href={`https://wa.me/${cleanPhone.startsWith("05") ? "966" + cleanPhone.slice(1) : cleanPhone}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-mono font-bold"
-                          >
-                            <MessageCircle size={14} />
-                            <span>{order.phone}</span>
-                          </a>
-                        ) : (
-                          <span className="text-white/40">—</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-3 text-white/65">
-                        {order.company || "—"}
-                      </td>
-                      <td className="px-3 py-3 text-white/85 text-xs whitespace-nowrap">
-                        {formatWhen(order.preferredAt)}
-                      </td>
-                      <td className="px-3 py-3 text-white/85 whitespace-nowrap">
-                        {order.groupSize} شخص
-                      </td>
-                      <td className="px-3 py-3">
-                        <span
-                          className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadgeClass(order.status)}`}
-                        >
-                          {BOOKING_STATUS_LABELS[order.status]}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3">
-                        <div className="flex flex-wrap gap-2 justify-start">
-                          <MiniBtn
-                            disabled={isBusy}
-                            label="مراجعة"
-                            onClick={() => setStatus(order.id, "pending")}
-                          />
-                          <MiniBtn
-                            disabled={isBusy}
-                            label="تأكيد"
-                            onClick={() => setStatus(order.id, "confirmed")}
-                          />
-                          <MiniBtn
-                            disabled={isBusy}
-                            label="ديبوزيت"
-                            onClick={() => setStatus(order.id, "deposit")}
-                          />
-                          <MiniBtn
-                            disabled={isBusy}
-                            label="اكتمال"
-                            onClick={() => setStatus(order.id, "completed")}
-                          />
-                          <MiniBtn
-                            disabled={isBusy}
-                            label="إلغاء"
-                            onClick={() => setStatus(order.id, "cancelled")}
-                            danger
-                          />
-                          <button
-                            type="button"
-                            disabled={isBusy}
-                            onClick={() => remove(order.id)}
-                            className="text-red-400/90 hover:text-red-300 inline-flex items-center gap-1 text-xs px-2 py-1 rounded border border-red-500/25"
-                          >
-                            <Trash2 size={14} /> حذف
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                filtered.map((order) => (
+                  <DesktopRow
+                    key={order.id}
+                    order={order}
+                    isBusy={busyId === order.id}
+                    onStatus={(s) => setStatus(order.id, s)}
+                    onOpen={() => setSelected(order)}
+                  />
+                ))
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {selectedLive ? (
+        <BookingDetailSheet
+          booking={selectedLive}
+          controller={controller}
+          onClose={() => setSelected(null)}
+        />
+      ) : null}
     </div>
+  );
+}
+
+function DesktopRow({
+  order,
+  isBusy,
+  onStatus,
+  onOpen,
+}: {
+  order: BookingRecord;
+  isBusy: boolean;
+  onStatus: (s: BookingStatus) => void;
+  onOpen: () => void;
+}) {
+  const wa = waHref(order.phone);
+  return (
+    <tr className="hover:bg-white/[0.03] transition-colors align-middle">
+      <td className="px-3 py-3 text-white/70 text-xs whitespace-nowrap">
+        {order.source === "website" ? "موقع" : "فريق"}
+      </td>
+      <td className="px-3 py-3">
+        <button
+          type="button"
+          onClick={onOpen}
+          className="font-medium text-white hover:text-[#d4b458] transition-colors text-right"
+        >
+          {order.name}
+        </button>
+        {order.notes ? (
+          <span className="block text-[10px] text-amber-400/70">📝 يوجد ملاحظات</span>
+        ) : null}
+      </td>
+      <td className="px-3 py-3 text-xs whitespace-nowrap">
+        {wa ? (
+          <a
+            href={wa}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-mono font-bold"
+          >
+            <MessageCircle size={14} />
+            <span>{order.phone}</span>
+          </a>
+        ) : (
+          <span className="text-white/40">—</span>
+        )}
+      </td>
+      <td className="px-3 py-3 text-white/85 text-xs whitespace-nowrap">
+        {formatWhen(order.preferredAt)}
+      </td>
+      <td className="px-3 py-3 text-white/85 whitespace-nowrap">
+        {order.groupSize} شخص
+      </td>
+      <td className="px-3 py-3">
+        <StatusBadge status={order.status} />
+      </td>
+      <td className="px-3 py-3">
+        <div className="flex items-center gap-2">
+          <select
+            disabled={isBusy}
+            value={order.status}
+            onChange={(e) => onStatus(e.target.value as BookingStatus)}
+            className="bg-white/5 border border-white/15 text-white/80 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#cba135] disabled:opacity-40"
+          >
+            {(Object.keys(BOOKING_STATUS_LABELS) as BookingStatus[]).map((k) => (
+              <option key={k} value={k} className="bg-[#14151b]">
+                {BOOKING_STATUS_LABELS[k]}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={onOpen}
+            className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-white/15 text-white/80 hover:bg-white/10"
+          >
+            <Eye size={13} />
+            تفاصيل
+          </button>
+        </div>
+      </td>
+    </tr>
   );
 }
 
@@ -552,9 +338,9 @@ function StatChip({
   tone,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   icon: ComponentType<{ size?: number | string }>;
-  tone: "neutral" | "amber" | "sky" | "violet" | "emerald" | "red";
+  tone: "neutral" | "amber" | "sky" | "violet" | "emerald" | "red" | "gold";
 }) {
   const ring =
     tone === "amber"
@@ -567,7 +353,9 @@ function StatChip({
             ? "bg-emerald-500/20 text-emerald-400"
             : tone === "red"
               ? "bg-red-500/20 text-red-400"
-              : "bg-white/10 text-white/50";
+              : tone === "gold"
+                ? "bg-[#cba135]/20 text-[#d4b458]"
+                : "bg-white/10 text-white/50";
 
   return (
     <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex flex-col gap-2">
@@ -583,32 +371,5 @@ function StatChip({
       </div>
       <p className="text-2xl font-bold text-white tabular-nums">{value}</p>
     </div>
-  );
-}
-
-function MiniBtn({
-  label,
-  onClick,
-  disabled,
-  danger,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  danger?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className={`text-[10px] sm:text-xs px-2 py-1 rounded border transition-colors disabled:opacity-40 ${
-        danger
-          ? "border-red-500/30 text-red-300 hover:bg-red-500/10"
-          : "border-white/15 text-white/80 hover:bg-white/10"
-      }`}
-    >
-      {label}
-    </button>
   );
 }

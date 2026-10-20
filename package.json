@@ -9,6 +9,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "audit": "npm audit --omit=dev",
+    "audit:fix": "npm audit fix --omit=dev",
     "scrape:instagram": "node scripts/scrape-instagram.mjs"
   },
   "dependencies": {

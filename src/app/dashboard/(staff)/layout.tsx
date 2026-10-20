@@ -1,13 +1,21 @@
 import React from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Inbox } from "lucide-react";
 import StaffLogoutButton from "@/components/dashboard/StaffLogoutButton";
+import { isStaffSession } from "@/lib/staff-session";
 
 export default function StaffDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Cryptographic session verification on the server — a forged cookie
+  // never reaches the panel.
+  if (!isStaffSession()) {
+    redirect("/dashboard/login");
+  }
+
   return (
     <div className="min-h-screen bg-[#0b0c10] flex flex-col md:flex-row" dir="rtl">
       <aside className="w-full md:w-64 bg-black border-b md:border-b-0 md:border-l border-white/10 flex md:flex-col shrink-0">

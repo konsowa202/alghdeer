@@ -5,8 +5,15 @@ import { randomUUID } from "crypto";
 import type { BookingRecord, BookingStatus, BookingSource } from "./bookings-types";
 import { MIN_LEAD_MS } from "./bookings-types";
 
-// Persistent Cloud Database URL (CORS-enabled REST JSON Bin shared across all serverless invocations and devices)
-export const CLOUD_DB_URL = "https://extendsclass.com/api/json-storage/bin/daddacf";
+// Persistent cloud JSON bin. Set BOOKINGS_DB_URL in env — never expose it to
+// the client bundle. The fallback keeps existing deployments working; rotate
+// the bin and move the URL to an env var as soon as possible.
+function cloudDbUrl(): string | null {
+  return (
+    process.env.BOOKINGS_DB_URL?.trim() ||
+    "https://extendsclass.com/api/json-storage/bin/daddacf"
+  );
+}
 
 // Writable file path in OS temp directory
 const TMP_DATA_FILE = path.join(os.tmpdir(), "alghdeer-bookings.json");
@@ -70,11 +77,13 @@ export function normalizeRecord(o: any): BookingRecord {
  * Fetch latest bookings from persistent cloud database with timeout protection
  */
 export async function fetchFromCloudDB(): Promise<BookingRecord[] | null> {
+  const url = cloudDbUrl();
+  if (!url) return null;
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 4000);
 
-    const res = await fetch(CLOUD_DB_URL, {
+    const res = await fetch(url, {
       method: "GET",
       headers: { Accept: "application/json" },
       signal: controller.signal,
@@ -97,11 +106,13 @@ export async function fetchFromCloudDB(): Promise<BookingRecord[] | null> {
  * Save bookings to persistent cloud database
  */
 export async function saveToCloudDB(rows: BookingRecord[]): Promise<void> {
+  const url = cloudDbUrl();
+  if (!url) return;
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 5000);
 
-    await fetch(CLOUD_DB_URL, {
+    await fetch(url, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -263,22 +274,37 @@ export async function deleteBooking(id: string): Promise<boolean> {
 export function isPreferredAtValidForPublic(preferredAtIso: string): boolean {
   const t = Date.parse(preferredAtIso);
   if (!Number.isFinite(t)) return false;
-  return true;
+  // Website bookings require at least MIN_LEAD_MS of lead time (24h)
+  return t >= Date.now() + MIN_LEAD_MS;
+}
+
+const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
+
+export function isEmailValid(email: string): boolean {
+  return EMAIL_RE.test(email);
+}
+
+/** Strips control characters that could break logs, CSV exports or mail headers. */
+function stripControlChars(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
 }
 
 export function sanitizeBookingFields(body: Record<string, unknown>) {
   const id = body.id ? String(body.id).trim().slice(0, 40) : undefined;
-  const name = String(body.name ?? "").trim().slice(0, 120);
+  const name = stripControlChars(String(body.name ?? "")).trim().slice(0, 120);
   const phone = String(body.phone ?? "").trim().slice(0, 40);
   const email = String(body.email ?? "").trim().slice(0, 160);
-  const company = String(body.company ?? "").trim().slice(0, 120);
-  const notes = String(body.notes ?? "").trim().slice(0, 4000);
+  const company = stripControlChars(String(body.company ?? "")).trim().slice(0, 120);
+  const notes = stripControlChars(String(body.notes ?? "")).trim().slice(0, 4000);
   const preferredAtRaw = String(body.preferredAt ?? "").trim();
+  // Honeypot field — invisible to humans, filled by bots
+  const honeypot = String(body.website ?? "").trim();
   const rawSize = Number(body.groupSize);
   const groupSizeClean =
     Number.isFinite(rawSize) && rawSize >= 1
       ? Math.min(Math.floor(rawSize), 5000)
       : 10;
 
-  return { id, name, phone, email, company, notes, preferredAtRaw, groupSizeClean };
+  return { id, name, phone, email, company, notes, preferredAtRaw, groupSizeClean, honeypot };
 }
