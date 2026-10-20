@@ -4,19 +4,30 @@ import React, { useMemo, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { minPreferredDatetimeLocal } from "@/lib/format-datetime-local";
 import { MIN_LEAD_MS } from "@/lib/bookings-types";
-import { CheckCircle2, Star } from "lucide-react";
+import { CheckCircle2, Star, MessageCircle, ArrowRight, ExternalLink } from "lucide-react";
+
+interface IssuedTicket {
+  id: string;
+  name: string;
+  phone: string;
+  company?: string;
+  groupSize: number;
+  preferredAt: string;
+}
 
 export default function ContactBookingForm() {
   const { t, lang } = useLanguage();
   const isAr = lang === "ar";
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [groupSize, setGroupSize] = useState("");
   const [preferredLocal, setPreferredLocal] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [done, setDone] = useState(false);
+  const [issuedTicket, setIssuedTicket] = useState<IssuedTicket | null>(null);
 
   const minLocal = useMemo(() => minPreferredDatetimeLocal(MIN_LEAD_MS), []);
 
@@ -39,6 +50,11 @@ export default function ContactBookingForm() {
         return;
       }
 
+      if (!phone.trim() || phone.trim().length < 8) {
+        setError(isAr ? "أدخل رقم جوال صحيح للتواصل وتأكيد الحجز." : "Enter a valid phone number.");
+        return;
+      }
+
       const n = Number(groupSize);
       if (!Number.isFinite(n) || n < 1) {
         setError(isAr ? "أدخل عدداً صحيحاً للضيوف." : "Enter a valid guest count.");
@@ -50,6 +66,8 @@ export default function ContactBookingForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
+          phone: phone.trim(),
+          email: email.trim(),
           company: company.trim(),
           groupSize: n,
           notes: notes.trim(),
@@ -57,9 +75,17 @@ export default function ContactBookingForm() {
         }),
       });
 
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        id?: string;
+        name?: string;
+        phone?: string;
+        groupSize?: number;
+        preferredAt?: string;
+        error?: string;
+      };
 
-      if (!res.ok) {
+      if (!res.ok || !data.id) {
         setError(
           data.error ||
             (isAr ? "تعذر إرسال الطلب. حاول مرة أخرى." : "Could not send your request. Please try again."),
@@ -67,8 +93,20 @@ export default function ContactBookingForm() {
         return;
       }
 
-      setDone(true);
+      setIssuedTicket({
+        id: data.id,
+        name: name.trim(),
+        phone: phone.trim(),
+        company: company.trim(),
+        groupSize: n,
+        preferredAt: d.toLocaleString(isAr ? "ar-SA" : "en-US", {
+          dateStyle: "full",
+          timeStyle: "short",
+        }),
+      });
       setName("");
+      setPhone("");
+      setEmail("");
       setCompany("");
       setGroupSize("");
       setPreferredLocal("");
@@ -78,38 +116,112 @@ export default function ContactBookingForm() {
     }
   }
 
+  const ticketNumber = issuedTicket
+    ? `ALG-${issuedTicket.id.slice(0, 8).toUpperCase()}`
+    : "2026";
+
+  const whatsappMessage = issuedTicket
+    ? encodeURIComponent(
+        `مرحباً مخيمات الغدير 🏕️\nأود تأكيد حجز تذكرتي الصادرة عبر الموقع برقم:\n№ ${ticketNumber}\n• الاسم: ${issuedTicket.name}\n• رقم الجوال: ${issuedTicket.phone}\n• موعد الفعالية: ${issuedTicket.preferredAt}\n• عدد الضيوف: ${issuedTicket.groupSize} شخص\n${issuedTicket.company ? `• الجهة: ${issuedTicket.company}\n` : ""}يرجى تأكيد الحجز وإرسال تفاصيل التجهيزات والموقع.`
+      )
+    : "";
+
   return (
     <div className="relative w-full">
-      {/* Outer Ticket Body with Corner Cutout Notches */}
+      {/* Outer Perforated Ticket Body */}
       <div className="relative bg-[#f4ead2] text-[#1a1610] rounded-none shadow-[0_20px_60px_rgba(0,0,0,0.65)] overflow-hidden">
-        {/* 4 Outer Corner Semi-Circle Cutouts (matching #0B0C10 footer background) */}
+        {/* Corner Cutout Notches */}
         <span className="pointer-events-none absolute -top-4 -left-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
         <span className="pointer-events-none absolute -top-4 -right-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
         <span className="pointer-events-none absolute -bottom-4 -left-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
         <span className="pointer-events-none absolute -bottom-4 -right-4 w-8 h-8 rounded-full bg-[#0B0C10] z-20" />
 
-        {done ? (
-          <div className="p-8 sm:p-12 text-center space-y-4 border-2 border-[#1a1610]/25 m-3 sm:m-4">
+        {issuedTicket ? (
+          /* ============================================================ */
+          /* TICKET ISSUED SUCCESS VIEW                                   */
+          /* Shows where the ticket went + instant WhatsApp dispatch      */
+          /* ============================================================ */
+          <div className="p-6 sm:p-10 md:p-12 text-center border-2 border-[#1a1610]/25 m-3 sm:m-4 space-y-6">
             <div className="flex justify-center text-[#8a6412]">
-              <CheckCircle2 size={48} strokeWidth={1.75} />
+              <CheckCircle2 size={54} strokeWidth={1.75} />
             </div>
-            <p className="text-xl sm:text-2xl font-black uppercase tracking-wider text-[#1a1610]">
-              {isAr ? "تم إصدار تذكرة طلبك بنجاح" : "VIP TICKET REQUEST ISSUED"}
-            </p>
-            <p className="text-sm text-[#1a1610]/75 max-w-md mx-auto leading-relaxed">
+
+            <div>
+              <span className="inline-block px-3 py-1 bg-[#1a1610] text-[#f4ead2] text-xs font-mono font-bold tracking-widest uppercase mb-2">
+                № {ticketNumber} • VIP PASS
+              </span>
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-wider text-[#1a1610]">
+                {isAr ? "تم إصدار وحفظ تذكرتك بنجاح" : "YOUR VIP TICKET IS ISSUED"}
+              </h3>
+            </div>
+
+            {/* Issued Ticket Summary Card */}
+            <div className="max-w-lg mx-auto bg-white/60 border border-[#1a1610]/20 p-5 sm:p-6 text-start space-y-3 font-sans">
+              <div className="flex justify-between items-center border-b border-[#1a1610]/15 pb-2">
+                <span className="text-xs text-[#1a1610]/70 font-bold">{isAr ? "رقم التذكرة:" : "Ticket No:"}</span>
+                <span className="font-mono font-bold text-[#b5382a]">{ticketNumber}</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-[#1a1610]/15 pb-2">
+                <span className="text-xs text-[#1a1610]/70 font-bold">{isAr ? "اسم الضيف:" : "Guest Name:"}</span>
+                <span className="font-bold text-[#1a1610]">{issuedTicket.name}</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-[#1a1610]/15 pb-2">
+                <span className="text-xs text-[#1a1610]/70 font-bold">{isAr ? "رقم الجوال:" : "Phone:"}</span>
+                <span dir="ltr" className="font-mono font-bold text-[#1a1610]">{issuedTicket.phone}</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-[#1a1610]/15 pb-2">
+                <span className="text-xs text-[#1a1610]/70 font-bold">{isAr ? "تاريخ الفعالية:" : "Event Date:"}</span>
+                <span className="font-bold text-xs text-[#1a1610]">{issuedTicket.preferredAt}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-[#1a1610]/70 font-bold">{isAr ? "عدد الضيوف:" : "Guests:"}</span>
+                <span className="font-bold text-[#1a1610]">{issuedTicket.groupSize} {isAr ? "شخص" : "guests"}</span>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-[#1a1610]/80 max-w-lg mx-auto leading-relaxed">
               {isAr
-                ? "تم تسجيل بيانات فعاليتك في مخيمات الغدير، وسيتواصل معك فريق الحجوزات لتأكيد الموعد."
-                : "Your event details have been registered. Our bookings team will contact you shortly to confirm."}
+                ? "تم تسجيل تذكرتك رسمياً في نظام حجوزات مخيمات الغدير. لتسريع التأكيد الفوري واستلام تفاصيل الموقع وخيارات البوفيه، اضغط على الزر أدناه لإرسال التذكرة مباشرة إلى واتساب الإدارة."
+                : "Your ticket has been registered in Alghdeer Camp reservations. Click below to confirm via WhatsApp with our reservations team."}
             </p>
-            <button
-              type="button"
-              onClick={() => setDone(false)}
-              className="mt-2 inline-block px-6 py-2.5 bg-[#1a1610] text-[#f4ead2] text-xs font-bold tracking-widest uppercase"
-            >
-              {isAr ? "إصدار تذكرة جديدة" : "Issue Another Ticket"}
-            </button>
+
+            {/* Direct WhatsApp Action Button */}
+            <div className="max-w-md mx-auto space-y-3">
+              <a
+                href={`https://wa.me/966544493991?text=${whatsappMessage}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2.5 w-full py-3.5 px-6 bg-[#25D366] hover:bg-[#1faa53] text-black font-black text-sm tracking-wider uppercase rounded-full shadow-lg transition-all"
+              >
+                <MessageCircle size={20} className="fill-black text-transparent" />
+                <span>{isAr ? "إرسال التذكرة ومتابعة الحجز واتساب" : "Confirm via WhatsApp Now"}</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setIssuedTicket(null)}
+                className="w-full py-2.5 text-xs text-[#1a1610]/70 hover:text-[#1a1610] underline font-bold tracking-wider"
+              >
+                {isAr ? "إصدار تذكرة إضافية" : "Issue Another Ticket"}
+              </button>
+            </div>
+
+            {/* Staff / Management Access Notice */}
+            <div className="pt-4 border-t border-[#1a1610]/15 text-[11px] text-[#1a1610]/60">
+              <span>{isAr ? "إدارة المخيم: يمكن مراجعة وتحديث كافة التذاكر المسجلة عبر " : "Staff: Manage all bookings in "}</span>
+              <a
+                href="/dashboard"
+                className="font-bold text-[#b5382a] hover:underline inline-flex items-center gap-1"
+              >
+                <span>{isAr ? "لوحة تحكم الحجوزات" : "Staff Dashboard"}</span>
+                <ExternalLink size={11} />
+              </a>
+            </div>
           </div>
         ) : (
+          /* ============================================================ */
+          /* TICKET INPUT FORM                                            */
+          /* ============================================================ */
           <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-12">
             {/* Main Ticket Area (8 cols) */}
             <div className="md:col-span-8 p-5 sm:p-7 md:p-8">
@@ -138,7 +250,7 @@ export default function ContactBookingForm() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
-                      {t("nameLabel")}
+                      {isAr ? "الاسم الكريم *" : "Full Name *"}
                     </label>
                     <input
                       required
@@ -150,13 +262,16 @@ export default function ContactBookingForm() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
-                      {t("companyLabel")}
+                      {isAr ? "رقم الجوال / الواتساب *" : "Phone / WhatsApp *"}
                     </label>
                     <input
-                      value={company}
-                      onChange={(e) => setCompany(e.target.value)}
-                      placeholder={isAr ? "شركة / عائلة / مناسبة" : "Company or occasion"}
-                      className="w-full bg-transparent border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] py-1.5 text-sm font-bold text-[#1a1610] placeholder:text-[#1a1610]/30 focus:outline-none transition-colors"
+                      required
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder={isAr ? "05xxxxxxxx" : "+966 5x xxx xxxx"}
+                      dir="ltr"
+                      className="w-full bg-transparent border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] py-1.5 text-sm font-bold text-[#1a1610] placeholder:text-[#1a1610]/30 focus:outline-none transition-colors text-right rtl:text-right ltr:text-left font-mono"
                     />
                   </div>
                 </div>
@@ -164,7 +279,34 @@ export default function ContactBookingForm() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
-                      {t("groupSizeLabel")}
+                      {isAr ? "الشركة أو المناسبة (اختياري)" : "Company / Occasion"}
+                    </label>
+                    <input
+                      value={company}
+                      onChange={(e) => setCompany(e.target.value)}
+                      placeholder={isAr ? "شركة / عائلة / تخرج" : "Company or occasion"}
+                      className="w-full bg-transparent border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] py-1.5 text-sm font-bold text-[#1a1610] placeholder:text-[#1a1610]/30 focus:outline-none transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
+                      {isAr ? "البريد الإلكتروني (اختياري)" : "Email (Optional)"}
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={isAr ? "name@example.com" : "name@example.com"}
+                      dir="ltr"
+                      className="w-full bg-transparent border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] py-1.5 text-sm font-bold text-[#1a1610] placeholder:text-[#1a1610]/30 focus:outline-none transition-colors text-right rtl:text-right ltr:text-left font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
+                      {t("groupSizeLabel")} *
                     </label>
                     <input
                       required
@@ -178,7 +320,7 @@ export default function ContactBookingForm() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold tracking-[0.18em] uppercase text-[#1a1610]/65 mb-1">
-                      {t("dateLabel")}
+                      {t("dateLabel")} *
                     </label>
                     <input
                       required
@@ -198,7 +340,7 @@ export default function ContactBookingForm() {
                   <input
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder={isAr ? "تفاصيل إضافية أو تجهيزات مطلوبة..." : "Any special setup or catering notes..."}
+                    placeholder={isAr ? "تفاصيل إضافية أو تجهيزات مطلوبة (بوفيه، قاعة زجاجية، شواء...)" : "Special setup, catering, or VIP lounge notes..."}
                     className="w-full bg-transparent border-b-2 border-[#1a1610]/25 focus:border-[#b5382a] py-1.5 text-sm font-bold text-[#1a1610] placeholder:text-[#1a1610]/30 focus:outline-none transition-colors"
                   />
                 </div>
@@ -232,13 +374,16 @@ export default function ContactBookingForm() {
                       {name ? name : isAr ? "ضيف مخيم الغدير" : "Alghdeer VIP Guest"}
                     </p>
                     <p className="text-[11px] text-[#f4ead2]/80">
+                      {phone ? phone : isAr ? "رقم الجوال للتأكيد" : "Phone required"}
+                    </p>
+                    <p className="text-[11px] text-[#f4ead2]/80">
                       {groupSize
                         ? isAr
                           ? `${groupSize} ضيف`
                           : `${groupSize} Guests`
                         : isAr
-                          ? "حجز خاص • جدة"
-                          : "Private Event • Jeddah"}
+                          ? "حجز خاص • بريمان"
+                          : "Private Event • Burayman"}
                     </p>
                   </div>
                 </div>
@@ -256,13 +401,9 @@ export default function ContactBookingForm() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="relative group w-full py-3.5 rounded-full bg-gradient-to-r from-[#1a1610] via-[#2c2419] to-[#1a1610] hover:from-[#cba135] hover:to-[#f3da8c] hover:text-black text-[#f4ead2] font-black text-xs tracking-[0.22em] uppercase transition-all duration-300 disabled:opacity-50 shadow-[0_10px_25px_rgba(0,0,0,0.4)] overflow-hidden border border-[#f4ead2]/30 hover:border-[#ffe8a3]"
+                  className="w-full py-3.5 rounded-full bg-[#1a1610] hover:bg-black text-[#f4ead2] font-black text-xs tracking-[0.2em] uppercase transition-all duration-300 disabled:opacity-50 shadow-lg border border-[#f4ead2]/25"
                 >
-                  {/* Top Specular Glass Edge */}
-                  <span className="pointer-events-none absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-                  <span className="relative z-10 flex items-center justify-center gap-2">
-                    {loading ? (isAr ? "جاري إصدار التذكرة..." : "Issuing Ticket...") : t("submitBtn")}
-                  </span>
+                  {loading ? (isAr ? "جاري إصدار التذكرة..." : "Issuing...") : (isAr ? "إصدار التذكرة الآن" : "Issue Ticket Now")}
                 </button>
               </div>
             </div>

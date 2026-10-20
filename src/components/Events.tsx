@@ -6,7 +6,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import TikTokIcon from "@/components/icons/TikTokIcon";
 import LiquidButton from "@/components/ui/LiquidButton";
-import { Play, X, Volume2, VolumeX, ExternalLink, Sparkles } from "lucide-react";
+import { Play, X, Volume2, VolumeX, ExternalLink } from "lucide-react";
 
 type BentoCardItem = {
   id: string;
@@ -259,14 +259,13 @@ export default function Events() {
                   : "Reserve your private night or corporate retreat at Alghdeer Camp"}
               </p>
 
-              {/* Liquid Golden CTA Ribbon Button */}
+              {/* Liquid Golden CTA Button */}
               <div className="inline-block">
                 <LiquidButton
                   href="#contact"
                   variant="liquid-gold"
                   size="lg"
                   breathe={true}
-                  icon={<Sparkles size={18} />}
                   className="font-black text-sm sm:text-base tracking-wider shadow-[0_15px_35px_rgba(203,161,53,0.55)]"
                 >
                   {isAr ? "ابدأ رحلتك الآن" : "Start Your Journey"}
