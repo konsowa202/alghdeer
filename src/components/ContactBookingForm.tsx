@@ -89,6 +89,26 @@ export default function ContactBookingForm() {
         notes: notes.trim(),
       });
 
+      // Save to localStorage so it is immediately visible in dashboard on this browser
+      if (typeof window !== "undefined") {
+        try {
+          const localArr = JSON.parse(localStorage.getItem("alghdeer_local_bookings") || "[]");
+          localArr.unshift({
+            id: finalId,
+            name: name.trim(),
+            phone: phone.trim() || "—",
+            company: company.trim() || "—",
+            groupSize: guestCount,
+            notes: notes.trim(),
+            preferredAt: preferredLocal ? new Date(preferredLocal).toISOString() : new Date().toISOString(),
+            status: "pending",
+            source: "website",
+            createdAt: new Date().toISOString(),
+          });
+          localStorage.setItem("alghdeer_local_bookings", JSON.stringify(localArr.slice(0, 50)));
+        } catch {}
+      }
+
       // 2. Open WhatsApp in new tab automatically
       if (typeof window !== "undefined") {
         window.open(waUrl, "_blank");

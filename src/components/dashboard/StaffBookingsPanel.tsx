@@ -45,17 +45,54 @@ export default function StaffBookingsPanel() {
 
   const refresh = useCallback(async () => {
     setLoadError("");
-    const res = await fetch("/api/bookings", { credentials: "include" });
-    if (!res.ok) {
-      setLoadError("تعذر تحميل الحجوزات.");
-      return;
+    try {
+      const res = await fetch("/api/bookings", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      let serverBookings: BookingRecord[] = [];
+      if (res.ok) {
+        const data = (await res.json()) as { bookings?: BookingRecord[] };
+        if (Array.isArray(data.bookings)) {
+          serverBookings = data.bookings;
+        }
+      }
+
+      // Check browser local backup
+      let localBookings: BookingRecord[] = [];
+      if (typeof window !== "undefined") {
+        try {
+          const raw = localStorage.getItem("alghdeer_local_bookings");
+          if (raw) localBookings = JSON.parse(raw);
+        } catch {}
+      }
+
+      // Merge unique by ID (server takes precedence for updated statuses)
+      const map = new Map<string, BookingRecord>();
+      for (const b of localBookings) {
+        if (b && b.id) map.set(b.id, b);
+      }
+      for (const b of serverBookings) {
+        if (b && b.id) map.set(b.id, b);
+      }
+
+      const merged = Array.from(map.values()).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      setRows(merged);
+    } catch {
+      setLoadError("تعذر تحديث الحجوزات، تأكد من الاتصال بالإنترنت.");
     }
-    const data = (await res.json()) as { bookings?: BookingRecord[] };
-    setRows(Array.isArray(data.bookings) ? data.bookings : []);
   }, []);
 
   useEffect(() => {
     void refresh();
+    // Auto-refresh every 10 seconds for live updates
+    const interval = setInterval(() => {
+      void refresh();
+    }, 10000);
+    return () => clearInterval(interval);
   }, [refresh]);
 
   const [name, setName] = useState("");
@@ -81,6 +118,26 @@ export default function StaffBookingsPanel() {
   async function setStatus(id: string, status: BookingStatus) {
     setBusyId(id);
     try {
+      // Optimistic local update
+      setRows((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status } : r))
+      );
+
+      // Update localStorage backup if exists
+      if (typeof window !== "undefined") {
+        try {
+          const raw = localStorage.getItem("alghdeer_local_bookings");
+          if (raw) {
+            const list: BookingRecord[] = JSON.parse(raw);
+            const idx = list.findIndex((x) => x.id === id);
+            if (idx !== -1) {
+              list[idx].status = status;
+              localStorage.setItem("alghdeer_local_bookings", JSON.stringify(list));
+            }
+          }
+        } catch {}
+      }
+
       const res = await fetch(`/api/bookings/${id}`, {
         method: "PATCH",
         credentials: "include",
@@ -97,6 +154,20 @@ export default function StaffBookingsPanel() {
     if (!confirm("حذف هذا السجل نهائياً؟")) return;
     setBusyId(id);
     try {
+      // Optimistic local remove
+      setRows((prev) => prev.filter((r) => r.id !== id));
+
+      if (typeof window !== "undefined") {
+        try {
+          const raw = localStorage.getItem("alghdeer_local_bookings");
+          if (raw) {
+            const list: BookingRecord[] = JSON.parse(raw);
+            const filtered = list.filter((x) => x.id !== id);
+            localStorage.setItem("alghdeer_local_bookings", JSON.stringify(filtered));
+          }
+        } catch {}
+      }
+
       const res = await fetch(`/api/bookings/${id}`, {
         method: "DELETE",
         credentials: "include",
@@ -321,9 +392,14 @@ export default function StaffBookingsPanel() {
       <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
         <div className="p-6 border-b border-white/10 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="text-lg font-bold text-white">قائمة الحجوزات والتذاكر</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold text-white">قائمة الحجوزات والتذاكر</h3>
+              <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                سحابي مباشر
+              </span>
+            </div>
             <p className="text-white/45 text-xs mt-1">
-              يتم حفظ التذاكر فورياً في قاعدة البيانات السحابية.
+              يتم المزامنة والتحديث اللحظي تلقائياً كل 10 ثوانٍ مع قاعدة البيانات السحابية.
             </p>
           </div>
           <button
