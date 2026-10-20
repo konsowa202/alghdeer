@@ -256,9 +256,13 @@ export default function ContactBookingForm() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-[#1a1610] hover:bg-black text-[#f4ead2] font-black text-xs tracking-[0.2em] uppercase transition-all disabled:opacity-50 shadow-lg"
+                  className="relative group w-full py-3.5 rounded-full bg-gradient-to-r from-[#1a1610] via-[#2c2419] to-[#1a1610] hover:from-[#cba135] hover:to-[#f3da8c] hover:text-black text-[#f4ead2] font-black text-xs tracking-[0.22em] uppercase transition-all duration-300 disabled:opacity-50 shadow-[0_10px_25px_rgba(0,0,0,0.4)] overflow-hidden border border-[#f4ead2]/30 hover:border-[#ffe8a3]"
                 >
-                  {loading ? (isAr ? "جاري الإصدار..." : "Issuing...") : t("submitBtn")}
+                  {/* Top Specular Glass Edge */}
+                  <span className="pointer-events-none absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    {loading ? (isAr ? "جاري إصدار التذكرة..." : "Issuing Ticket...") : t("submitBtn")}
+                  </span>
                 </button>
               </div>
             </div>

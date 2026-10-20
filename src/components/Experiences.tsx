@@ -4,6 +4,8 @@ import React, { useRef, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import FloatingEmbers from "@/components/ui/FloatingEmbers";
+import { Sparkles, Play } from "lucide-react";
 
 export default function Experiences() {
   const { t, lang } = useLanguage();
@@ -46,8 +48,11 @@ export default function Experiences() {
   ];
 
   return (
-    <section ref={ref} id="experiences" className="py-20 sm:py-32 md:py-40 bg-black text-white overflow-hidden">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-16">
+    <section ref={ref} id="experiences" className="relative py-20 sm:py-32 md:py-40 bg-black text-white overflow-hidden">
+      {/* Campfire Embers Floating Atmosphere */}
+      <FloatingEmbers count={16} />
+
+      <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-16">
         <div className="mb-12 sm:mb-16 border-b border-white/10 pb-8">
           <p className="text-xs tracking-[0.35em] uppercase text-[#cba135] mb-3">
             {isAr ? "ما نقدمه" : "WHAT WE OFFER"}
@@ -84,6 +89,17 @@ export default function Experiences() {
                 onClick={() => setHoveredIdx(isHovered ? null : i)}
                 className={`group cursor-pointer overflow-hidden relative rounded-2xl border border-white/10 hover:border-[#cba135]/60 transition-colors ${placement}`}
               >
+                {/* Top Specular Glass Edge Highlight */}
+                <span className="pointer-events-none absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/50 to-transparent z-10" />
+
+                {/* Live Reel Playing Beacon */}
+                {isHovered && (
+                  <div className="absolute top-4 left-4 rtl:left-auto rtl:right-4 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/65 backdrop-blur-md border border-[#cba135]/60 text-[#f5df9a] text-[10px] font-bold shadow-md">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#cba135] animate-ping" />
+                    <span>{isAr ? "فيديو حي" : "LIVE REEL"}</span>
+                  </div>
+                )}
+
                 <img
                   src={exp.image}
                   alt={t(exp.title)}

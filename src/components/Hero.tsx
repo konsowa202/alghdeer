@@ -4,9 +4,13 @@ import React, { useRef } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import LiquidButton from "@/components/ui/LiquidButton";
+import FloatingEmbers from "@/components/ui/FloatingEmbers";
+import { Sparkles, Compass } from "lucide-react";
 
 export default function Hero() {
   const { t, lang } = useLanguage();
+  const isAr = lang === "ar";
   const narrow = useMediaQuery("(max-width: 767px)");
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
@@ -28,6 +32,7 @@ export default function Hero() {
 
   return (
     <section ref={ref} id="home" className="relative h-[125vh] w-full overflow-hidden">
+      {/* Video Background Layer with Ambient Overlays */}
       <motion.div style={{ scale: imgScale }} className="absolute inset-0 z-0">
         <video
           src="/instagram/DXl2kAGijT4.mp4"
@@ -44,16 +49,31 @@ export default function Hero() {
             className="w-full h-full object-cover"
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/20" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/55 to-transparent rtl:bg-gradient-to-l" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/25" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent rtl:bg-gradient-to-l" />
       </motion.div>
+
+      {/* Floating Campfire Embers & Desert Stars for Living Breathing Feel */}
+      <FloatingEmbers count={24} />
 
       <motion.div
         style={{ opacity, y }}
         className="sticky top-0 h-screen flex items-center z-10"
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-16 text-center">
-          <div className="overflow-visible mb-5 sm:mb-7">
+          {/* Gamified Live Beacon Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.2 }}
+            className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full backdrop-blur-xl bg-white/[0.07] border border-white/20 text-[#f5df9a] text-[11px] sm:text-xs font-bold tracking-wider mb-5 shadow-[0_0_25px_rgba(203,161,53,0.3)] select-none"
+          >
+            <span className="w-2 h-2 rounded-full bg-[#cba135] animate-ping" />
+            <Sparkles size={13} className="text-[#f3da8c] animate-pulse" />
+            <span>{isAr ? "واحة شتوية فاخرة • بريمان، جدة" : "LUXURY WINTER OASIS • JEDDAH"}</span>
+          </motion.div>
+
+          <div className="overflow-visible mb-4 sm:mb-6">
             <motion.div
               initial={{ y: "80%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -65,7 +85,7 @@ export default function Hero() {
                   letterSpacing: lang === "ar" ? titleLetterSpacing : "0em",
                   y: titleY,
                 }}
-                className="hero-kashida text-[clamp(4.1rem,18vw,5.85rem)] sm:text-[5.4rem] md:text-[7rem] lg:text-[9.5rem] xl:text-[11rem] font-black text-white leading-[0.95]"
+                className="hero-kashida text-[clamp(4.1rem,18vw,5.85rem)] sm:text-[5.4rem] md:text-[7rem] lg:text-[9.5rem] xl:text-[11rem] font-black text-white leading-[0.95] drop-shadow-[0_10px_35px_rgba(0,0,0,0.8)]"
               >
                 {lang === "ar" ? "الغدير" : "ALGHDEER"}
               </motion.h1>
@@ -82,32 +102,40 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 1.2 }}
-            className="text-white/75 text-base sm:text-lg md:text-xl max-w-md sm:max-w-2xl mb-8 sm:mb-10 leading-relaxed mx-auto"
+            className="text-white/80 text-base sm:text-lg md:text-xl max-w-md sm:max-w-2xl mb-8 sm:mb-10 leading-relaxed mx-auto font-light drop-shadow-md"
           >
             {t("heroSub")}
           </motion.p>
 
+          {/* Liquid Interactive Buttons with Spring Physics & Gamified Touch */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 1.8 }}
-            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center"
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 1.6 }}
+            className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center items-center"
           >
-            <a
-              href="#events"
-              className="group relative px-5 sm:px-8 py-3 sm:py-4 border border-[#cba135]/55 text-white text-[11px] sm:text-sm tracking-[0.2em] uppercase overflow-hidden text-center"
-            >
-              <span className="relative z-10 group-hover:text-black transition-colors duration-500">
-                {t("exploreBtn")}
-              </span>
-              <div className="absolute inset-0 bg-[#cba135] scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left rtl:origin-right" />
-            </a>
-            <a
+            {/* Primary Liquid Gold Button */}
+            <LiquidButton
               href="#contact"
-              className="px-5 sm:px-8 py-3 sm:py-4 bg-[#cba135] text-black text-[11px] sm:text-sm tracking-[0.2em] uppercase font-bold hover:bg-[#d4b458] transition-all text-center"
+              variant="liquid-gold"
+              size="lg"
+              breathe={true}
+              icon={<Sparkles size={16} />}
+              iconPosition="left"
             >
               {t("inquireBtn")}
-            </a>
+            </LiquidButton>
+
+            {/* Secondary Frosted Liquid Glass Button */}
+            <LiquidButton
+              href="#events"
+              variant="liquid-glass"
+              size="lg"
+              icon={<Compass size={16} />}
+              iconPosition="right"
+            >
+              {t("exploreBtn")}
+            </LiquidButton>
           </motion.div>
         </div>
       </motion.div>
