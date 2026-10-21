@@ -28,9 +28,16 @@ export default function Hero() {
   const extendWidth = narrow ? extendWidthNarrow : extendWidthWide;
 
   return (
-    <section ref={ref} id="home" className="relative h-[125vh] w-full overflow-hidden">
+    <section
+      ref={ref}
+      id="home"
+      className="relative h-[85svh] sm:h-[90svh] md:h-[125vh] w-full overflow-hidden"
+    >
       {/* Video Background Layer with Ambient Overlays */}
-      <motion.div style={{ scale: imgScale }} className="absolute inset-0 z-0">
+      <motion.div
+        style={{ scale: narrow ? 1 : imgScale }}
+        className="absolute inset-0 z-0"
+      >
         <video
           src="/instagram/DXl2kAGijT4.mp4"
           autoPlay
@@ -51,11 +58,11 @@ export default function Hero() {
       </motion.div>
 
       <motion.div
-        style={{ opacity, y }}
-        className="sticky top-0 h-screen flex items-center z-10"
+        style={narrow ? undefined : { opacity, y }}
+        className="relative md:sticky top-0 h-full md:h-screen flex items-center justify-center z-10 pt-20 pb-8 sm:pt-24 sm:pb-10 md:py-0"
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-16 text-center">
-          <div className="overflow-visible mb-4 sm:mb-6">
+          <div className="overflow-visible mb-3 sm:mb-6">
             <motion.div
               initial={{ y: "80%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -65,9 +72,9 @@ export default function Hero() {
                 style={{
                   scaleX: lang === "ar" ? titleScaleX : 1,
                   letterSpacing: lang === "ar" ? titleLetterSpacing : "0em",
-                  y: titleY,
+                  y: narrow ? 0 : titleY,
                 }}
-                className="hero-kashida text-[clamp(4.1rem,18vw,5.85rem)] sm:text-[5.4rem] md:text-[7rem] lg:text-[9.5rem] xl:text-[11rem] font-black text-white leading-[0.95] drop-shadow-[0_10px_35px_rgba(0,0,0,0.8)]"
+                className="hero-kashida text-[clamp(3.2rem,14vw,4.8rem)] sm:text-[5.4rem] md:text-[7rem] lg:text-[9.5rem] xl:text-[11rem] font-black text-white leading-[0.95] drop-shadow-[0_10px_35px_rgba(0,0,0,0.8)]"
               >
                 {lang === "ar" ? "الغدير" : "ALGHDEER"}
               </motion.h1>
@@ -75,7 +82,7 @@ export default function Hero() {
                 style={{
                   width: extendWidth,
                 }}
-                className="hero-extend-line mt-3 sm:mt-4 mx-auto"
+                className="hero-extend-line mt-2.5 sm:mt-4 mx-auto"
               />
             </motion.div>
           </div>
@@ -84,7 +91,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 1.2 }}
-            className="text-white/80 text-base sm:text-lg md:text-xl max-w-md sm:max-w-2xl mb-8 sm:mb-10 leading-relaxed mx-auto font-light drop-shadow-md"
+            className="text-white/80 text-xs sm:text-base md:text-xl max-w-sm sm:max-w-2xl mb-6 sm:mb-10 leading-relaxed mx-auto font-light drop-shadow-md px-2"
           >
             {t("heroSub")}
           </motion.p>
@@ -94,7 +101,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 1.6 }}
-            className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center items-center"
+            className="flex flex-col sm:flex-row gap-2.5 sm:gap-5 justify-center items-center"
           >
             {/* Primary Liquid Gold Button */}
             <LiquidButton
