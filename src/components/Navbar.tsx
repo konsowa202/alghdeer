@@ -67,7 +67,7 @@ export default function Navbar() {
           <div className="hidden xl:flex items-center gap-4">
             <button
               onClick={() => setLang(lang === "en" ? "ar" : "en")}
-              className="text-white/70 hover:text-white transition-colors text-xs tracking-[0.15em] border border-white/15 px-3 py-1.5 rounded-full backdrop-blur-md hover:border-[#cba135]/60 hover:text-[#f5df9a]"
+              className="text-white/70 hover:text-white transition-colors text-xs tracking-[0.15em] border border-white/15 px-3 py-1.5 rounded-[12px] backdrop-blur-md hover:border-[#cba135]/60 hover:text-[#f5df9a]"
             >
               {lang === "en" ? "عربي" : "EN"}
             </button>

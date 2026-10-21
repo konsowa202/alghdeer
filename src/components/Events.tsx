@@ -114,7 +114,7 @@ export default function Events() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-[#111] text-left focus:outline-none border border-white/10 hover:border-[#cba135]/60 transition-all"
+              className="group relative aspect-square rounded-[16px] overflow-hidden bg-[#111] text-left focus:outline-none border border-white/10 hover:border-[#cba135]/60 transition-all"
             >
               <img
                 src={cards[0].image}
@@ -122,7 +122,7 @@ export default function Events() {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/20" />
-              <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/55 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-[#cba135] group-hover:text-black transition-all">
+              <div className="absolute top-3 right-3 w-8 h-8 rounded-[10px] bg-black/55 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-[#cba135] group-hover:text-black transition-all">
                 <Play size={13} className="fill-current ml-0.5" />
               </div>
               <div className="absolute bottom-3.5 inset-x-3.5 text-center" dir={isAr ? "rtl" : "ltr"}>
@@ -143,7 +143,7 @@ export default function Events() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.08 }}
-              className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-[#111] text-left focus:outline-none border border-white/10 hover:border-[#cba135]/60 transition-all"
+              className="group relative aspect-square rounded-[16px] overflow-hidden bg-[#111] text-left focus:outline-none border border-white/10 hover:border-[#cba135]/60 transition-all"
             >
               <img
                 src={cards[1].image}
@@ -165,7 +165,7 @@ export default function Events() {
                   {isAr ? "جيوب • دبابات" : "JEEPS • ATVS"}
                 </span>
               </div>
-              <div className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/65 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-[#cba135] group-hover:text-black transition-all">
+              <div className="absolute bottom-3 right-3 w-8 h-8 rounded-[10px] bg-black/65 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-[#cba135] group-hover:text-black transition-all">
                 <Play size={13} className="fill-current ml-0.5" />
               </div>
             </motion.button>
@@ -178,7 +178,7 @@ export default function Events() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.14 }}
-              className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-[#111] text-center focus:outline-none border border-white/10 hover:border-[#cba135]/60 transition-all"
+              className="group relative aspect-square rounded-[16px] overflow-hidden bg-[#111] text-center focus:outline-none border border-white/10 hover:border-[#cba135]/60 transition-all"
             >
               <img
                 src={cards[2].image}
@@ -210,7 +210,7 @@ export default function Events() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-[#111] text-left focus:outline-none border border-white/10 hover:border-[#cba135]/60 transition-all"
+              className="group relative aspect-square rounded-[16px] overflow-hidden bg-[#111] text-left focus:outline-none border border-white/10 hover:border-[#cba135]/60 transition-all"
             >
               <img
                 src={cards[3].image}
@@ -218,7 +218,7 @@ export default function Events() {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
-              <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/55 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-[#cba135] group-hover:text-black transition-all">
+              <div className="absolute top-3 right-3 w-8 h-8 rounded-[10px] bg-black/55 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-[#cba135] group-hover:text-black transition-all">
                 <Play size={13} className="fill-current ml-0.5" />
               </div>
               <div className="absolute bottom-3.5 inset-x-3.5 text-center" dir={isAr ? "rtl" : "ltr"}>
@@ -239,7 +239,7 @@ export default function Events() {
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
             dir={isAr ? "rtl" : "ltr"}
-            className="lg:col-span-6 relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 group flex flex-col justify-between p-6 sm:p-10 md:p-12"
+            className="lg:col-span-6 relative aspect-square rounded-[16px] overflow-hidden border border-white/10 group flex flex-col justify-between p-6 sm:p-10 md:p-12"
           >
             <img
               src="/nano/wbk_portal_hero.jpg"

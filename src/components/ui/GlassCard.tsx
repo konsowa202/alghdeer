@@ -51,7 +51,7 @@ export default function GlassCard({
       {/* Soft Ambient Warmth behind the card */}
       {ambientBlob && (
         <div
-          className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#cba135]/10 via-[#cba135]/5 to-transparent blur-2xl opacity-30 group-hover/glass:opacity-70 transition-opacity duration-700 pointer-events-none -z-10"
+          className="absolute -inset-1 rounded-[16px] bg-gradient-to-r from-[#cba135]/10 via-[#cba135]/5 to-transparent blur-2xl opacity-30 group-hover/glass:opacity-70 transition-opacity duration-700 pointer-events-none -z-10"
         />
       )}
 
@@ -74,7 +74,7 @@ export default function GlassCard({
         transition={{ type: "spring", stiffness: 350, damping: 25 }}
         style={{ transformStyle: "preserve-3d" }}
         className={`
-          relative h-full w-full rounded-2xl sm:rounded-3xl p-6 sm:p-8
+          relative h-full w-full rounded-[16px] p-6 sm:p-8
           backdrop-blur-xl bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent
           border border-white/10 group-hover/glass:border-[#cba135]/40
           shadow-[0_20px_45px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.12)]
