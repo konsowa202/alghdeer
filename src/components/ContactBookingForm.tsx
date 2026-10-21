@@ -241,10 +241,8 @@ export default function ContactBookingForm() {
                       type="button"
                       disabled={downloadingImage}
                       onClick={handleDownloadImage}
-                      className="group relative flex items-center justify-center gap-2 py-2.5 px-3 bg-[#1a1610] hover:bg-black text-[#f4ead2] rounded-[14px] text-xs font-bold transition-all shadow-md cursor-pointer disabled:opacity-60 overflow-hidden"
+                      className="group relative flex items-center justify-center gap-2 py-2.5 px-3 bg-[#1a1610] hover:bg-black text-[#f4ead2] ticket-mask-cutout rounded-none border-y border-dashed border-[#f4ead2]/30 text-xs font-bold transition-all shadow-md cursor-pointer disabled:opacity-60 overflow-hidden"
                     >
-                      <span className="pointer-events-none absolute -start-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#f4ead2]" />
-                      <span className="pointer-events-none absolute -end-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#f4ead2]" />
                       <Download size={14} className="text-[#cba135]" />
                       <span>{downloadingImage ? (isAr ? "جاري التوليد..." : "Saving...") : (isAr ? "حفظ التذكرة بالصور (PNG)" : "Save to Photos (PNG)")}</span>
                     </button>
@@ -253,10 +251,8 @@ export default function ContactBookingForm() {
                     <button
                       type="button"
                       onClick={() => setShowWalletModal(true)}
-                      className="group relative flex items-center justify-center gap-2 py-2.5 px-3 bg-white hover:bg-zinc-100 text-[#1a1610] border border-[#1a1610]/25 rounded-[14px] text-xs font-bold transition-all shadow-sm cursor-pointer overflow-hidden"
+                      className="group relative flex items-center justify-center gap-2 py-2.5 px-3 bg-white hover:bg-zinc-100 text-[#1a1610] ticket-mask-cutout rounded-none border-y border-dashed border-[#1a1610]/35 text-xs font-bold transition-all shadow-sm cursor-pointer overflow-hidden"
                     >
-                      <span className="pointer-events-none absolute -start-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#f4ead2] border border-[#1a1610]/20" />
-                      <span className="pointer-events-none absolute -end-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#f4ead2] border border-[#1a1610]/20" />
                       <QrCode size={14} className="text-[#b5382a]" />
                       <span>{isAr ? "بطاقة المحفظة (QR)" : "Digital Wallet Pass"}</span>
                     </button>
@@ -265,10 +261,8 @@ export default function ContactBookingForm() {
                     <button
                       type="button"
                       onClick={() => downloadIcsFile(issuedTicket)}
-                      className="group relative flex items-center justify-center gap-2 py-2.5 px-3 bg-[#1a1610]/10 hover:bg-[#1a1610]/15 text-[#1a1610] border border-[#1a1610]/25 rounded-[14px] text-xs font-bold transition-all shadow-sm cursor-pointer overflow-hidden"
+                      className="group relative flex items-center justify-center gap-2 py-2.5 px-3 bg-[#1a1610]/10 hover:bg-[#1a1610]/15 text-[#1a1610] ticket-mask-cutout rounded-none border-y border-dashed border-[#1a1610]/35 text-xs font-bold transition-all shadow-sm cursor-pointer overflow-hidden"
                     >
-                      <span className="pointer-events-none absolute -start-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#f4ead2] border border-[#1a1610]/20" />
-                      <span className="pointer-events-none absolute -end-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#f4ead2] border border-[#1a1610]/20" />
                       <Calendar size={14} />
                       <span>{isAr ? "إضافة لتقويم الهاتف" : "Add to Calendar"}</span>
                     </button>
@@ -320,14 +314,13 @@ export default function ContactBookingForm() {
                     href={directWaUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group relative w-full py-3.5 px-4 rounded-[14px] bg-[#25D366] hover:bg-[#1faa53] text-black font-black text-xs tracking-wider uppercase transition-all duration-300 shadow-xl flex items-center justify-center gap-2 cursor-pointer overflow-hidden"
+                    className="group relative w-full py-3.5 px-4 ticket-mask-cutout rounded-none bg-[#25D366] hover:bg-[#1faa53] text-black font-black text-xs tracking-wider uppercase transition-all duration-300 shadow-xl flex items-center justify-center gap-2 cursor-pointer overflow-hidden border-y border-dashed border-black/30"
                   >
-                    {/* Side Ticket Notches */}
-                    <span className="pointer-events-none absolute -start-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#b5382a] border border-black/20" />
-                    <span className="pointer-events-none absolute -end-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#b5382a] border border-black/20" />
+                    {/* Continuous Laser Scanner Sweep */}
+                    <span className="pointer-events-none absolute top-0 bottom-0 w-8 bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-75 animate-laser-sweep" />
 
-                    <MessageCircle size={18} className="fill-black text-transparent shrink-0" />
-                    <span>{isAr ? "فتح محادثة الواتساب وتأكيد الحجز" : "Confirm via WhatsApp"}</span>
+                    <MessageCircle size={18} className="fill-black text-transparent shrink-0 relative z-10" />
+                    <span className="relative z-10">{isAr ? "فتح محادثة الواتساب وتأكيد الحجز" : "Confirm via WhatsApp"}</span>
                   </a>
 
                   <button
@@ -531,16 +524,12 @@ export default function ContactBookingForm() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group relative w-full py-3.5 px-4 rounded-[14px] bg-[#1a1610] hover:bg-black text-[#f4ead2] font-black text-xs tracking-[0.2em] uppercase transition-all duration-300 disabled:opacity-50 shadow-lg border border-[#f4ead2]/25 cursor-pointer overflow-hidden flex items-center justify-center gap-2"
+                  className="group relative w-full py-3.5 px-4 ticket-mask-cutout rounded-none bg-[#1a1610] hover:bg-black text-[#f4ead2] font-black text-xs tracking-[0.2em] uppercase transition-all duration-300 disabled:opacity-50 shadow-lg border-y border-dashed border-[#f4ead2]/35 cursor-pointer overflow-hidden flex items-center justify-center gap-2"
                 >
-                  {/* Side Ticket Notches */}
-                  <span className="pointer-events-none absolute -start-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#b5382a] border border-[#f4ead2]/35" />
-                  <span className="pointer-events-none absolute -end-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#b5382a] border border-[#f4ead2]/35" />
+                  {/* Continuous Laser Scanner Sweep */}
+                  <span className="pointer-events-none absolute top-0 bottom-0 w-8 bg-gradient-to-r from-transparent via-[#ffd700] to-transparent opacity-80 animate-laser-sweep" />
 
-                  {/* Laser Scanner Sweep */}
-                  <span className="pointer-events-none absolute top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-[#ffd700] to-transparent opacity-0 group-hover:opacity-100 group-hover:left-[110%] -left-[10%] transition-all duration-700 ease-in-out" />
-
-                  <span>{loading ? (isAr ? "جاري إصدار التذكرة..." : "Issuing...") : (isAr ? "إصدار تذكرة الحجز" : "Issue Ticket Now")}</span>
+                  <span className="relative z-10">{loading ? (isAr ? "جاري إصدار التذكرة..." : "Issuing...") : (isAr ? "إصدار تذكرة الحجز" : "Issue Ticket Now")}</span>
                 </button>
               </div>
             </div>
@@ -626,10 +615,8 @@ export default function ContactBookingForm() {
                 <button
                   type="button"
                   onClick={handleDownloadImage}
-                  className="group relative w-full py-2.5 px-4 rounded-[14px] bg-[#cba135] hover:bg-[#d4b458] text-black font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer overflow-hidden"
+                  className="group relative w-full py-2.5 px-4 ticket-mask-cutout rounded-none bg-[#cba135] hover:bg-[#d4b458] text-black font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer overflow-hidden border-y border-dashed border-black/30"
                 >
-                  <span className="pointer-events-none absolute -start-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#0B0C10]" />
-                  <span className="pointer-events-none absolute -end-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#0B0C10]" />
                   <Download size={14} />
                   <span>{isAr ? "حفظ التذكرة بالصور (PNG)" : "Save to Photos"}</span>
                 </button>
@@ -637,10 +624,8 @@ export default function ContactBookingForm() {
                 <button
                   type="button"
                   onClick={() => downloadIcsFile(issuedTicket)}
-                  className="group relative w-full py-2 px-4 rounded-[14px] bg-white/10 hover:bg-white/15 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer overflow-hidden"
+                  className="group relative w-full py-2 px-4 ticket-mask-cutout rounded-none bg-white/10 hover:bg-white/15 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer overflow-hidden border-y border-dashed border-white/20"
                 >
-                  <span className="pointer-events-none absolute -start-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#0B0C10]" />
-                  <span className="pointer-events-none absolute -end-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#0B0C10]" />
                   <Calendar size={14} />
                   <span>{isAr ? "إضافة لتقويم الهاتف (Calendar)" : "Add to Calendar"}</span>
                 </button>

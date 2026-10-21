@@ -200,6 +200,39 @@
   animation: liquidBorder 3s ease-in-out infinite;
 }
 
+/* ── Authentic Luxury Ticket Cutout Masks & Shimmer ── */
+.ticket-mask-cutout {
+  -webkit-mask-image: 
+    radial-gradient(circle 9px at 0% 50%, transparent 8px, black 8.5px),
+    radial-gradient(circle 9px at 100% 50%, transparent 8px, black 8.5px);
+  -webkit-mask-composite: destination-in;
+  mask-image: 
+    radial-gradient(circle 9px at 0% 50%, transparent 8px, black 8.5px),
+    radial-gradient(circle 9px at 100% 50%, transparent 8px, black 8.5px);
+  mask-composite: intersect;
+}
+
+@keyframes laserSweep {
+  0% { transform: translateX(-150%) skewX(-20deg); opacity: 0; }
+  15% { opacity: 0.9; }
+  85% { opacity: 0.9; }
+  100% { transform: translateX(250%) skewX(-20deg); opacity: 0; }
+}
+
+@keyframes ticketGoldShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-laser-sweep {
+  animation: laserSweep 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-gold-shimmer {
+  background-size: 200% 100%;
+  animation: ticketGoldShimmer 4s linear infinite;
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #000; }
