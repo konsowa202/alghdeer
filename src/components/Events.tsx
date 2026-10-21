@@ -28,6 +28,11 @@ export default function Events() {
   const [activeVideo, setActiveVideo] = useState<BentoCardItem | null>(null);
   const [isMuted, setIsMuted] = useState(false);
 
+  const openVideo = (card: BentoCardItem) => {
+    setActiveVideo(card);
+    setIsMuted(false);
+  };
+
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const titleScaleX = useTransform(scrollYProgress, (p) =>
     prefersNarrowTitles ? 1 + p * 0.18 : 1 + p * 0.35,
@@ -110,7 +115,7 @@ export default function Events() {
             {/* Card 1: Oasis Gate (Aquarabia style) */}
             <motion.button
               type="button"
-              onClick={() => setActiveVideo(cards[0])}
+              onClick={() => openVideo(cards[0])}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -138,7 +143,7 @@ export default function Events() {
             {/* Card 2: Safari & Dunes (MotoGP slanted poster style) */}
             <motion.button
               type="button"
-              onClick={() => setActiveVideo(cards[1])}
+              onClick={() => openVideo(cards[1])}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -173,7 +178,7 @@ export default function Events() {
             {/* Card 3: Live Tarab Nights (Concert Poster style) */}
             <motion.button
               type="button"
-              onClick={() => setActiveVideo(cards[2])}
+              onClick={() => openVideo(cards[2])}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -205,7 +210,7 @@ export default function Events() {
             {/* Card 4: Aerial Camp Oasis (Qiddiya style) */}
             <motion.button
               type="button"
-              onClick={() => setActiveVideo(cards[3])}
+              onClick={() => openVideo(cards[3])}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -324,16 +329,16 @@ export default function Events() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setActiveVideo(null)}
-            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-3 sm:p-6"
           >
             <motion.div
               initial={{ scale: 0.94, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.94, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-2xl bg-[#0b0c10] border border-white/15 rounded-2xl overflow-hidden"
+              className="relative w-full max-w-xl sm:max-w-2xl bg-[#0b0c10] border border-white/15 rounded-2xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.9)]"
             >
-              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#121318]">
                 <div>
                   <h4 className="text-sm sm:text-base font-bold text-white">
                     {isAr ? activeVideo.titleAr : activeVideo.titleEn}
@@ -346,10 +351,10 @@ export default function Events() {
                   <button
                     type="button"
                     onClick={() => setIsMuted((m) => !m)}
-                    className="px-3 py-1.5 bg-white/10 hover:bg-[#cba135] hover:text-black text-white text-xs rounded-md flex items-center gap-1.5 transition-colors"
+                    className="px-3 py-1.5 bg-white/10 hover:bg-[#cba135] hover:text-black text-white text-xs rounded-md flex items-center gap-1.5 transition-colors font-medium"
                   >
-                    {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                    <span>{isMuted ? (isAr ? "تشغيل الصوت" : "Unmute") : isAr ? "كتم" : "Mute"}</span>
+                    {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                    <span>{isMuted ? (isAr ? "تشغيل الصوت" : "Unmute") : isAr ? "صوت مفعّل" : "Sound On"}</span>
                   </button>
                   <a
                     href={activeVideo.permalink}
@@ -357,6 +362,7 @@ export default function Events() {
                     rel="noopener noreferrer"
                     className="p-1.5 bg-white/10 hover:bg-[#cba135] hover:text-black text-white rounded-md transition-colors"
                     aria-label="Instagram"
+                    title="Instagram"
                   >
                     <ExternalLink size={15} />
                   </a>
@@ -370,15 +376,16 @@ export default function Events() {
                   </button>
                 </div>
               </div>
-              <div className="relative aspect-video bg-black">
+              <div className="relative bg-black flex items-center justify-center max-h-[72vh] min-h-[300px] overflow-hidden">
                 <video
+                  key={activeVideo.id}
                   src={activeVideo.videoUrl}
                   autoPlay
                   muted={isMuted}
                   loop
                   playsInline
                   controls
-                  className="w-full h-full object-contain"
+                  className="max-h-[72vh] w-auto max-w-full object-contain mx-auto"
                 />
               </div>
             </motion.div>
