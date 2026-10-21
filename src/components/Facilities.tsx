@@ -190,7 +190,7 @@ export default function Facilities() {
           <div className="w-20 sm:w-28 h-px bg-gradient-to-r from-transparent via-[#cba135] to-transparent mx-auto mt-6" />
 
           {/* Interactive Gamified Filter Tabs (Desktop Only) */}
-          <div className="hidden sm:flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-8 p-1.5 bg-white/[0.03] border border-white/10 rounded-full backdrop-blur-xl">
+          <div className="hidden sm:flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-8 p-1.5 bg-white/[0.03] border border-white/10 rounded-[16px] backdrop-blur-xl">
             {[
               { id: "all", label: isAr ? "جميع المرافق (6)" : "All (6)" },
               { id: "hospitality", label: isAr ? "الضيافة والولائم" : "Hospitality & VIP" },
@@ -202,7 +202,7 @@ export default function Facilities() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveCategory(tab.id as FacilityCategory)}
-                  className={`relative px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 ${
+                  className={`relative px-4 sm:px-5 py-2 rounded-[12px] text-xs sm:text-sm font-bold transition-all duration-300 ${
                     active
                       ? "text-black shadow-[0_0_20px_rgba(203,161,53,0.4)]"
                       : "text-white/60 hover:text-white"
@@ -211,7 +211,7 @@ export default function Facilities() {
                   {active && (
                     <motion.div
                       layoutId="activeFacilityTab"
-                      className="absolute inset-0 bg-gradient-to-r from-[#ffd700] via-[#fae5a5] to-[#cba135] rounded-full -z-10"
+                      className="absolute inset-0 bg-gradient-to-r from-[#ffd700] via-[#fae5a5] to-[#cba135] rounded-[12px] -z-10"
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                   )}
@@ -293,7 +293,7 @@ export default function Facilities() {
             <button
               onClick={handlePrev}
               aria-label="Previous facility"
-              className="w-10 h-10 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center active:scale-95"
+              className="w-10 h-10 rounded-[12px] bg-white/10 border border-white/15 text-white flex items-center justify-center active:scale-95"
             >
               <ChevronLeft size={20} />
             </button>
@@ -304,7 +304,7 @@ export default function Facilities() {
                 <button
                   key={idx}
                   onClick={() => setActiveIndex(idx)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
+                  className={`h-2 rounded-[4px] transition-all duration-300 ${
                     idx === activeIndex
                       ? "w-7 bg-gradient-to-r from-[#ffd700] to-[#cba135]"
                       : "w-2 bg-white/20"
@@ -316,7 +316,7 @@ export default function Facilities() {
             <button
               onClick={handleNext}
               aria-label="Next facility"
-              className="w-10 h-10 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center active:scale-95"
+              className="w-10 h-10 rounded-[12px] bg-white/10 border border-white/15 text-white flex items-center justify-center active:scale-95"
             >
               <ChevronRight size={20} />
             </button>
