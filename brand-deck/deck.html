@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>ALGHDEER — Brand Identity Guidelines 2026</title>
+<style>
+/* ============ FONTS ============ */
+@font-face { font-family:'Thmanyah Serif'; src:url('../public/fonts/thmanyah%20typeface/thmanyahserifdisplay/woff2/thmanyahserifdisplay-Bold.woff2') format('woff2'); font-weight:700; }
+@font-face { font-family:'Thmanyah Serif'; src:url('../public/fonts/thmanyah%20typeface/thmanyahserifdisplay/woff2/thmanyahserifdisplay-Black.woff2') format('woff2'); font-weight:900; }
+@font-face { font-family:'Thmanyah Sans'; src:url('../public/fonts/thmanyah%20typeface/thmanyahsans/woff2/thmanyahsans-Regular.woff2') format('woff2'); font-weight:400; }
+@font-face { font-family:'Thmanyah Sans'; src:url('../public/fonts/thmanyah%20typeface/thmanyahsans/woff2/thmanyahsans-Medium.woff2') format('woff2'); font-weight:500; }
+@font-face { font-family:'Thmanyah Sans'; src:url('../public/fonts/thmanyah%20typeface/thmanyahsans/woff2/thmanyahsans-Bold.woff2') format('woff2'); font-weight:700; }
+
+/* ============ TOKENS ============ */
+:root{
+  --obsidian:#0B0C10; --panel:#13151c; --panel2:#181b24;
+  --gold:#CBA135; --gold-l:#D4B458; --beige:#F4EAD2;
+  --red:#B5382A; --teal:#2A7F78; --muted:#8d929e; --line:rgba(255,255,255,.09);
+}
+*{ margin:0; padding:0; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+@page { size:1280px 720px; margin:0; }
+body{ font-family:'Thmanyah Sans',sans-serif; background:var(--obsidian); color:#fff; }
+
+.slide{ width:1280px; height:720px; position:relative; overflow:hidden; page-break-after:always; background:var(--obsidian); padding:56px 64px 64px; }
+.slide:last-child{ page-break-after:auto; }
+
+/* shared chrome */
+.shead{ display:flex; align-items:baseline; gap:18px; border-bottom:1px solid var(--line); padding-bottom:16px; margin-bottom:26px; }
+.snum{ font-family:'Thmanyah Serif'; font-weight:900; font-size:15px; color:var(--gold); letter-spacing:1px; }
+.stitle{ font-family:'Thmanyah Serif'; font-weight:900; font-size:30px; }
+.ssub{ margin-inline-start:auto; font-size:12px; color:var(--muted); }
+.sfoot{ position:absolute; bottom:22px; right:64px; left:64px; display:flex; justify-content:space-between; font-size:10px; color:#565b66; letter-spacing:.5px; }
+.gold{ color:var(--gold); }
+.serif{ font-family:'Thmanyah Serif'; }
+.muted{ color:var(--muted); }
+
+/* pattern strip */
+.dunes{ position:absolute; bottom:0; left:0; right:0; height:120px; opacity:.5;
+  background:
+   radial-gradient(ellipse 600px 120px at 20% 130%, rgba(203,161,53,.16), transparent 70%),
+   radial-gradient(ellipse 700px 140px at 70% 140%, rgba(42,127,120,.14), transparent 70%);
+}
+.stars::before{ content:''; position:absolute; inset:0;
+  background-image:radial-gradient(1.5px 1.5px at 12% 22%, rgba(244,234,210,.7), transparent 60%),
+   radial-gradient(1px 1px at 32% 12%, rgba(244,234,210,.5), transparent 60%),
+   radial-gradient(1.5px 1.5px at 58% 28%, rgba(244,234,210,.55), transparent 60%),
+   radial-gradient(1px 1px at 78% 16%, rgba(244,234,210,.6), transparent 60%),
+   radial-gradient(1.2px 1.2px at 90% 34%, rgba(244,234,210,.45), transparent 60%);
+}
+
+/* COVER */
+.cover{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0; }
+.cover img.mark{ width:300px; height:300px; object-fit:cover; border-radius:50%; border:1px solid rgba(203,161,53,.35); box-shadow:0 30px 80px rgba(0,0,0,.6); }
+.cover h1{ font-family:'Thmanyah Serif'; font-weight:900; font-size:54px; margin-top:34px; }
+.cover .en{ font-size:15px; letter-spacing:9px; color:var(--gold-l); margin-top:10px; }
+.cover .rule{ width:120px; height:2px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:22px 0; }
+.cover p{ color:var(--muted); font-size:14px; }
+
+/* generic blocks */
+.grid{ display:grid; gap:18px; }
+.card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px; }
+.chip{ display:inline-block; padding:4px 12px; border-radius:99px; font-size:11px; border:1px solid rgba(203,161,53,.4); color:var(--gold-l); }
+</style>
+</head>
+<body>
+
+<!-- 01 COVER -->
+<section class="slide cover stars">
+  <div style="position:absolute;top:26px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:6px;color:#565b66;">ALGHDEER CAMP — JEDDAH</div>
+  <img src="../public/logo-dark-bg.png" style="width:660px;filter:drop-shadow(0 24px 60px rgba(0,0,0,.65));" alt="ALGHDEER camp">
+  <h1 style="margin-top:44px;">دليل الهوية البصرية</h1>
+  <div class="en">BRAND IDENTITY GUIDELINES</div>
+  <div class="rule"></div>
+  <p>مخيمات الغدير — وجهة الضيافة الصحراوية الفاخرة · إصدار ٢٠٢٦ · V2.0</p>
+  <div class="dunes"></div>
+</section>
+
+<!-- 02 ESSENCE -->
+<section class="slide stars">
+  <div class="shead"><span class="snum">٠١</span><h2 class="stitle">نبض العلامة</h2><span class="ssub">BRAND ESSENCE</span></div>
+  <div class="grid" style="grid-template-columns:1.15fr .85fr; align-items:stretch;">
+    <div class="card" style="display:flex;flex-direction:column;justify-content:center;padding:34px;">
+      <p class="serif" style="font-size:26px;line-height:1.9;font-weight:700;">
+        «عندما يهدأ الصمت الصحراوي، يبدأ <span class="gold">الغدير</span> —
+        مجرّد ماءٍ وسط الرمال، صار عنواناً لليالٍ لا تُنسى تحت النجوم.»
+      </p>
+      <p class="muted" style="margin-top:18px;font-size:13.5px;line-height:2;">
+        الغدير ليس مخيماً، بل مسرحٌ صحراوي للضيافة العربية المعاصرة: فخامة هادئة بلا استعراض،
+        نارٌ تجمع ولا تحرق، وتفاصيل مُتقَنة من أول التذكرة حتى آخر فنجان قهوة.
+      </p>
+    </div>
+    <div class="grid" style="grid-template-rows:1fr 1fr;">
+      <div class="card">
+        <div class="chip">الموقع التموضعي</div>
+        <p style="margin-top:12px;font-size:14.5px;line-height:1.9;">الوجهة الشتوية والرمضانية الأضخم في جدة لفعاليات الشركات والمناسبات الخاصة — <span class="gold">رفاهية المنتجع، بروح المخيم.</span></p>
+      </div>
+      <div class="card">
+        <div class="chip">وعد العلامة</div>
+        <p style="margin-top:12px;font-size:14.5px;line-height:1.9;">كل ضيف يخرج بذكرى تُروى — <span class="gold">"ليلة الغدير"</span> وحدة قياس السعادة لدينا.</p>
+      </div>
+    </div>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>02 / 20</span></div>
+  <div class="dunes"></div>
+</section>
+
+<!-- 03 PILLARS -->
+<section class="slide">
+  <div class="shead"><span class="snum">٠٢</span><h2 class="stitle">ركائز الشخصية</h2><span class="ssub">BRAND PILLARS</span></div>
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);">
+    <div class="card" style="text-align:center;padding:26px 16px;">
+      <div style="font-size:30px;">🏜️</div>
+      <h3 class="serif" style="font-size:19px;margin:12px 0 8px;">أصالة صحراوية</h3>
+      <p class="muted" style="font-size:12px;line-height:1.9;">كثبان، نار، قهوة سادة — جذور نجدية بلا تصنّع.</p>
+    </div>
+    <div class="card" style="text-align:center;padding:26px 16px;">
+      <div style="font-size:30px;">✨</div>
+      <h3 class="serif" style="font-size:19px;margin:12px 0 8px;">فخامة هادئة</h3>
+      <p class="muted" style="font-size:12px;line-height:1.9;">ذهبٌ على أسود، همسٌ لا صخب — الفخامة في التفاصيل.</p>
+    </div>
+    <div class="card" style="text-align:center;padding:26px 16px;">
+      <div style="font-size:30px;">🎬</div>
+      <h3 class="serif" style="font-size:19px;margin:12px 0 8px;">ليالٍ سينمائية</h3>
+      <p class="muted" style="font-size:12px;line-height:1.9;">إضاءة، دخان، ونجوم — كل لقطة صالحة للنشر.</p>
+    </div>
+    <div class="card" style="text-align:center;padding:26px 16px;">
+      <div style="font-size:30px;">🛡️</div>
+      <h3 class="serif" style="font-size:19px;margin:12px 0 8px;">خصوصية مطلقة</h3>
+      <p class="muted" style="font-size:12px;line-height:1.9;">حجوزات مغلقة، بوابة VIP، وتجربة لا يشاركها غريب.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:20px;padding:20px 26px;">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px;"><span>دافئ وعفوي</span><span>رسمي وفخم</span></div>
+    <div style="height:6px;border-radius:99px;background:linear-gradient(90deg,var(--teal),var(--gold) 62%,#3a3f4b 62%);"></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:14px 0 8px;"><span>تراثي</span><span>معاصر</span></div>
+    <div style="height:6px;border-radius:99px;background:linear-gradient(90deg,#3a3f4b,var(--gold) 45%,#3a3f4b 45%);"></div>
+    <p class="muted" style="font-size:11px;margin-top:14px;">موضع العلامة: ٦٢٪ نحو الفخامة الرسمية، ومنتصف الطريق بين التراث والمعاصرة — تراثٌ يلبس حلةً عصرية.</p>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>03 / 20</span></div>
+</section>
+
+<!-- 04 PRIMARY LOGO -->
+<section class="slide stars">
+  <div class="shead"><span class="snum">٠٣</span><h2 class="stitle">الشعار الأساسي</h2><span class="ssub">PRIMARY LOGO</span></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr; height:480px;">
+    <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:#05060a;gap:26px;position:relative;">
+      <img src="../public/logo-dark-bg.png" style="width:86%;" alt="">
+      <div style="position:absolute;bottom:14px;right:16px;font-size:11px;color:var(--gold-l);background:rgba(0,0,0,.45);padding:4px 12px;border-radius:99px;">النسخة الرئيسية — ذهبي على أوبسيديان</div>
+    </div>
+    <div class="grid" style="grid-template-rows:1fr 1fr 1fr;">
+      <div class="card" style="display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1d7a72,#0d4a5c);">
+        <img src="../public/logo-white.png" style="width:74%;" alt="">
+      </div>
+      <div class="card" style="display:flex;align-items:center;justify-content:center;background:var(--beige);">
+        <img src="../public/logo-light-bg.png" style="width:74%;" alt="">
+      </div>
+      <div class="card" style="display:flex;align-items:center;justify-content:center;background:#0B0C10;border:1px solid var(--line);">
+        <img src="../public/logo-dark-bg.png" style="width:74%;" alt="">
+      </div>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:16px;font-size:12.5px;">شعار واحد، أربع نسخ لونية معتمدة فقط: <span class="gold">الذهبي على الداكن</span> هو الافتراضي، الأبيض للتيل والصور، الأسود على الرمل للمطبوعات — ولا خامس لها.</p>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>04 / 20</span></div>
+</section>
+
+<!-- 05 LOGO IN USE -->
+<section class="slide">
+  <div class="shead"><span class="snum">٠٤</span><h2 class="stitle">الشعار في الاستخدام</h2><span class="ssub">LOGO IN CONTEXT</span></div>
+  <div class="grid" style="grid-template-columns:1.35fr 1fr 1fr;grid-template-rows:1fr 1fr;height:500px;gap:16px;">
+    <div style="grid-row:span 2;border-radius:14px;overflow:hidden;position:relative;border:1px solid var(--line);">
+      <img src="shots/home_hero.png" style="width:100%;height:100%;object-fit:cover;object-position:top;">
+      <span class="tag">ترويسة الموقع — أعلى اليمين دائماً</span>
+    </div>
+    <div style="border-radius:14px;overflow:hidden;position:relative;border:1px solid var(--line);background:#05060a;display:flex;align-items:center;justify-content:center;">
+      <img src="../public/logo.jpg" style="width:120px;height:120px;object-fit:cover;border-radius:26px;box-shadow:0 14px 36px rgba(0,0,0,.5);">
+      <span class="tag">أيقونة التطبيق — App Icon</span>
+    </div>
+    <div style="border-radius:14px;overflow:hidden;position:relative;border:1px solid var(--line);">
+      <img src="shots/stub_crop.png" style="width:100%;height:100%;object-fit:cover;object-position:top;">
+      <span class="tag">جناح التذكرة — أبيض على الجمر</span>
+    </div>
+    <div style="border-radius:14px;overflow:hidden;position:relative;border:1px solid var(--line);background:linear-gradient(135deg,#1d7a72,#0d4a5c);display:flex;align-items:center;justify-content:center;">
+      <img src="../public/logo.jpg" style="width:96px;height:96px;object-fit:cover;border-radius:50%;border:2px solid rgba(244,234,210,.5);">
+      <span class="tag">أفاتار السوشيال — دائري</span>
+    </div>
+    <div style="border-radius:14px;position:relative;border:1px solid var(--line);background:var(--panel);display:flex;align-items:center;justify-content:center;gap:14px;">
+      <img src="../public/logo-dark-bg.png" style="width:150px;">
+      <span style="font-size:11px;color:var(--muted);">التوقيع الرقمي<br>فوتر الإيميلات والعروض</span>
+      <span class="tag">التوقيع الرقمي</span>
+    </div>
+  </div>
+  <style>.tag{position:absolute;bottom:10px;right:10px;font-size:10.5px;background:rgba(0,0,0,.6);color:var(--beige);padding:4px 10px;border-radius:99px;}</style>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>05 / 20</span></div>
+</section>
+
+<!-- 06 ANATOMY -->
+<section class="slide" style="background:linear-gradient(180deg,#0a1420,#0B0C10);">
+  <div class="shead"><span class="snum">٠٥</span><h2 class="stitle">تشريح الشعار</h2><span class="ssub">LOGO ANATOMY</span></div>
+  <div style="display:flex;gap:30px;align-items:stretch;height:500px;">
+    <div style="flex:1;position:relative;border-radius:16px;border:1px dashed rgba(203,161,53,.4);background:
+      repeating-linear-gradient(0deg,transparent 0 39px,rgba(203,161,53,.10) 39px 40px),
+      repeating-linear-gradient(90deg,transparent 0 39px,rgba(203,161,53,.10) 39px 40px);">
+      <!-- logo centered -->
+      <img src="../public/logo-dark-bg.png" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:76%;" alt="">
+      <!-- numbered feature badges (match cards ١-٤) -->
+      <span style="position:absolute;top:36%;left:13.5%;width:24px;height:24px;border-radius:50%;background:var(--gold);color:#000;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);box-shadow:0 0 0 3px rgba(203,161,53,.25);">١</span>
+      <span style="position:absolute;top:47%;left:46%;width:24px;height:24px;border-radius:50%;background:var(--gold);color:#000;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);box-shadow:0 0 0 3px rgba(203,161,53,.25);">٢</span>
+      <span style="position:absolute;top:56%;left:88%;width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);box-shadow:0 0 0 3px rgba(42,127,120,.3);">٣</span>
+      <!-- baseline -->
+      <div style="position:absolute;top:64%;left:12%;right:12%;height:1.5px;background:var(--beige);opacity:.55;"></div>
+      <span style="position:absolute;top:60%;left:88%;width:24px;height:24px;border-radius:50%;background:var(--beige);color:#000;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);">٤</span>
+      <span style="position:absolute;top:66%;left:12%;font-size:10px;color:var(--beige);opacity:.7;letter-spacing:2px;">BASELINE</span>
+    </div>
+    <div style="width:360px;display:flex;flex-direction:column;gap:14px;">
+      <div class="card"><div style="display:flex;gap:10px;align-items:center;"><span style="width:26px;height:26px;border-radius:50%;background:var(--gold);color:#000;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">١</span><b>علامة ™ التجارية</b></div><p class="muted" style="font-size:12px;line-height:1.9;margin-top:8px;">أعلى يسار العلامة بحجم ١٨٪ من ارتفاع الحرف — لا تُحذف في الاستخدامات الرسمية.</p></div>
+      <div class="card"><div style="display:flex;gap:10px;align-items:center;"><span style="width:26px;height:26px;border-radius:50%;background:var(--gold);color:#000;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">٢</span><b>ALGHDEER — التدرج الذهبي</b></div><p class="muted" style="font-size:12px;line-height:1.9;margin-top:8px;">تدرج معدني من #B8892D إلى #E3C169 يعطي عمق السبيكة — يُستخدم كملف PNG جاهز ولا يُعاد تلوينه.</p></div>
+      <div class="card"><div style="display:flex;gap:10px;align-items:center;"><span style="width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">٣</span><b>الوصف camp</b></div><p class="muted" style="font-size:12px;line-height:1.9;margin-top:8px;">أحرف صغيرة نحيفة (Thin) بمحاذاة خط الأساس — أبيض على الداكن، أسود على الفاتح.</p></div>
+      <div class="card"><div style="display:flex;gap:10px;align-items:center;"><span style="width:26px;height:26px;border-radius:50%;background:var(--beige);color:#000;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">٤</span><b>النسبة ٦٫٣ : ١</b></div><p class="muted" style="font-size:12px;line-height:1.9;margin-top:8px;">العرض الكلي = ٦٫٣ × الارتفاع — نسبة أفقية واثقة مصممة للترويسات واللافتات.</p></div>
+    </div>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>06 / 20</span></div>
+</section>
+<!-- 07 CLEARSPACE -->
+<section class="slide">
+  <div class="shead"><span class="snum">٠٦</span><h2 class="stitle">مساحة الأمان والأحجام</h2><span class="ssub">CLEARSPACE & SIZING</span></div>
+  <div style="display:flex;gap:26px;height:470px;">
+    <div class="card" style="flex:1.2;display:flex;align-items:center;justify-content:center;position:relative;">
+      <!-- clearspace diagram -->
+      <div style="position:relative;border:1.5px dashed var(--gold);padding:52px;">
+        <img src="../public/logo-dark-bg.png" style="width:330px;display:block;" alt="">
+        <span style="position:absolute;top:8px;right:50%;transform:translateX(50%);font-size:11px;color:var(--gold);">×</span>
+        <span style="position:absolute;bottom:8px;right:50%;transform:translateX(50%);font-size:11px;color:var(--gold);">×</span>
+        <span style="position:absolute;top:50%;right:10px;transform:translateY(-50%);font-size:11px;color:var(--gold);">×</span>
+        <span style="position:absolute;top:50%;left:10px;transform:translateY(-50%);font-size:11px;color:var(--gold);">×</span>
+      </div>
+      <p class="muted" style="position:absolute;bottom:16px;right:20px;left:20px;font-size:11.5px;text-align:center;">المساحة الآمنة = ارتفاع حرف <span class="gold">×</span> (حرف A من العلامة) من كل الجهات — لا نصوص ولا صور داخلها.</p>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+      <div class="card" style="display:flex;align-items:center;justify-content:space-around;">
+        <img src="../public/logo-dark-bg.png" style="width:230px;" alt="">
+        <div style="text-align:center;"><div class="serif" style="font-size:20px;color:var(--gold);">٢٤٠px</div><div class="muted" style="font-size:11px;">الحد الأدنى رقمياً</div></div>
+      </div>
+      <div class="card" style="display:flex;align-items:center;justify-content:space-around;">
+        <img src="../public/logo-dark-bg.png" style="width:110px;" alt="">
+        <div style="text-align:center;"><div class="serif" style="font-size:20px;color:var(--gold);">١٢٠px</div><div class="muted" style="font-size:11px;">استثنائي — توقيعات وأيقونات</div></div>
+      </div>
+      <div class="card" style="display:flex;align-items:center;justify-content:space-around;">
+        <div style="width:44px;height:44px;border-radius:12px;overflow:hidden;"><img src="../public/logo.jpg" style="width:100%;height:100%;object-fit:cover;"></div>
+        <div style="text-align:center;"><div class="serif" style="font-size:20px;color:var(--gold);">٤٤px</div><div class="muted" style="font-size:11px;">الأيقونة فقط — أفاتار وسوشيال</div></div>
+      </div>
+      <div class="card" style="background:rgba(181,56,42,.08);border-color:rgba(181,56,42,.35);">
+        <p style="font-size:12.5px;line-height:1.9;color:#e8b4ab;">تحت ١٢٠px استخدم الأيقونة الخطية وحدها — العلامة الأفقية تفقد مقروئية «camp».</p>
+      </div>
+    </div>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>07 / 20</span></div>
+</section>
+
+<!-- 08 MISUSE -->
+<section class="slide">
+  <div class="shead"><span class="snum">٠٧</span><h2 class="stitle">ما لا يجوز</h2><span class="ssub">LOGO MISUSE</span></div>
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);height:430px;">
+    <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
+      <img src="../public/logo-dark-bg.png" style="width:85%;filter:hue-rotate(140deg) saturate(2);" alt="">
+      <span style="color:var(--red);font-size:22px;">✕</span>
+      <p class="muted" style="font-size:11.5px;text-align:center;">تغيير ألوان العلامة</p>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
+      <img src="../public/logo-dark-bg.png" style="width:95%;transform:scaleY(.55);" alt="">
+      <span style="color:var(--red);font-size:22px;">✕</span>
+      <p class="muted" style="font-size:11.5px;text-align:center;">مطّ أو ضغط الشعار</p>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
+      <img src="../public/logo-dark-bg.png" style="width:80%;transform:rotate(-14deg);" alt="">
+      <span style="color:var(--red);font-size:22px;">✕</span>
+      <p class="muted" style="font-size:11.5px;text-align:center;">إمالة أو تدوير</p>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:linear-gradient(45deg,#7a2d8f,#2266aa);">
+      <img src="../public/logo-dark-bg.png" style="width:85%;opacity:.5;" alt="">
+      <span style="color:var(--red);font-size:22px;">✕</span>
+      <p class="muted" style="font-size:11.5px;text-align:center;">خلفية مزدحمة أو تباين ضعيف</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:18px;font-size:12.5px;text-align:center;">أي تعديل على العلامة — ظلال، حدود، إعادة رسم — يمرّ حصراً عبر إدارة الهوية.</p>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>08 / 20</span></div>
+</section>
+
+<!-- 09 COLORS -->
+<section class="slide">
+  <div class="shead"><span class="snum">٠٨</span><h2 class="stitle">منظومة الألوان</h2><span class="ssub">COLOR SYSTEM</span></div>
+  <div class="grid" style="grid-template-columns:repeat(5,1fr);height:330px;">
+    <div style="border-radius:14px;background:#0B0C10;border:1px solid var(--line);padding:16px;display:flex;flex-direction:column;justify-content:flex-end;"><b style="font-size:14px;">أوبسيديان الليل</b><span style="font-size:10.5px;color:var(--muted);direction:ltr;text-align:end;">#0B0C10 · RGB 11 12 16<br>C 78 M 70 Y 60 K 88</span></div>
+    <div style="border-radius:14px;background:var(--gold);padding:16px;display:flex;flex-direction:column;justify-content:flex-end;color:#1a1610;"><b style="font-size:14px;">ذهب الغدير</b><span style="font-size:10.5px;direction:ltr;text-align:end;">#CBA135 · RGB 203 161 53<br>C 22 M 33 Y 92 K 4</span></div>
+    <div style="border-radius:14px;background:var(--beige);padding:16px;display:flex;flex-direction:column;justify-content:flex-end;color:#1a1610;"><b style="font-size:14px;">رمل الفجر</b><span style="font-size:10.5px;direction:ltr;text-align:end;">#F4EAD2 · RGB 244 234 210<br>C 5 M 7 Y 18 K 0</span></div>
+    <div style="border-radius:14px;background:var(--red);padding:16px;display:flex;flex-direction:column;justify-content:flex-end;"><b style="font-size:14px;">جمر المجلس</b><span style="font-size:10.5px;color:#ffd9d2;direction:ltr;text-align:end;">#B5382A · RGB 181 56 42<br>C 20 M 90 Y 95 K 12</span></div>
+    <div style="border-radius:14px;background:var(--teal);padding:16px;display:flex;flex-direction:column;justify-content:flex-end;"><b style="font-size:14px;">ماء الواحة</b><span style="font-size:10.5px;color:#d8f3ef;direction:ltr;text-align:end;">#2A7F78 · RGB 42 127 120<br>C 84 M 34 Y 47 K 18</span></div>
+  </div>
+  <div class="card" style="margin-top:22px;">
+    <p style="font-size:13px;margin-bottom:12px;">نسبة الاستخدام <span class="gold">٦٠ / ٢٥ / ١٠ / ٥</span></p>
+    <div style="display:flex;height:26px;border-radius:8px;overflow:hidden;font-size:10.5px;font-weight:700;">
+      <div style="width:60%;background:#171a22;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);">أوبسيديان ٦٠٪</div>
+      <div style="width:25%;background:var(--beige);color:#1a1610;display:flex;align-items:center;justify-content:center;">رمل ٢٥٪</div>
+      <div style="width:10%;background:var(--gold);color:#1a1610;display:flex;align-items:center;justify-content:center;">ذهب</div>
+      <div style="width:5%;background:var(--red);display:flex;align-items:center;justify-content:center;">٥</div>
+    </div>
+    <p class="muted" style="font-size:11px;margin-top:12px;">التيل للحظات خاصة فقط (أقسام الماء والواحة) — الإفراط فيه يحوّل الهوية من صحراوية إلى بحرية.</p>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>09 / 20</span></div>
+</section>
+
+<!-- 10 TYPOGRAPHY -->
+<section class="slide">
+  <div class="shead"><span class="snum">٠٩</span><h2 class="stitle">الخطوط</h2><span class="ssub">TYPOGRAPHY</span></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:22px;">
+    <div class="card" style="padding:26px;">
+      <div class="chip">العناوين — عربي</div>
+      <p class="serif" style="font-size:52px;font-weight:900;line-height:1.35;margin:14px 0 6px;">ليالٍ من ذهب</p>
+      <p class="serif" style="font-size:20px;color:var(--gold-l);">ثمانية سيريف ديسبلاي — Bold / Black</p>
+      <p class="muted" style="font-size:11.5px;margin-top:10px;line-height:1.9;">للعناوين الكبرى والتذاكر والأغلفة. لا يستخدم أبداً لنصوص أصغر من ١٨pt.</p>
+    </div>
+    <div class="card" style="padding:26px;">
+      <div class="chip">النصوص — عربي</div>
+      <p style="font-size:26px;font-weight:500;line-height:1.8;margin:14px 0 6px;">احجز ليلتك تحت نجوم بريمان، واترك التفاصيل لنا من القهوة حتى الكبسة.</p>
+      <p style="font-size:15px;color:var(--gold-l);font-weight:500;">ثمانية سنس — Regular / Medium / Bold</p>
+      <p class="muted" style="font-size:11.5px;margin-top:10px;line-height:1.9;">للفقرات والواجهات والقوائم — أساس كل التواصل المكتوب.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:20px;display:flex;align-items:center;gap:30px;padding:18px 26px;">
+    <div style="font-size:26px;letter-spacing:4px;direction:ltr;">ALGHDEER <span style="color:var(--gold);">camp</span></div>
+    <div class="muted" style="font-size:12px;line-height:1.9;">اللاتيني والأرقام: <b style="color:#fff;">IBM Plex Sans</b> — بديل ويب آمن، يطابق هندسية ثمانية. الأرقام دائماً Tabular في الجداول والأسعار.</div>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>10 / 20</span></div>
+</section>
+
+<!-- 11 VOICE -->
+<section class="slide stars">
+  <div class="shead"><span class="snum">١٠</span><h2 class="stitle">صوت العلامة</h2><span class="ssub">BRAND VOICE</span></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr 1fr;">
+    <div class="card" style="text-align:center;"><h3 class="serif" style="color:var(--gold);font-size:19px;">مُضيفٌ لا بائع</h3><p class="muted" style="font-size:12px;line-height:1.9;margin-top:8px;">ندعو ولا نلحّ: «تشرّفنا» بدل «عرض لفترة محدودة!»</p></div>
+    <div class="card" style="text-align:center;"><h3 class="serif" style="color:var(--gold);font-size:19px;">واثقٌ بلا غرور</h3><p class="muted" style="font-size:12px;line-height:1.9;margin-top:8px;">جمل قصيرة محسوبة، وأرقام حقيقية بدل الصفات الرنانة.</p></div>
+    <div class="card" style="text-align:center;"><h3 class="serif" style="color:var(--gold);font-size:19px;">شاعرٌ بجرعة مضبوطة</h3><p class="muted" style="font-size:12px;line-height:1.9;margin-top:8px;">صورة واحدة جميلة في الجملة تكفي — النجوم والنار والماء.</p></div>
+  </div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:20px;">
+    <div class="card" style="border-color:rgba(42,127,120,.5);">
+      <b style="color:#7fd8cf;font-size:14px;">✓ نقول</b>
+      <p style="font-size:14.5px;line-height:2.1;margin-top:10px;">«ليلتك تبدأ من بوابة الغدير.»<br>«خمسون ضيفاً؟ جهّزنا المجلس الكبير.»<br>«النجوم مجاناً، والباقي علينا.»</p>
+    </div>
+    <div class="card" style="border-color:rgba(181,56,42,.5);">
+      <b style="color:#f0a396;font-size:14px;">✕ لا نقول</b>
+      <p style="font-size:14.5px;line-height:2.1;margin-top:10px;color:#c9cdd6;">«أقوى عروض الموسم!!! اشتري الآن»<br>«رحلة سفاري مميزة جداً جداً»<br>«أهلاً وسهلاً بك عميلنا العزيز»</p>
+    </div>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>11 / 20</span></div>
+</section>
+
+<!-- 12 GRAPHIC ELEMENTS -->
+<section class="slide">
+  <div class="shead"><span class="snum">١١</span><h2 class="stitle">العناصر الجرافيكية</h2><span class="ssub">GRAPHIC ELEMENTS</span></div>
+  <div class="grid" style="grid-template-columns:1.2fr 1fr;gap:22px;">
+    <div class="card" style="height:470px;position:relative;overflow:hidden;padding:0;">
+      <svg width="100%" height="100%" viewBox="0 0 560 470" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <pattern id="star8" width="70" height="70" patternUnits="userSpaceOnUse">
+            <g fill="none" stroke="#CBA135" stroke-width="1" opacity="0.55">
+              <path d="M35 8 L41 29 L62 35 L41 41 L35 62 L29 41 L8 35 L29 29 Z"/>
+              <circle cx="35" cy="35" r="4"/>
+            </g>
+          </pattern>
+        </defs>
+        <rect width="560" height="470" fill="#0e1017"/>
+        <rect width="560" height="470" fill="url(#star8)"/>
+        <path d="M0 400 Q140 330 280 385 T560 370 V470 H0 Z" fill="rgba(203,161,53,.14)"/>
+        <path d="M0 430 Q160 375 320 420 T560 415 V470 H0 Z" fill="rgba(203,161,53,.22)"/>
+      </svg>
+      <span style="position:absolute;bottom:14px;right:16px;font-size:11px;color:var(--gold-l);background:rgba(0,0,0,.5);padding:4px 12px;border-radius:99px;">باترن «نجمة الغدير» + خطوط الكثبان</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="card"><b style="font-size:14px;">النجمة الثمانية</b><p class="muted" style="font-size:12px;line-height:1.9;margin-top:6px;">نجمة الصحراء الملاحية — تُستخدم باترن خافت (شفافية ≤ ٢٠٪) على الأغلفة والتذاكر والبطاقات.</p></div>
+      <div class="card"><b style="font-size:14px;">خطوط الكثبان</b><p class="muted" style="font-size:12px;line-height:1.9;margin-top:6px;">منحنيات أفقية متدرجة الذهب أسفل التكوين — ترسّب بصري يوحي بالرمال دون صور.</p></div>
+      <div class="card"><b style="font-size:14px;">الخط الذهبي الرفيع</b><p class="muted" style="font-size:12px;line-height:1.9;margin-top:6px;">فاصل ١px متدرج من وإلى الشفاف — يفصل الأقسام في المطبوعات والويب.</p></div>
+      <div class="card" style="background:rgba(203,161,53,.08);border-color:rgba(203,161,53,.3);"><b style="font-size:14px;color:var(--gold-l);">قاعدة الاكتفاء</b><p class="muted" style="font-size:12px;line-height:1.9;margin-top:6px;">عنصر جرافيكي واحد بطل في كل تصميم — الباقي صمتٌ أنيق.</p></div>
+    </div>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>12 / 20</span></div>
+</section>
+
+<!-- 13 PHOTOGRAPHY -->
+<section class="slide">
+  <div class="shead"><span class="snum">١٢</span><h2 class="stitle">أسلوب التصوير</h2><span class="ssub">PHOTOGRAPHY</span></div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;height:400px;">
+    <div style="border-radius:12px;overflow:hidden;"><img src="../public/nano/nb_campfire_majlis.jpg" style="width:100%;height:100%;object-fit:cover;"></div>
+    <div style="border-radius:12px;overflow:hidden;"><img src="../public/nano/nb_bohemian_walkway_cinematic.jpg" style="width:100%;height:100%;object-fit:cover;"></div>
+    <div style="border-radius:12px;overflow:hidden;"><img src="../public/nano/nb_royal_banquet.jpg" style="width:100%;height:100%;object-fit:cover;"></div>
+    <div style="border-radius:12px;overflow:hidden;"><img src="../public/nano/nb_glass_pavilion.jpg" style="width:100%;height:100%;object-fit:cover;"></div>
+    <div style="border-radius:12px;overflow:hidden;"><img src="../public/nano/nb_about_gate.jpg" style="width:100%;height:100%;object-fit:cover;"></div>
+  </div>
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:18px;">
+    <div class="card" style="padding:14px 18px;"><b style="font-size:12.5px;color:var(--gold-l);">ليلي دائماً</b><p class="muted" style="font-size:11px;margin-top:4px;">الهوية تعيش بعد الغروب — سماء مرصّعة إلزامية في اللقطة البطلة.</p></div>
+    <div class="card" style="padding:14px 18px;"><b style="font-size:12.5px;color:var(--gold-l);">ذهبي دافئ ٢٧٠٠K</b><p class="muted" style="font-size:11px;margin-top:4px;">إضاءة فوانيس ونار — ممنوع الفلورسنت البارد.</p></div>
+    <div class="card" style="padding:14px 18px;"><b style="font-size:12.5px;color:var(--gold-l);">أشخاص بلحظة صادقة</b><p class="muted" style="font-size:11px;margin-top:4px;">ضحكة حول النار، لا بوزات استوديو.</p></div>
+    <div class="card" style="padding:14px 18px;"><b style="font-size:12.5px;color:var(--gold-l);">تفاصيل الضيافة</b><p class="muted" style="font-size:11px;margin-top:4px;">دلة، بخور، سدو — قربٌ يغازل الحواس.</p></div>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>13 / 20</span></div>
+</section>
+<!-- 14 TICKET -->
+<section class="slide" style="background:#0a0b0f;">
+  <div class="shead"><span class="snum">١٣</span><h2 class="stitle">التذكرة — توقيع العلامة</h2><span class="ssub">THE VIP TICKET</span></div>
+  <div style="display:flex;gap:30px;align-items:center;height:470px;">
+    <div style="flex:1.5;border-radius:16px;overflow:hidden;border:1px solid rgba(203,161,53,.25);box-shadow:0 24px 60px rgba(0,0,0,.55);">
+      <img src="shots/ticket_section.png" style="width:100%;display:block;" alt="">
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:13px;">
+      <p class="muted" style="font-size:13px;line-height:2;">التذكرة ليست فورم — هي <span class="gold">أول لمسة من التجربة</span>: ورق مصقول بيج، جمرٌ أحمر، وباركود يهمس «أنت من أهل الـ VIP».</p>
+      <div class="card" style="padding:14px 18px;"><b style="font-size:13px;">جسم التذكرة</b><p class="muted" style="font-size:11.5px;margin-top:4px;">رمل الفجر #F4EAD2 + نصوص حبريّة #1A1610 — قراءة مريحة تحت إضاءة المخيم.</p></div>
+      <div class="card" style="padding:14px 18px;"><b style="font-size:13px;">الجناح المقطوع (Stub)</b><p class="muted" style="font-size:11.5px;margin-top:4px;">جمر المجلس #B5382A مع خط قطع منقّط — يُسلَّم عند البوابة كتذكار.</p></div>
+      <div class="card" style="padding:14px 18px;"><b style="font-size:13px;">رقم التسلسل № ALG-XXXX</b><p class="muted" style="font-size:11.5px;margin-top:4px;">مونوسبيس ذهبي — يتحول لرمز QR في بطاقة المحفظة الرقمية.</p></div>
+      <div class="card" style="padding:14px 18px;"><b style="font-size:13px;">الثقوب الأربعة</b><p class="muted" style="font-size:11.5px;margin-top:4px;">أقواس نصف دائرية بالأوبسيديان — توقيع لا يُقلَّد في المطبوعات.</p></div>
+    </div>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>14 / 20</span></div>
+</section>
+
+<!-- 15 UI COMPONENTS -->
+<section class="slide">
+  <div class="shead"><span class="snum">١٤</span><h2 class="stitle">مكوّنات الواجهة الرقمية</h2><span class="ssub">DIGITAL COMPONENTS</span></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:22px;">
+    <div class="card" style="padding:26px;">
+      <div class="chip">الأزرار</div>
+      <div style="display:flex;flex-direction:column;gap:14px;margin-top:18px;">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <span style="background:var(--gold);color:#000;font-weight:700;font-size:13px;padding:13px 30px;border-radius:10px;">احجز الآن</span>
+          <span class="muted" style="font-size:11px;">Primary — ذهب مصمت للفعل الرئيسي</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <span style="border:1.5px solid var(--gold);color:var(--gold-l);font-weight:700;font-size:13px;padding:12px 30px;border-radius:10px;">استكشف التجارب</span>
+          <span class="muted" style="font-size:11px;">Ghost — ذهب مفرّغ للثانوي</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <span style="background:#25D366;color:#04120a;font-weight:700;font-size:13px;padding:13px 30px;border-radius:99px;">تأكيد عبر واتساب</span>
+          <span class="muted" style="font-size:11px;">قناة التواصل — أخضر واتساب الرسمي فقط</span>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="padding:26px;">
+      <div class="chip">البطاقات والحالات</div>
+      <div style="margin-top:16px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:14px;padding:18px;backdrop-filter:blur(6px);">
+        <p class="muted" style="font-size:11px;margin-bottom:10px;">Glass Card — أبيض ٥٪ فوق الأوبسيديان + حد ١px</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:11px;padding:5px 12px;border-radius:99px;background:rgba(245,158,11,.18);color:#fcd34d;">قيد المراجعة</span>
+          <span style="font-size:11px;padding:5px 12px;border-radius:99px;background:rgba(14,165,233,.18);color:#7dd3fc;">مؤكد</span>
+          <span style="font-size:11px;padding:5px 12px;border-radius:99px;background:rgba(139,92,246,.18);color:#c4b5fd;">الديبوزيت</span>
+          <span style="font-size:11px;padding:5px 12px;border-radius:99px;background:rgba(16,185,129,.18);color:#6ee7b7;">مكتمل</span>
+          <span style="font-size:11px;padding:5px 12px;border-radius:99px;background:rgba(239,68,68,.18);color:#fca5a5;">ملغى</span>
+        </div>
+      </div>
+      <p class="muted" style="font-size:11px;margin-top:12px;line-height:1.9;">شارات الحالة بألوان دلالية ثابتة — لا يجوز استبدالها بألوان الهوية.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:20px;display:flex;align-items:center;gap:24px;padding:16px 24px;">
+    <b style="font-size:13px;">قواعد الحركة</b>
+    <p class="muted" style="font-size:12px;">انتقالات ٣٠٠–٥٠٠ms بمنحنى ease-out · سائل «Liquid» للأزرار الذهبية عند التحويم · ممنوع القفز (bounce) — الفخامة تنساب ولا ترتد.</p>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>15 / 20</span></div>
+</section>
+
+<!-- 16 LAPTOP MOCKUP -->
+<section class="slide stars" style="background:radial-gradient(900px 500px at 50% 120%, rgba(203,161,53,.10), transparent 60%), var(--obsidian);">
+  <div class="shead"><span class="snum">١٥</span><h2 class="stitle">الموقع — سطح المكتب</h2><span class="ssub">DESKTOP WEB · FRAMELESS</span></div>
+  <div style="display:flex;justify-content:center;margin-top:6px;">
+    <div style="width:860px;border-radius:18px;overflow:hidden;box-shadow:0 50px 110px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.08);position:relative;">
+      <img src="shots/home_hero.png" style="width:100%;display:block;" alt="">
+      <div style="position:absolute;top:0;left:0;right:0;height:26px;background:linear-gradient(180deg,rgba(255,255,255,.10),transparent);"></div>
+    </div>
+  </div>
+  <p class="muted" style="text-align:center;margin-top:20px;font-size:12.5px;">الهيرو بملء الشاشة: «الغدير» بثمانية ديسبلاي فوق فيديو الكثبان — أول ٣ ثوانٍ تحكي القصة كاملة.</p>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>16 / 20</span></div>
+</section>
+
+<!-- 17 MOBILE MOCKUP -->
+<section class="slide stars" style="background:radial-gradient(700px 500px at 20% 110%, rgba(42,127,120,.12), transparent 60%), var(--obsidian);">
+  <div class="shead"><span class="snum">١٦</span><h2 class="stitle">الموقع — الجوال أولاً</h2><span class="ssub">MOBILE WEB · FRAMELESS</span></div>
+  <div style="display:flex;gap:44px;align-items:center;justify-content:center;height:500px;">
+    <div style="width:236px;border-radius:26px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.09);">
+      <img src="shots/home_mobile.png" style="width:100%;display:block;" alt="">
+    </div>
+    <div style="max-width:380px;display:flex;flex-direction:column;gap:16px;">
+      <p class="serif" style="font-size:24px;line-height:1.7;font-weight:700;">٧٠٪ من الحجوزات تبدأ من جوال — لذلك صُمم الموقع <span class="gold">للإبهام أولاً.</span></p>
+      <div class="card" style="padding:14px 18px;"><b style="font-size:13px;">أزرار بملء العرض</b><p class="muted" style="font-size:11.5px;margin-top:4px;">هدف لمس لا يقل عن ٤٤×٤٤px.</p></div>
+      <div class="card" style="padding:14px 18px;"><b style="font-size:13px;">التذكرة تتكدس عمودياً</b><p class="muted" style="font-size:11.5px;margin-top:4px;">الجناح الأحمر أسفل الجسم — نفس القصة بترتيب جوال.</p></div>
+      <div class="card" style="padding:14px 18px;"><b style="font-size:13px;">فيديو الهيرو مُحسَّن</b><p class="muted" style="font-size:11.5px;margin-top:4px;">بوستر ثابت للاتصالات البطيئة — الجمال لا يحجب السرعة.</p></div>
+    </div>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>17 / 20</span></div>
+</section>
+
+<!-- 18 DASHBOARD -->
+<section class="slide">
+  <div class="shead"><span class="snum">١٧</span><h2 class="stitle">لوحة تحكم الحجوزات</h2><span class="ssub">STAFF DASHBOARD</span></div>
+  <div style="display:flex;gap:24px;align-items:stretch;height:470px;">
+    <div style="flex:1.65;border-radius:14px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.6);border:1px solid var(--line);">
+      <img src="shots/dash_desktop.png" style="width:100%;height:100%;object-fit:cover;object-position:top;" alt="">
+    </div>
+    <div style="flex:1;display:flex;gap:20px;">
+      <div style="width:44%;border-radius:20px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.6);border:1px solid var(--line);">
+        <img src="shots/dash_mobile.png" style="width:100%;height:100%;object-fit:cover;object-position:top;" alt="">
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:12px;">
+        <div class="card" style="padding:13px 16px;"><b style="font-size:12.5px;">واجهة جوال مستقلة</b><p class="muted" style="font-size:11px;margin-top:3px;">ليست تصغيراً للجدول — كروت، أوراق سفلية، وزر عائم.</p></div>
+        <div class="card" style="padding:13px 16px;"><b style="font-size:12.5px;">تنبيه فوري</b><p class="muted" style="font-size:11px;margin-top:3px;">صوت واهتزاز وبنر عند كل حجز جديد من الموقع.</p></div>
+        <div class="card" style="padding:13px 16px;"><b style="font-size:12.5px;">بحث وفلاتر لحظية</b><p class="muted" style="font-size:11px;margin-top:3px;">بالاسم أو الجوال أو رقم التذكرة أو الملاحظات.</p></div>
+        <div class="card" style="padding:13px 16px;"><b style="font-size:12.5px;">أمان بمعيار الإنتاج</b><p class="muted" style="font-size:11px;margin-top:3px;">جلسات موقّعة HMAC، حدّ محاولات الدخول، وإشعارات بريدية للفريق.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>18 / 20</span></div>
+</section>
+
+<!-- 19 SOCIAL -->
+<section class="slide">
+  <div class="shead"><span class="snum">١٨</span><h2 class="stitle">السوشيال — إنستغرام</h2><span class="ssub">SOCIAL PRESENCE · @alghdeer_sa</span></div>
+  <div style="display:flex;gap:26px;align-items:center;height:470px;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:430px;">
+      <img src="../public/instagram/C0_ANXSMVj2.jpg" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;">
+      <img src="../public/instagram/DTvhHeBDXt8.jpg" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;">
+      <img src="../public/instagram/DXl2kAGijT4.jpg" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;">
+      <img src="../public/instagram/DXl3MV1Cp7o.jpg" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;">
+      <div style="border-radius:10px;overflow:hidden;"><img src="../public/logo.jpg" style="width:100%;aspect-ratio:1;object-fit:cover;"></div>
+      <div style="border-radius:10px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;"><span class="serif" style="font-size:13px;color:var(--gold-l);line-height:1.6;">«النجوم<br>مجاناً»</span></div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+      <div class="card" style="padding:16px 20px;"><b style="font-size:13.5px;">إيقاع الشبكة ٣+٣</b><p class="muted" style="font-size:12px;line-height:1.9;margin-top:5px;">ثلاث لقطات تجربة (نار/طعام/سماء) ثم بطاقة اقتباس أو عرض — الشعار يظهر مرة كل ٦ منشورات كحد أقصى.</p></div>
+      <div class="card" style="padding:16px 20px;"><b style="font-size:13.5px;">الريلز سينمائية</b><p class="muted" style="font-size:12px;line-height:1.9;margin-top:5px;">افتتاحية ١.٥ ثانية على لهب أو نجوم، خط ثمانية ديسبلاي للعناوين، وموسيقى تراثية معدّلة.</p></div>
+      <div class="card" style="padding:16px 20px;"><b style="font-size:13.5px;">الهايلايتس بأيقونات الذهب</b><p class="muted" style="font-size:12px;line-height:1.9;margin-top:5px;">أغلفة أوبسيديان بخط ذهبي رفيع: التجارب، الأسعار، الآراء، الموقع.</p></div>
+    </div>
+  </div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>19 / 20</span></div>
+</section>
+
+<!-- 20 BACK COVER -->
+<section class="slide cover stars">
+  <img src="../public/logo-dark-bg.png" style="width:420px;filter:drop-shadow(0 16px 40px rgba(0,0,0,.6));" alt="">
+  <h2 class="serif" style="font-size:34px;font-weight:900;margin-top:26px;">الهوية أمانة — طبّقها بمحبة</h2>
+  <div class="rule" style="width:110px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:20px 0;"></div>
+  <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:14px;width:760px;">
+    <div class="card" style="padding:16px;"><b style="font-size:13px;color:var(--gold-l);">الموقع والحجوزات</b><p class="muted" style="font-size:11.5px;margin-top:4px;direction:ltr;">alghdeer.com</p></div>
+    <div class="card" style="padding:16px;"><b style="font-size:13px;color:var(--gold-l);">واتساب الأعمال</b><p class="muted" style="font-size:11.5px;margin-top:4px;direction:ltr;">+966 54 449 3991</p></div>
+    <div class="card" style="padding:16px;"><b style="font-size:13px;color:var(--gold-l);">إنستغرام</b><p class="muted" style="font-size:11.5px;margin-top:4px;direction:ltr;">@alghdeer_sa</p></div>
+  </div>
+  <p class="muted" style="margin-top:24px;font-size:11px;">جدة — طريق بريمان · إصدار ٢.٠ · أكتوبر ٢٠٢٦ · يُراجع كل ٦ أشهر</p>
+  <div class="dunes"></div>
+  <div class="sfoot"><span>ALGHDEER — Brand Guidelines 2026</span><span>20 / 20</span></div>
+</section>
+</body>
+</html>

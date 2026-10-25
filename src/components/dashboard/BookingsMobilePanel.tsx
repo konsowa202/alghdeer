@@ -113,9 +113,9 @@ export default function BookingsMobilePanel() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#0b0c10] flex flex-col -m-4" dir="rtl">
+    <div className="min-h-[calc(100dvh-3.5rem)] bg-[#0b0c10] flex flex-col -m-4" dir="rtl">
       {/* Sticky app bar */}
-      <header className="sticky top-0 z-30 bg-[#0b0c10]/95 backdrop-blur border-b border-white/10">
+      <header className="sticky top-14 z-30 bg-[#0b0c10]/95 backdrop-blur border-b border-white/10">
         <div className="px-4 pt-3 pb-2 flex items-center justify-between">
           <div>
             <h1 className="text-white font-black text-lg leading-tight">
@@ -218,10 +218,15 @@ export default function BookingsMobilePanel() {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        className="flex-1 overflow-y-auto px-4 pt-3 pb-28 space-y-2.5"
+        className="flex-1 overflow-y-auto px-4 pt-3 pb-36 space-y-2.5"
       >
         {loadError ? (
           <p className="text-red-400 text-sm text-center py-4">{loadError}</p>
+        ) : null}
+        {controller.mutationError ? (
+          <button type="button" onClick={controller.clearMutationError} className="w-full rounded-xl border border-red-500/25 bg-red-500/10 text-red-300 text-xs p-3 text-right">
+            {controller.mutationError} · إغلاق
+          </button>
         ) : null}
 
         {loading && rows.length === 0 ? (
@@ -254,7 +259,7 @@ export default function BookingsMobilePanel() {
       <button
         type="button"
         onClick={() => setShowAdd(true)}
-        className="fixed bottom-6 end-5 z-40 w-14 h-14 rounded-full bg-[#cba135] text-black shadow-[0_10px_30px_rgba(203,161,53,0.35)] flex items-center justify-center active:scale-95 transition-transform"
+        className="fixed bottom-24 end-5 z-30 w-14 h-14 rounded-full bg-[#cba135] text-black shadow-[0_10px_30px_rgba(203,161,53,0.35)] flex items-center justify-center active:scale-95 transition-transform"
         aria-label="تسجيل حجز يدوي"
       >
         <Plus size={26} strokeWidth={2.5} />

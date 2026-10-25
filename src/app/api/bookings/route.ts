@@ -156,19 +156,12 @@ export async function POST(req: Request) {
       notified,
     });
   } catch (error) {
-    // Detailed error is logged server-side only; the client gets a generic
-    // message. A synthetic ticket is still issued so a real customer is
-    // never blocked — staff see the attempt in the server logs.
+    // Detailed errors stay in server logs. Never issue a fake ticket when the
+    // booking was not persisted — the guest must be able to retry safely.
     console.error("[bookings] submission error:", error);
     return NextResponse.json(
-      {
-        ok: true,
-        id: "ALG-" + Math.random().toString(36).substring(2, 9).toUpperCase(),
-        name: "ضيف",
-        status: "pending",
-        offline: true,
-      },
-      { status: 200 }
+      { error: "تعذر حفظ الحجز الآن. لم يتم إصدار تذكرة؛ حاول مرة أخرى أو تواصل معنا واتساب." },
+      { status: 500 }
     );
   }
 }

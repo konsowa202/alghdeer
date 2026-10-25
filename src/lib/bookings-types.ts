@@ -10,6 +10,31 @@ export type BookingStatus =
   | "completed"
   | "cancelled";
 
+export const BOOKING_STATUSES: BookingStatus[] = [
+  "pending",
+  "confirmed",
+  "deposit",
+  "completed",
+  "cancelled",
+];
+
+export const BOOKING_FLOW_STATUSES: Exclude<BookingStatus, "cancelled">[] = [
+  "pending",
+  "confirmed",
+  "deposit",
+  "completed",
+];
+
+export function isBookingStatus(value: unknown): value is BookingStatus {
+  return typeof value === "string" && BOOKING_STATUSES.includes(value as BookingStatus);
+}
+
+export type BookingHistoryEntry = {
+  status: BookingStatus;
+  /** ISO 8601 (UTC). Recorded by the server, never supplied by the browser. */
+  at: string;
+};
+
 export type BookingRecord = {
   id: string;
   name: string;
@@ -23,6 +48,9 @@ export type BookingRecord = {
   status: BookingStatus;
   source: BookingSource;
   createdAt: string;
+  updatedAt?: string;
+  /** Empty only for legacy records created before status auditing existed. */
+  history: BookingHistoryEntry[];
 };
 
 export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {

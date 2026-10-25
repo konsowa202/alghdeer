@@ -1,6 +1,6 @@
 import React from "react";
-import DashboardSwitcher from "@/components/dashboard/DashboardSwitcher";
+import OverviewPanel from "@/components/dashboard/OverviewPanel";
 
 export default function StaffDashboardPage() {
-  return <DashboardSwitcher />;
+  return <OverviewPanel />;
 }

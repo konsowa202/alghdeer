@@ -88,25 +88,34 @@ export default function ContactBookingForm() {
 
     try {
       // 1. Post to API to store in database/dashboard
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: generatedSerial,
-          name: name.trim(),
-          phone: phone.trim(),
-          email: email.trim(),
-          company: company.trim(),
-          groupSize: guestCount,
-          notes: notes.trim(),
-          preferredAt: rawIsoDate,
-          website, // honeypot — always empty for humans
-        }),
-      }).catch(() => null);
+      let res: Response;
+      try {
+        res = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: generatedSerial,
+            name: name.trim(),
+            phone: phone.trim(),
+            email: email.trim(),
+            company: company.trim(),
+            groupSize: guestCount,
+            notes: notes.trim(),
+            preferredAt: rawIsoDate,
+            website, // honeypot — always empty for humans
+          }),
+        });
+      } catch {
+        setError(
+          isAr
+            ? "لا يوجد اتصال بالخادم. لم يتم إصدار تذكرة؛ حاول مرة أخرى أو تواصل واتساب."
+            : "No server connection. No ticket was issued; please retry or contact us on WhatsApp."
+        );
+        return;
+      }
 
-      // Server-side validation failed (400) or rate-limited (429):
-      // show the message and let the guest fix the form — no ticket yet.
-      if (res && !res.ok) {
+      // Validation, rate limits and persistence failures never issue a ticket.
+      if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
         setError(
           data.error ||
@@ -117,13 +126,16 @@ export default function ContactBookingForm() {
         return;
       }
 
-      let finalId = generatedSerial;
-      if (res && res.ok) {
-        const data = await res.json().catch(() => ({}));
-        if (data.id) {
-          finalId = String(data.id);
-        }
+      const data = (await res.json().catch(() => ({}))) as { id?: string };
+      if (!data.id) {
+        setError(
+          isAr
+            ? "لم يؤكد الخادم حفظ الطلب. لم يتم إصدار تذكرة؛ حاول مرة أخرى."
+            : "The server did not confirm the booking. No ticket was issued; please retry."
+        );
+        return;
       }
+      const finalId = String(data.id);
 
       setIssuedTicket({
         id: finalId,

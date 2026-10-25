@@ -96,6 +96,8 @@ export function useBookingsController() {
   const [rows, setRows] = useState<BookingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [mutationError, setMutationError] = useState("");
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [unauthorized, setUnauthorized] = useState(false);
   const [newCount, setNewCount] = useState(0);
@@ -153,6 +155,7 @@ export function useBookingsController() {
       knownIdsRef.current = new Set(serverRows.map((r) => r.id));
 
       setRows(serverRows);
+      setLastSyncAt(new Date().toISOString());
     } catch {
       setLoadError("تعذر تحديث الحجوزات، تأكد من الاتصال بالإنترنت.");
     } finally {
@@ -183,44 +186,61 @@ export function useBookingsController() {
   }, [rows]);
 
   const setStatus = useCallback(
-    async (id: string, status: BookingStatus) => {
+    async (id: string, status: BookingStatus): Promise<boolean> => {
       setBusyId(id);
+      setMutationError("");
       try {
-        setRows((prev) =>
-          prev.map((r) => (r.id === id ? { ...r, status } : r))
-        );
         const res = await fetch(`/api/bookings/${encodeURIComponent(id)}`, {
           method: "PATCH",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status }),
         });
+        const data = (await res.json().catch(() => ({}))) as {
+          booking?: BookingRecord;
+          error?: string;
+        };
         if (res.status === 401) setUnauthorized(true);
-        if (res.ok) await refresh();
+        if (!res.ok || !data.booking) {
+          setMutationError(data.error || "تعذر تغيير الحالة. لم يتم حفظ التعديل.");
+          return false;
+        }
+        setRows((prev) => prev.map((row) => (row.id === id ? data.booking! : row)));
+        setLastSyncAt(new Date().toISOString());
+        return true;
+      } catch {
+        setMutationError("انقطع الاتصال أثناء تغيير الحالة. لم يتم تأكيد التعديل.");
+        return false;
       } finally {
         setBusyId(null);
       }
     },
-    [refresh]
+    []
   );
 
-  const remove = useCallback(
-    async (id: string) => {
-      setBusyId(id);
-      try {
-        setRows((prev) => prev.filter((r) => r.id !== id));
-        const res = await fetch(`/api/bookings/${encodeURIComponent(id)}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
-        if (res.status === 401) setUnauthorized(true);
-        if (res.ok) await refresh();
-      } finally {
-        setBusyId(null);
+  const remove = useCallback(async (id: string): Promise<boolean> => {
+    setBusyId(id);
+    setMutationError("");
+    try {
+      const res = await fetch(`/api/bookings/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (res.status === 401) setUnauthorized(true);
+      if (!res.ok) {
+        setMutationError(data.error || "تعذر حذف السجل.");
+        return false;
       }
-    },
-    [refresh]
-  );
+      setRows((prev) => prev.filter((row) => row.id !== id));
+      return true;
+    } catch {
+      setMutationError("انقطع الاتصال أثناء الحذف. حاول مرة أخرى.");
+      return false;
+    } finally {
+      setBusyId(null);
+    }
+  }, []);
 
   const addBooking = useCallback(
     async (input: {
@@ -268,16 +288,20 @@ export function useBookingsController() {
   );
 
   const clearNewCount = useCallback(() => setNewCount(0), []);
+  const clearMutationError = useCallback(() => setMutationError(""), []);
 
   return {
     rows,
     loading,
     loadError,
+    mutationError,
+    lastSyncAt,
     busyId,
     unauthorized,
     stats,
     newCount,
     clearNewCount,
+    clearMutationError,
     soundOn,
     setSoundOn,
     refresh,

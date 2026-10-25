@@ -96,6 +96,12 @@ export default function StaffBookingsPanel() {
       ) : null}
 
       {loadError ? <p className="text-red-400 text-sm">{loadError}</p> : null}
+      {controller.mutationError ? (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 text-red-300 text-xs p-3.5 flex items-center justify-between gap-3">
+          <span>{controller.mutationError}</span>
+          <button type="button" onClick={controller.clearMutationError} className="text-white/60 hover:text-white">إغلاق</button>
+        </div>
+      ) : null}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

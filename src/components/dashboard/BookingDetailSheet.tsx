@@ -10,6 +10,9 @@ import {
   Trash2,
   Globe,
   UserRound,
+  History,
+  Check,
+  CircleDot,
 } from "lucide-react";
 import type { BookingRecord, BookingStatus } from "@/lib/bookings-types";
 import { BOOKING_STATUS_LABELS } from "@/lib/bookings-types";
@@ -57,8 +60,8 @@ export default function BookingDetailSheet({
 
   async function handleDelete() {
     if (!window.confirm("حذف هذا السجل نهائياً؟")) return;
-    await controller.remove(booking.id);
-    onClose();
+    const removed = await controller.remove(booking.id);
+    if (removed) onClose();
   }
 
   const detailRow = (label: string, value: React.ReactNode) => (
@@ -208,6 +211,50 @@ export default function BookingDetailSheet({
                 {booking.notes}
               </p>
             </div>
+          ) : null}
+
+          {/* Auditable status timeline */}
+          <div className="rounded-xl bg-white/[0.025] border border-white/[0.07] p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <History size={16} className="text-[#d4b458]" />
+              <div>
+                <h4 className="text-white text-sm font-bold">سجل رحلة الحجز</h4>
+                <p className="text-white/30 text-[10px] mt-0.5">الوقت المسجل على الخادم لكل انتقال</p>
+              </div>
+            </div>
+            <ol className="relative space-y-0 before:absolute before:right-[11px] before:top-3 before:bottom-3 before:w-px before:bg-white/10">
+              {[...booking.history].reverse().map((entry, index) => (
+                <li key={`${entry.at}-${entry.status}-${index}`} className="relative flex gap-3 pb-4 last:pb-0">
+                  <span className={`relative z-10 w-[23px] h-[23px] rounded-full border flex items-center justify-center shrink-0 ${index === 0 ? "bg-[#cba135]/15 border-[#cba135]/40 text-[#d4b458]" : "bg-[#17181e] border-white/10 text-white/35"}`}>
+                    {index === 0 ? <CircleDot size={11} /> : <Check size={11} />}
+                  </span>
+                  <div className="flex-1 min-w-0 pt-0.5">
+                    <p className={`text-xs font-bold ${index === 0 ? "text-white" : "text-white/55"}`}>{BOOKING_STATUS_LABELS[entry.status]}</p>
+                    <p className="text-[10px] text-white/30 mt-1">{formatCreated(entry.at)}</p>
+                  </div>
+                </li>
+              ))}
+              {booking.history.length === 0 ? (
+                <li className="relative flex gap-3 pb-4">
+                  <span className="relative z-10 w-[23px] h-[23px] rounded-full bg-[#17181e] border border-white/10 text-white/35 flex items-center justify-center shrink-0"><CircleDot size={11} /></span>
+                  <div className="flex-1 pt-0.5">
+                    <p className="text-xs font-bold text-white/60">الحالة الحالية: {BOOKING_STATUS_LABELS[booking.status]}</p>
+                    <p className="text-[10px] text-amber-400/50 mt-1">سجل قديم؛ وقت هذا الانتقال غير متاح.</p>
+                  </div>
+                </li>
+              ) : null}
+              <li className="relative flex gap-3">
+                <span className="relative z-10 w-[23px] h-[23px] rounded-full bg-[#17181e] border border-white/10 text-white/35 flex items-center justify-center shrink-0"><Check size={11} /></span>
+                <div className="flex-1 pt-0.5">
+                  <p className="text-xs font-bold text-white/55">تم تسجيل الطلب من {booking.source === "website" ? "الموقع" : "الفريق"}</p>
+                  <p className="text-[10px] text-white/30 mt-1">{formatCreated(booking.createdAt)}</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+
+          {controller.mutationError ? (
+            <p className="rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-xs p-3">{controller.mutationError}</p>
           ) : null}
 
           {/* Status actions */}

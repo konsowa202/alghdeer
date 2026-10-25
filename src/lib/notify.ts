@@ -205,6 +205,26 @@ export type NotifyResult = {
   provider: "resend" | "smtp" | "web3forms" | "formsubmit" | "none";
 };
 
+/** Non-secret configuration health for the authenticated system-status page. */
+export function getNotificationReadiness() {
+  const recipientCount = notifyRecipients().length;
+  const provider: NotifyResult["provider"] = process.env.RESEND_API_KEY?.trim()
+    ? "resend"
+    : process.env.SMTP_HOST?.trim()
+      ? "smtp"
+      : process.env.WEB3FORMS_ACCESS_KEY?.trim()
+        ? "web3forms"
+        : recipientCount > 0
+          ? "formsubmit"
+          : "none";
+  return {
+    recipientCount,
+    provider,
+    configured: recipientCount > 0 && provider !== "none",
+    requiresActivation: provider === "formsubmit",
+  };
+}
+
 /** Send the "new booking" notification. Never throws. */
 export async function notifyNewBooking(booking: BookingRecord): Promise<NotifyResult> {
   try {

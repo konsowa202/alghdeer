@@ -2,8 +2,13 @@ import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
 import { randomUUID } from "crypto";
-import type { BookingRecord, BookingStatus, BookingSource } from "./bookings-types";
-import { MIN_LEAD_MS } from "./bookings-types";
+import type {
+  BookingHistoryEntry,
+  BookingRecord,
+  BookingStatus,
+  BookingSource,
+} from "./bookings-types";
+import { isBookingStatus, MIN_LEAD_MS } from "./bookings-types";
 
 // Persistent cloud JSON bin. Set BOOKINGS_DB_URL in env — never expose it to
 // the client bundle. The fallback keeps existing deployments working; rotate
@@ -41,7 +46,26 @@ function enqueue<T>(fn: () => Promise<T>): Promise<T> {
   return run;
 }
 
+function normalizeHistory(value: unknown): BookingHistoryEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(
+      (entry): entry is { status: BookingStatus; at: string } =>
+        Boolean(entry) &&
+        isBookingStatus(entry.status) &&
+        typeof entry.at === "string" &&
+        Number.isFinite(Date.parse(entry.at))
+    )
+    .map((entry) => ({
+      status: entry.status,
+      at: new Date(entry.at).toISOString(),
+    }))
+    .sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
+    .slice(-100);
+}
+
 export function normalizeRecord(o: any): BookingRecord {
+  const now = new Date().toISOString();
   if (!o || typeof o !== "object") {
     return {
       id: "ALG-" + randomUUID().substring(0, 6).toUpperCase(),
@@ -51,13 +75,15 @@ export function normalizeRecord(o: any): BookingRecord {
       company: "—",
       groupSize: 10,
       notes: "",
-      preferredAt: new Date().toISOString(),
+      preferredAt: now,
       status: "pending",
       source: "website",
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      history: [{ status: "pending", at: now }],
     };
   }
 
+  const status = isBookingStatus(o.status) ? o.status : "pending";
   return {
     id: String(o.id || "ALG-" + randomUUID().substring(0, 6).toUpperCase()),
     name: String(o.name || "ضيف"),
@@ -66,10 +92,12 @@ export function normalizeRecord(o: any): BookingRecord {
     company: String(o.company || "—"),
     groupSize: Number.isFinite(Number(o.groupSize)) && Number(o.groupSize) >= 1 ? Number(o.groupSize) : 10,
     notes: String(o.notes || ""),
-    preferredAt: String(o.preferredAt || new Date().toISOString()),
-    status: (o.status || "pending") as BookingStatus,
-    source: (o.source || "website") as BookingSource,
-    createdAt: String(o.createdAt || new Date().toISOString()),
+    preferredAt: String(o.preferredAt || now),
+    status,
+    source: (o.source === "staff" ? "staff" : "website") as BookingSource,
+    createdAt: String(o.createdAt || now),
+    updatedAt: o.updatedAt ? String(o.updatedAt) : undefined,
+    history: normalizeHistory(o.history),
   };
 }
 
@@ -201,8 +229,16 @@ export type NewBookingInput = {
 export async function appendBooking(input: NewBookingInput): Promise<BookingRecord> {
   return enqueue(async () => {
     const rows = await listBookings();
+    const createdAt = new Date().toISOString();
+    let id = input.id?.trim() || "ALG-" + randomUUID().substring(0, 6).toUpperCase();
+
+    // A client-supplied ticket ID may never overwrite an existing booking.
+    while (rows.some((row) => row.id === id)) {
+      id = "ALG-" + randomUUID().substring(0, 6).toUpperCase();
+    }
+
     const row: BookingRecord = {
-      id: input.id ? String(input.id).trim() : "ALG-" + randomUUID().substring(0, 6).toUpperCase(),
+      id,
       name: input.name || "ضيف",
       phone: input.phone || "—",
       email: input.email || "",
@@ -212,17 +248,12 @@ export async function appendBooking(input: NewBookingInput): Promise<BookingReco
       preferredAt: input.preferredAt || new Date(Date.now() + 86400000).toISOString(),
       status: input.status || "pending",
       source: input.source || "website",
-      createdAt: new Date().toISOString(),
+      createdAt,
+      updatedAt: createdAt,
+      history: [{ status: input.status || "pending", at: createdAt }],
     };
 
-    // Prepend or update if ID exists
-    const existingIdx = rows.findIndex((r) => r.id === row.id);
-    if (existingIdx !== -1) {
-      rows[existingIdx] = row;
-    } else {
-      rows.unshift(row);
-    }
-
+    rows.unshift(row);
     globalThis.__alghdeer_bookings_memory__ = rows;
 
     // Parallel persist to disk and cloud database
@@ -243,7 +274,15 @@ export async function updateBookingStatus(
     const rows = await listBookings();
     const i = rows.findIndex((r) => r.id === id);
     if (i === -1) return null;
-    rows[i] = { ...rows[i], status };
+    if (rows[i]!.status === status) return rows[i]!;
+
+    const at = new Date().toISOString();
+    rows[i] = {
+      ...rows[i]!,
+      status,
+      updatedAt: at,
+      history: [...rows[i]!.history, { status, at }].slice(-100),
+    };
     globalThis.__alghdeer_bookings_memory__ = rows;
 
     await Promise.allSettled([
@@ -251,7 +290,7 @@ export async function updateBookingStatus(
       saveToCloudDB(rows),
     ]);
 
-    return rows[i];
+    return rows[i]!;
   });
 }
 
