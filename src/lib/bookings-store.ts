@@ -1,6 +1,3 @@
-import { promises as fs } from "fs";
-import path from "path";
-import os from "os";
 import { randomUUID } from "crypto";
 import type {
   BookingHistoryEntry,
@@ -10,40 +7,59 @@ import type {
 } from "./bookings-types";
 import { isBookingStatus, MIN_LEAD_MS } from "./bookings-types";
 
-// Persistent cloud JSON bin. Set BOOKINGS_DB_URL in env — never expose it to
-// the client bundle. The fallback keeps existing deployments working; rotate
-// the bin and move the URL to an env var as soon as possible.
-function cloudDbUrl(): string | null {
-  return (
-    process.env.BOOKINGS_DB_URL?.trim() ||
-    "***REMOVED_LEGACY_STORAGE_URL***"
-  );
+type DatabaseBooking = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  company: string;
+  group_size: number;
+  notes: string;
+  preferred_at: string;
+  status: BookingStatus;
+  source: BookingSource;
+  created_at: string;
+  updated_at: string | null;
+  history: unknown;
+};
+
+function databaseConfig() {
+  const url = process.env.SUPABASE_URL?.trim().replace(/\/$/, "");
+  const apiKey = process.env.SUPABASE_PUBLISHABLE_KEY?.trim();
+  const serverKey = process.env.SUPABASE_SERVER_KEY?.trim();
+  if (!url || !apiKey || !serverKey) {
+    throw new Error("Supabase server environment is not configured.");
+  }
+  return {
+    endpoint: `${url}/rest/v1/bookings`,
+    headers: {
+      apikey: apiKey,
+      Authorization: `Bearer ${apiKey}`,
+      "x-alghdeer-key": serverKey,
+      "Content-Type": "application/json",
+    },
+  };
 }
 
-// Writable file path in OS temp directory
-const TMP_DATA_FILE = path.join(os.tmpdir(), "alghdeer-bookings.json");
-// Local project data directory
-const LOCAL_DATA_DIR = path.join(process.cwd(), "data");
-const LOCAL_DATA_FILE = path.join(LOCAL_DATA_DIR, "bookings.json");
-
-// In-memory cache across warm serverless requests
-declare global {
-  var __alghdeer_bookings_memory__: BookingRecord[] | undefined;
-}
-
-if (!globalThis.__alghdeer_bookings_memory__) {
-  globalThis.__alghdeer_bookings_memory__ = [];
-}
-
-let mutex: Promise<void> = Promise.resolve();
-
-function enqueue<T>(fn: () => Promise<T>): Promise<T> {
-  const run = mutex.then(fn);
-  mutex = run.then(
-    () => undefined,
-    () => undefined
-  );
-  return run;
+async function databaseRequest(path: string, init: RequestInit = {}): Promise<Response> {
+  const { endpoint, headers } = databaseConfig();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(`${endpoint}${path}`, {
+      ...init,
+      headers: { ...headers, ...init.headers },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      const details = await response.text();
+      throw new Error(`Booking database request failed (${response.status}): ${details.slice(0, 500)}`);
+    }
+    return response;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function normalizeHistory(value: unknown): BookingHistoryEntry[] {
@@ -51,166 +67,36 @@ function normalizeHistory(value: unknown): BookingHistoryEntry[] {
   return value
     .filter(
       (entry): entry is { status: BookingStatus; at: string } =>
-        Boolean(entry) &&
-        isBookingStatus(entry.status) &&
-        typeof entry.at === "string" &&
-        Number.isFinite(Date.parse(entry.at))
+        Boolean(entry) && isBookingStatus(entry.status) &&
+        typeof entry.at === "string" && Number.isFinite(Date.parse(entry.at))
     )
-    .map((entry) => ({
-      status: entry.status,
-      at: new Date(entry.at).toISOString(),
-    }))
+    .map((entry) => ({ status: entry.status, at: new Date(entry.at).toISOString() }))
     .sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
     .slice(-100);
 }
 
-export function normalizeRecord(o: any): BookingRecord {
-  const now = new Date().toISOString();
-  if (!o || typeof o !== "object") {
-    return {
-      id: "ALG-" + randomUUID().substring(0, 6).toUpperCase(),
-      name: "ضيف",
-      phone: "—",
-      email: "",
-      company: "—",
-      groupSize: 10,
-      notes: "",
-      preferredAt: now,
-      status: "pending",
-      source: "website",
-      createdAt: now,
-      history: [{ status: "pending", at: now }],
-    };
-  }
-
-  const status = isBookingStatus(o.status) ? o.status : "pending";
+function normalizeRecord(row: DatabaseBooking): BookingRecord {
   return {
-    id: String(o.id || "ALG-" + randomUUID().substring(0, 6).toUpperCase()),
-    name: String(o.name || "ضيف"),
-    phone: String(o.phone || "—"),
-    email: String(o.email || ""),
-    company: String(o.company || "—"),
-    groupSize: Number.isFinite(Number(o.groupSize)) && Number(o.groupSize) >= 1 ? Number(o.groupSize) : 10,
-    notes: String(o.notes || ""),
-    preferredAt: String(o.preferredAt || now),
-    status,
-    source: (o.source === "staff" ? "staff" : "website") as BookingSource,
-    createdAt: String(o.createdAt || now),
-    updatedAt: o.updatedAt ? String(o.updatedAt) : undefined,
-    history: normalizeHistory(o.history),
+    id: row.id,
+    name: row.name,
+    phone: row.phone,
+    email: row.email || "",
+    company: row.company,
+    groupSize: row.group_size,
+    notes: row.notes,
+    preferredAt: new Date(row.preferred_at).toISOString(),
+    status: row.status,
+    source: row.source,
+    createdAt: new Date(row.created_at).toISOString(),
+    updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : undefined,
+    history: normalizeHistory(row.history),
   };
 }
 
-/**
- * Fetch latest bookings from persistent cloud database with timeout protection
- */
-export async function fetchFromCloudDB(): Promise<BookingRecord[] | null> {
-  const url = cloudDbUrl();
-  if (!url) return null;
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4000);
-
-    const res = await fetch(url, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      signal: controller.signal,
-      cache: "no-store",
-    });
-    clearTimeout(timer);
-
-    if (!res.ok) return null;
-    const json = await res.json();
-    if (json && Array.isArray(json.bookings)) {
-      return json.bookings.map(normalizeRecord);
-    }
-  } catch (err) {
-    // Cloud fetch timeout or network error - fallback to disk/memory
-  }
-  return null;
-}
-
-/**
- * Save bookings to persistent cloud database
- */
-export async function saveToCloudDB(rows: BookingRecord[]): Promise<void> {
-  const url = cloudDbUrl();
-  if (!url) return;
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 5000);
-
-    await fetch(url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ bookings: rows }),
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-  } catch (err) {
-    console.error("Cloud DB save error:", err);
-  }
-}
-
-async function readFromDisk(): Promise<BookingRecord[]> {
-  // 1. Try reading from tmp directory (Vercel writable)
-  try {
-    const raw = await fs.readFile(TMP_DATA_FILE, "utf8");
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.map(normalizeRecord);
-    }
-  } catch {}
-
-  // 2. Try reading from local project data directory
-  try {
-    const raw = await fs.readFile(LOCAL_DATA_FILE, "utf8");
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.map(normalizeRecord);
-    }
-  } catch {}
-
-  return [];
-}
-
-async function writeToDisk(rows: BookingRecord[]): Promise<void> {
-  const jsonStr = JSON.stringify(rows, null, 2);
-
-  // 1. Write to OS temp directory
-  try {
-    await fs.writeFile(TMP_DATA_FILE, jsonStr, "utf8");
-  } catch {}
-
-  // 2. Write to local project data directory
-  try {
-    await fs.mkdir(LOCAL_DATA_DIR, { recursive: true });
-    await fs.writeFile(LOCAL_DATA_FILE, jsonStr, "utf8");
-  } catch {}
-}
-
 export async function listBookings(): Promise<BookingRecord[]> {
-  // 1. First fetch from Cloud Database
-  const cloudRows = await fetchFromCloudDB();
-  const diskRows = await readFromDisk();
-  const memRows = globalThis.__alghdeer_bookings_memory__ || [];
-
-  // Merge unique by ID
-  const map = new Map<string, BookingRecord>();
-  for (const r of memRows) map.set(r.id, r);
-  for (const r of diskRows) map.set(r.id, r);
-  if (cloudRows) {
-    for (const r of cloudRows) map.set(r.id, r);
-  }
-
-  const combined = Array.from(map.values()).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-
-  globalThis.__alghdeer_bookings_memory__ = combined;
-  return combined;
+  const response = await databaseRequest("?select=*&order=created_at.desc");
+  const rows = (await response.json()) as DatabaseBooking[];
+  return rows.map(normalizeRecord);
 }
 
 export type NewBookingInput = {
@@ -227,106 +113,88 @@ export type NewBookingInput = {
 };
 
 export async function appendBooking(input: NewBookingInput): Promise<BookingRecord> {
-  return enqueue(async () => {
-    const rows = await listBookings();
-    const createdAt = new Date().toISOString();
-    let id = input.id?.trim() || "ALG-" + randomUUID().substring(0, 6).toUpperCase();
-
-    // A client-supplied ticket ID may never overwrite an existing booking.
-    while (rows.some((row) => row.id === id)) {
-      id = "ALG-" + randomUUID().substring(0, 6).toUpperCase();
-    }
-
-    const row: BookingRecord = {
+  const createdAt = new Date().toISOString();
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const id = attempt === 0 && input.id?.trim()
+      ? input.id.trim()
+      : `ALG-${randomUUID().substring(0, 6).toUpperCase()}`;
+    const row: DatabaseBooking = {
       id,
       name: input.name || "ضيف",
       phone: input.phone || "—",
       email: input.email || "",
       company: input.company || "—",
-      groupSize: Number.isFinite(input.groupSize) && Number(input.groupSize) >= 1 ? Number(input.groupSize) : 10,
+      group_size: Number.isFinite(input.groupSize) && Number(input.groupSize) >= 1 ? Number(input.groupSize) : 10,
       notes: input.notes || "",
-      preferredAt: input.preferredAt || new Date(Date.now() + 86400000).toISOString(),
+      preferred_at: input.preferredAt || new Date(Date.now() + 86400000).toISOString(),
       status: input.status || "pending",
       source: input.source || "website",
-      createdAt,
-      updatedAt: createdAt,
+      created_at: createdAt,
+      updated_at: createdAt,
       history: [{ status: input.status || "pending", at: createdAt }],
     };
-
-    rows.unshift(row);
-    globalThis.__alghdeer_bookings_memory__ = rows;
-
-    // Parallel persist to disk and cloud database
-    await Promise.allSettled([
-      writeToDisk(rows),
-      saveToCloudDB(rows),
-    ]);
-
-    return row;
-  });
+    try {
+      const response = await databaseRequest("?select=*", {
+        method: "POST",
+        headers: { Prefer: "return=representation" },
+        body: JSON.stringify(row),
+      });
+      const inserted = (await response.json()) as DatabaseBooking[];
+      if (!inserted[0]) throw new Error("Booking database returned no inserted record.");
+      return normalizeRecord(inserted[0]);
+    } catch (error) {
+      if (attempt < 4 && error instanceof Error && error.message.includes("(409)")) continue;
+      throw error;
+    }
+  }
+  throw new Error("Could not allocate a unique booking ID.");
 }
 
-export async function updateBookingStatus(
-  id: string,
-  status: BookingStatus
-): Promise<BookingRecord | null> {
-  return enqueue(async () => {
-    const rows = await listBookings();
-    const i = rows.findIndex((r) => r.id === id);
-    if (i === -1) return null;
-    if (rows[i]!.status === status) return rows[i]!;
-
-    const at = new Date().toISOString();
-    rows[i] = {
-      ...rows[i]!,
-      status,
-      updatedAt: at,
-      history: [...rows[i]!.history, { status, at }].slice(-100),
-    };
-    globalThis.__alghdeer_bookings_memory__ = rows;
-
-    await Promise.allSettled([
-      writeToDisk(rows),
-      saveToCloudDB(rows),
-    ]);
-
-    return rows[i]!;
-  });
+export async function updateBookingStatus(id: string, status: BookingStatus): Promise<BookingRecord | null> {
+  const safeId = encodeURIComponent(id);
+  const response = await databaseRequest(`?id=eq.${safeId}&select=*`);
+  const rows = (await response.json()) as DatabaseBooking[];
+  const current = rows[0];
+  if (!current) return null;
+  if (current.status === status) return normalizeRecord(current);
+  const at = new Date().toISOString();
+  const history = [...normalizeHistory(current.history), { status, at }].slice(-100);
+  // The old history is the optimistic lock: a concurrent status change fails
+  // instead of silently erasing another staff member's audit entry.
+  const updated = await databaseRequest(
+    `?id=eq.${safeId}&status=eq.${encodeURIComponent(current.status)}&history=eq.${encodeURIComponent(JSON.stringify(current.history))}&select=*`,
+    {
+      method: "PATCH",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({ status, updated_at: at, history }),
+    }
+  );
+  const result = (await updated.json()) as DatabaseBooking[];
+  if (!result[0]) throw new Error("Booking changed concurrently. Refresh and retry the status update.");
+  return normalizeRecord(result[0]);
 }
 
 export async function deleteBooking(id: string): Promise<boolean> {
-  return enqueue(async () => {
-    const rows = await listBookings();
-    const next = rows.filter((r) => r.id !== id);
-    if (next.length === rows.length) return false;
-    globalThis.__alghdeer_bookings_memory__ = next;
-
-    await Promise.allSettled([
-      writeToDisk(next),
-      saveToCloudDB(next),
-    ]);
-
-    return true;
+  const response = await databaseRequest(`?id=eq.${encodeURIComponent(id)}&select=id`, {
+    method: "DELETE",
+    headers: { Prefer: "return=representation" },
   });
+  return ((await response.json()) as { id: string }[]).length > 0;
 }
 
 export function isPreferredAtValidForPublic(preferredAtIso: string): boolean {
-  const t = Date.parse(preferredAtIso);
-  if (!Number.isFinite(t)) return false;
-  // Website bookings require at least MIN_LEAD_MS of lead time (24h)
-  return t >= Date.now() + MIN_LEAD_MS;
+  const time = Date.parse(preferredAtIso);
+  return Number.isFinite(time) && time >= Date.now() + MIN_LEAD_MS;
 }
 
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
-
 export function isEmailValid(email: string): boolean {
   return EMAIL_RE.test(email);
 }
 
-/** Strips control characters that could break logs, CSV exports or mail headers. */
-function stripControlChars(s: string): string {
+function stripControlChars(value: string): string {
   // eslint-disable-next-line no-control-regex
-  return s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  return value.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
 }
 
 export function sanitizeBookingFields(body: Record<string, unknown>) {
@@ -337,13 +205,8 @@ export function sanitizeBookingFields(body: Record<string, unknown>) {
   const company = stripControlChars(String(body.company ?? "")).trim().slice(0, 120);
   const notes = stripControlChars(String(body.notes ?? "")).trim().slice(0, 4000);
   const preferredAtRaw = String(body.preferredAt ?? "").trim();
-  // Honeypot field — invisible to humans, filled by bots
   const honeypot = String(body.website ?? "").trim();
   const rawSize = Number(body.groupSize);
-  const groupSizeClean =
-    Number.isFinite(rawSize) && rawSize >= 1
-      ? Math.min(Math.floor(rawSize), 5000)
-      : 10;
-
+  const groupSizeClean = Number.isFinite(rawSize) && rawSize >= 1 ? Math.min(Math.floor(rawSize), 5000) : 10;
   return { id, name, phone, email, company, notes, preferredAtRaw, groupSizeClean, honeypot };
 }

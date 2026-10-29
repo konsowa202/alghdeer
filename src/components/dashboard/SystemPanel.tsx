@@ -11,7 +11,6 @@ import {
   Cloud,
   Database,
   Globe2,
-  HardDrive,
   KeyRound,
   Loader2,
   LockKeyhole,
@@ -122,7 +121,7 @@ export default function SystemPanel() {
           ready={Boolean(data?.storage.cloudReachable)}
           loading={loading && !data}
           value={!data ? "بانتظار الفحص" : data.storage.cloudReachable ? "الاتصال يعمل" : "تعذر الاتصال"}
-          note={data?.storage.localFallback ? "توجد نسخة محلية احتياطية" : "—"}
+          note="Supabase · PostgreSQL · RLS مفعّلة"
         />
         <HealthCard label="التحديث المباشر" icon={Activity} ready value="كل 10 ثوانٍ" note="مع صوت وتنبيه عند طلب جديد" />
         <HealthCard label="جلسة الإدارة" icon={LockKeyhole} ready value="موقّعة ومؤقتة" note="صلاحية الجلسة 12 ساعة" />
@@ -176,11 +175,9 @@ export default function SystemPanel() {
           <CardHeader icon={Database} title="التخزين والمزامنة" subtitle="فحص قراءة حقيقي من قاعدة الحجوزات" />
           <div className="p-4 md:p-5 space-y-3">
             <StatusLine icon={Cloud} label="قراءة التخزين السحابي" ok={Boolean(data?.storage.cloudReachable)} loading={loading && !data} okText="ناجحة" failText="فشلت" />
-            <StatusLine icon={HardDrive} label="نسخة محلية احتياطية" ok={Boolean(data?.storage.localFallback)} okText="مفعّلة" />
-            <StatusLine icon={ServerCog} label="رابط سحابي خاص بالبيئة" ok={Boolean(data?.storage.configuredFromEnvironment)} okText="مضبوط" failText="يستخدم الافتراضي" warning={!data?.storage.configuredFromEnvironment} />
-            {data && !data.storage.configuredFromEnvironment ? (
-              <p className="text-amber-300/60 text-[11px] leading-relaxed rounded-lg bg-amber-500/[0.05] border border-amber-500/15 p-3">قبل الإطلاق، انقل رابط قاعدة الحجوزات إلى <code dir="ltr">BOOKINGS_DB_URL</code> بدلاً من الاعتماد على الرابط الافتراضي داخل الكود.</p>
-            ) : null}
+            <StatusLine icon={Database} label="قاعدة البيانات" ok okText="Supabase / PostgreSQL" />
+            <StatusLine icon={ServerCog} label="إعدادات Supabase الخاصة بالبيئة" ok={Boolean(data?.storage.configuredFromEnvironment)} okText="مضبوطة" failText="ناقصة" warning={!data?.storage.configuredFromEnvironment} />
+            <StatusLine icon={LockKeyhole} label="حماية صفوف الحجوزات RLS" ok okText="مفعّلة وإلزامية" />
             <div className="pt-2 text-[10px] text-white/25 flex items-center gap-1.5">
               <TimerReset size={12} />
               {data ? `آخر فحص: ${formatCreated(data.checkedAt)}` : "لم يكتمل الفحص بعد"}

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isStaffSession } from "@/lib/staff-session";
-import { fetchFromCloudDB } from "@/lib/bookings-store";
+import { listBookings } from "@/lib/bookings-store";
 import { getNotificationReadiness } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
@@ -11,15 +11,15 @@ export async function GET() {
   }
 
   try {
-    const cloudRows = await fetchFromCloudDB();
+    await listBookings();
     return NextResponse.json(
       {
         checkedAt: new Date().toISOString(),
         notifications: getNotificationReadiness(),
         storage: {
-          cloudReachable: cloudRows !== null,
-          configuredFromEnvironment: Boolean(process.env.BOOKINGS_DB_URL?.trim()),
-          localFallback: true,
+          cloudReachable: true,
+          configuredFromEnvironment: Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_PUBLISHABLE_KEY && process.env.SUPABASE_SERVER_KEY),
+          localFallback: false,
         },
         protection: {
           signedSessions: true,
