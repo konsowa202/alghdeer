@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { STAFF_COOKIE_NAME } from "@/lib/staff-auth";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isSameOriginRequest } from "@/lib/request-guard";
 
-export async function POST() {
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set(STAFF_COOKIE_NAME, "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 0,
-  });
-  return res;
+export async function POST(req: Request) {
+  if (!isSameOriginRequest(req)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const supabase = createSupabaseServerClient();
+  await supabase.auth.signOut({ scope: "local" });
+  return NextResponse.json({ ok: true });
 }

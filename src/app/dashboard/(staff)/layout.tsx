@@ -3,14 +3,13 @@ import { redirect } from "next/navigation";
 import DashboardChrome from "@/components/dashboard/DashboardChrome";
 import { isStaffSession } from "@/lib/staff-session";
 
-export default function StaffDashboardLayout({
+export default async function StaffDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Cryptographic session verification on the server — a forged cookie
-  // never reaches any dashboard route or its data.
-  if (!isStaffSession()) {
+  // Supabase validates the session and the active staff grant on the server.
+  if (!(await isStaffSession())) {
     redirect("/dashboard/login");
   }
 

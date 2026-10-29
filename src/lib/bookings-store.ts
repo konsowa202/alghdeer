@@ -23,26 +23,26 @@ type DatabaseBooking = {
   history: unknown;
 };
 
-function databaseConfig() {
+function databaseConfig(staffAccessToken?: string) {
   const url = process.env.SUPABASE_URL?.trim().replace(/\/$/, "");
   const apiKey = process.env.SUPABASE_PUBLISHABLE_KEY?.trim();
   const serverKey = process.env.SUPABASE_SERVER_KEY?.trim();
-  if (!url || !apiKey || !serverKey) {
+  if (!url || !apiKey || (!staffAccessToken && !serverKey)) {
     throw new Error("Supabase server environment is not configured.");
   }
   return {
     endpoint: `${url}/rest/v1/bookings`,
     headers: {
       apikey: apiKey,
-      Authorization: `Bearer ${apiKey}`,
-      "x-alghdeer-key": serverKey,
+      Authorization: `Bearer ${staffAccessToken || apiKey}`,
+      ...(staffAccessToken ? {} : { "x-alghdeer-key": serverKey as string }),
       "Content-Type": "application/json",
     },
   };
 }
 
-async function databaseRequest(path: string, init: RequestInit = {}): Promise<Response> {
-  const { endpoint, headers } = databaseConfig();
+async function databaseRequest(path: string, init: RequestInit = {}, staffAccessToken?: string): Promise<Response> {
+  const { endpoint, headers } = databaseConfig(staffAccessToken);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
   try {
@@ -93,8 +93,8 @@ function normalizeRecord(row: DatabaseBooking): BookingRecord {
   };
 }
 
-export async function listBookings(): Promise<BookingRecord[]> {
-  const response = await databaseRequest("?select=*&order=created_at.desc");
+export async function listBookings(staffAccessToken: string): Promise<BookingRecord[]> {
+  const response = await databaseRequest("?select=*&order=created_at.desc", {}, staffAccessToken);
   const rows = (await response.json()) as DatabaseBooking[];
   return rows.map(normalizeRecord);
 }
@@ -112,7 +112,7 @@ export type NewBookingInput = {
   source: BookingSource;
 };
 
-export async function appendBooking(input: NewBookingInput): Promise<BookingRecord> {
+export async function appendBooking(input: NewBookingInput, staffAccessToken?: string): Promise<BookingRecord> {
   const createdAt = new Date().toISOString();
   for (let attempt = 0; attempt < 5; attempt++) {
     const id = attempt === 0 && input.id?.trim()
@@ -138,7 +138,7 @@ export async function appendBooking(input: NewBookingInput): Promise<BookingReco
         method: "POST",
         headers: { Prefer: "return=representation" },
         body: JSON.stringify(row),
-      });
+      }, staffAccessToken);
       const inserted = (await response.json()) as DatabaseBooking[];
       if (!inserted[0]) throw new Error("Booking database returned no inserted record.");
       return normalizeRecord(inserted[0]);
@@ -150,9 +150,9 @@ export async function appendBooking(input: NewBookingInput): Promise<BookingReco
   throw new Error("Could not allocate a unique booking ID.");
 }
 
-export async function updateBookingStatus(id: string, status: BookingStatus): Promise<BookingRecord | null> {
+export async function updateBookingStatus(id: string, status: BookingStatus, staffAccessToken: string): Promise<BookingRecord | null> {
   const safeId = encodeURIComponent(id);
-  const response = await databaseRequest(`?id=eq.${safeId}&select=*`);
+  const response = await databaseRequest(`?id=eq.${safeId}&select=*`, {}, staffAccessToken);
   const rows = (await response.json()) as DatabaseBooking[];
   const current = rows[0];
   if (!current) return null;
@@ -167,18 +167,19 @@ export async function updateBookingStatus(id: string, status: BookingStatus): Pr
       method: "PATCH",
       headers: { Prefer: "return=representation" },
       body: JSON.stringify({ status, updated_at: at, history }),
-    }
+    },
+    staffAccessToken
   );
   const result = (await updated.json()) as DatabaseBooking[];
   if (!result[0]) throw new Error("Booking changed concurrently. Refresh and retry the status update.");
   return normalizeRecord(result[0]);
 }
 
-export async function deleteBooking(id: string): Promise<boolean> {
+export async function deleteBooking(id: string, staffAccessToken: string): Promise<boolean> {
   const response = await databaseRequest(`?id=eq.${encodeURIComponent(id)}&select=id`, {
     method: "DELETE",
     headers: { Prefer: "return=representation" },
-  });
+  }, staffAccessToken);
   return ((await response.json()) as { id: string }[]).length > 0;
 }
 

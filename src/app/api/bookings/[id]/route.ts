@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isStaffSession } from "@/lib/staff-session";
+import { getStaffContext, type StaffContext } from "@/lib/staff-session";
 import { deleteBooking, updateBookingStatus } from "@/lib/bookings-store";
 import type { BookingStatus } from "@/lib/bookings-types";
 import { isSameOriginRequest } from "@/lib/request-guard";
@@ -13,29 +13,34 @@ const STATUSES: BookingStatus[] = [
   "cancelled",
 ];
 
-function guardStaff(req: Request): NextResponse | null {
-  if (!isStaffSession()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+async function guardStaff(
+  req: Request
+): Promise<{ response: NextResponse } | { staff: StaffContext }> {
+  const staff = await getStaffContext();
+  if (!staff) {
+    return { response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
   }
   if (!isSameOriginRequest(req)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return { response: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
   }
   const rl = rateLimit(`bookings:mutate:${clientIp(req)}`, 120, 10 * 60 * 1000);
   if (!rl.ok) {
-    return NextResponse.json(
-      { error: "طلبات كثيرة. حاول بعد قليل." },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
-    );
+    return {
+      response: NextResponse.json(
+        { error: "طلبات كثيرة. حاول بعد قليل." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+      ),
+    };
   }
-  return null;
+  return { staff };
 }
 
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const blocked = guardStaff(req);
-  if (blocked) return blocked;
+  const guard = await guardStaff(req);
+  if ("response" in guard) return guard.response;
 
   let body: { status?: string };
   try {
@@ -49,7 +54,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
-  const updated = await updateBookingStatus(params.id, status);
+  const updated = await updateBookingStatus(params.id, status, guard.staff.accessToken);
   if (!updated) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -60,10 +65,10 @@ export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const blocked = guardStaff(req);
-  if (blocked) return blocked;
+  const guard = await guardStaff(req);
+  if ("response" in guard) return guard.response;
 
-  const ok = await deleteBooking(params.id);
+  const ok = await deleteBooking(params.id, guard.staff.accessToken);
   if (!ok) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

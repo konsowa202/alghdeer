@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isStaffSession } from "@/lib/staff-session";
+import { getStaffContext } from "@/lib/staff-session";
 import {
   appendBooking,
   listBookings,
@@ -28,11 +28,12 @@ function normalizeStaffStatus(raw: unknown): BookingStatus | null {
 }
 
 export async function GET() {
-  if (!isStaffSession()) {
+  const staff = await getStaffContext();
+  if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
-    const rows = await listBookings();
+    const rows = await listBookings(staff.accessToken);
     return NextResponse.json({ bookings: rows });
   } catch (err) {
     console.error("[bookings] list error:", err);
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const staff = isStaffSession();
+    const staff = await getStaffContext();
     const ip = clientIp(req);
 
     // Public submissions: 5 per 10 minutes per IP. Staff entries: 60/10min.
@@ -130,7 +131,7 @@ export async function POST(req: Request) {
       preferredAt: preferredAtIso,
       status,
       source: staff ? "staff" : "website",
-    });
+    }, staff?.accessToken);
 
     // Email notification for website bookings — awaited (with timeout) so
     // serverless runtimes do not freeze the request before the send.

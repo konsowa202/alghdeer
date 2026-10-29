@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
-import { isStaffSession } from "@/lib/staff-session";
+import { getStaffContext } from "@/lib/staff-session";
 import { listBookings } from "@/lib/bookings-store";
 import { getNotificationReadiness } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  if (!isStaffSession()) {
+  const staff = await getStaffContext();
+  if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    await listBookings();
+    await listBookings(staff.accessToken);
     return NextResponse.json(
       {
         checkedAt: new Date().toISOString(),
