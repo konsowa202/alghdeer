@@ -9,10 +9,38 @@ const ibmPlex = IBM_Plex_Sans({
   variable: "--font-ibm",
 });
 
+const siteTitle = "ALGHDEER camp | مخيمات الغدير — جدة • طريق بريمان";
+const siteDescription =
+  "مخيمات الغدير (@alghdeer_sa) — وجهتكم الشتوية والرمضانية الأضخم في جدة (طريق بريمان) لاستضافة فعاليات الشركات الكبرى، الغبقات الرمضانية، والاحتفالات الخاصة.";
+const socialImage = "/og-alghdeer.jpg";
+
 export const metadata: Metadata = {
-  title: "ALGHDEER camp | مخيمات الغدير — جدة • طريق بريمان",
-  description:
-    "مخيمات الغدير (@alghdeer_sa) — وجهتكم الشتوية والرمضانية الأضخم في جدة (طريق بريمان) لاستضافة فعاليات الشركات الكبرى، الغبقات الرمضانية، والاحتفالات الخاصة.",
+  metadataBase: new URL("https://www.alghder.com"),
+  title: siteTitle,
+  description: siteDescription,
+  openGraph: {
+    title: siteTitle,
+    description: siteDescription,
+    url: "/",
+    siteName: "ALGHDEER camp",
+    locale: "ar_SA",
+    type: "website",
+    images: [
+      {
+        url: socialImage,
+        width: 1200,
+        height: 630,
+        alt: "ALGHDEER camp — مخيمات الغدير",
+        type: "image/jpeg",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+    images: [socialImage],
+  },
   icons: {
     icon: "/logo-dark-bg.png",
     shortcut: "/logo-dark-bg.png",
