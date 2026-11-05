@@ -42,9 +42,20 @@ export const metadata: Metadata = {
     images: [socialImage],
   },
   icons: {
-    icon: "/icon.jpg",
-    shortcut: "/favicon.ico",
-    apple: "/apple-icon.jpg",
+    icon: [
+      {
+        url: "/alghdeer-favicon-v2.ico?v=20261105",
+        type: "image/x-icon",
+        sizes: "any",
+      },
+      {
+        url: "/alghdeer-icon-v2.png?v=20261105",
+        type: "image/png",
+        sizes: "512x512",
+      },
+    ],
+    shortcut: "/alghdeer-favicon-v2.ico?v=20261105",
+    apple: "/alghdeer-apple-icon-v2.png?v=20261105",
   },
 };
 
