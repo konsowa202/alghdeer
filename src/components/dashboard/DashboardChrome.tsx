@@ -5,11 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  FileText,
   GitBranch,
   Home,
   Inbox,
   LayoutDashboard,
   ShieldCheck,
+  UsersRound,
 } from "lucide-react";
 import StaffLogoutButton from "./StaffLogoutButton";
 
@@ -34,6 +36,20 @@ const NAV_ITEMS = [
     mobileLabel: "المسار",
     description: "إدارة المراحل من الطلب إلى الإتمام",
     icon: GitBranch,
+  },
+  {
+    href: "/dashboard/invoices",
+    label: "التسعير والفواتير",
+    mobileLabel: "الفواتير",
+    description: "التسعير الذكي واعتماد عروض الأسعار",
+    icon: FileText,
+  },
+  {
+    href: "/dashboard/customers",
+    label: "العملاء",
+    mobileLabel: "العملاء",
+    description: "ملفات العملاء وسجل الحجوزات والفواتير",
+    icon: UsersRound,
   },
   {
     href: "/dashboard/system",
@@ -120,7 +136,7 @@ export default function DashboardChrome({ children }: { children: React.ReactNod
       </div>
 
       <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 bg-[#090a0d]/95 border-t border-white/10 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]" aria-label="التنقل الرئيسي للموبايل">
-        <div className="grid grid-cols-4 h-[72px] px-1">
+        <div className="grid grid-cols-6 h-[72px] px-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = isActive(pathname, item.href);

@@ -205,10 +205,13 @@ export type NotifyResult = {
   provider: "resend" | "smtp" | "web3forms" | "formsubmit" | "none";
 };
 
-/** Non-secret configuration health for the authenticated system-status page. */
-export function getNotificationReadiness() {
-  const recipientCount = notifyRecipients().length;
-  const provider: NotifyResult["provider"] = process.env.RESEND_API_KEY?.trim()
+function selectedProvider(recipientCount: number): NotifyResult["provider"] {
+  const preferred = process.env.NOTIFY_PROVIDER?.trim().toLowerCase();
+  if (preferred === "formsubmit") return recipientCount > 0 ? "formsubmit" : "none";
+  if (preferred === "resend" && process.env.RESEND_API_KEY?.trim()) return "resend";
+  if (preferred === "smtp" && process.env.SMTP_HOST?.trim()) return "smtp";
+  if (preferred === "web3forms" && process.env.WEB3FORMS_ACCESS_KEY?.trim()) return "web3forms";
+  return process.env.RESEND_API_KEY?.trim()
     ? "resend"
     : process.env.SMTP_HOST?.trim()
       ? "smtp"
@@ -217,6 +220,12 @@ export function getNotificationReadiness() {
         : recipientCount > 0
           ? "formsubmit"
           : "none";
+}
+
+/** Non-secret configuration health for the authenticated system-status page. */
+export function getNotificationReadiness() {
+  const recipientCount = notifyRecipients().length;
+  const provider = selectedProvider(recipientCount);
   return {
     recipientCount,
     provider,
@@ -230,35 +239,28 @@ export async function notifyNewBooking(booking: BookingRecord): Promise<NotifyRe
   try {
     const to = notifyRecipients();
     const baseUrl =
-      process.env.SITE_URL?.trim().replace(/\/$/, "") || "https://alghdeer.com";
+      process.env.SITE_URL?.trim().replace(/\/$/, "") || "https://www.alghder.com";
     const dashboardUrl = `${baseUrl}/dashboard`;
+    const provider = selectedProvider(to.length);
 
-    if (to.length === 0) {
-      console.warn(
-        "[notify] NOTIFY_EMAIL is not set — booking notification skipped."
-      );
+    if (provider === "none") {
+      console.warn("[notify] No configured notification provider — booking notification skipped.");
       return { sent: false, provider: "none" };
     }
 
     const subject = `حجز جديد ${booking.id} — ${booking.name}`;
     const html = buildEmailHtml(booking, dashboardUrl);
     const text = buildEmailText(booking, dashboardUrl);
+    const sent = provider === "resend"
+      ? await sendViaResend(to, subject, html, text)
+      : provider === "smtp"
+        ? await sendViaSmtp(to, subject, html, text)
+        : provider === "web3forms"
+          ? await sendViaWeb3Forms(to, subject, html, text)
+          : await sendViaFormSubmit(to, subject, text);
 
-    if (await sendViaResend(to, subject, html, text)) {
-      return { sent: true, provider: "resend" };
-    }
-    if (await sendViaSmtp(to, subject, html, text)) {
-      return { sent: true, provider: "smtp" };
-    }
-    if (await sendViaWeb3Forms(to, subject, html, text)) {
-      return { sent: true, provider: "web3forms" };
-    }
-    if (await sendViaFormSubmit(to, subject, text)) {
-      return { sent: true, provider: "formsubmit" };
-    }
-
-    console.error("[notify] All providers failed or unconfigured.");
-    return { sent: false, provider: "none" };
+    if (!sent) console.error(`[notify] Selected provider failed: ${provider}`);
+    return { sent, provider: sent ? provider : "none" };
   } catch (err) {
     console.error("[notify] Unexpected error:", err);
     return { sent: false, provider: "none" };

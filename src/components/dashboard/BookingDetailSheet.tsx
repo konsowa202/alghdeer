@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import {
   X,
   MessageCircle,
@@ -13,6 +14,8 @@ import {
   History,
   Check,
   CircleDot,
+  FileText,
+  UsersRound,
 } from "lucide-react";
 import type { BookingRecord, BookingStatus } from "@/lib/bookings-types";
 import { BOOKING_STATUS_LABELS } from "@/lib/bookings-types";
@@ -170,6 +173,15 @@ export default function BookingDetailSheet({
                 إيميل
               </span>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Link href={`/dashboard/invoices?booking=${encodeURIComponent(booking.id)}`} className="flex items-center justify-center gap-2 rounded-xl border border-[#cba135]/25 bg-[#cba135]/[0.07] px-3 py-3 text-xs font-bold text-[#d4b458] hover:bg-[#cba135]/10">
+              <FileText size={16} /> إنشاء عرض سعر
+            </Link>
+            <Link href={`/dashboard/customers?phone=${encodeURIComponent(booking.phone)}`} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 text-xs font-bold text-white/65 hover:bg-white/[0.06]">
+              <UsersRound size={16} /> ملف العميل
+            </Link>
           </div>
 
           {/* Details */}
