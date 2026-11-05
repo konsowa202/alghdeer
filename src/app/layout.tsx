@@ -42,9 +42,9 @@ export const metadata: Metadata = {
     images: [socialImage],
   },
   icons: {
-    icon: "/logo-dark-bg.png",
-    shortcut: "/logo-dark-bg.png",
-    apple: "/logo-dark-bg.png",
+    icon: "/icon.jpg",
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.jpg",
   },
 };
 
