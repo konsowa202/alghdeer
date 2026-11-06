@@ -133,10 +133,11 @@ export async function POST(req: Request) {
       source: staff ? "staff" : "website",
     }, staff?.accessToken);
 
-    // Email notification for website bookings — awaited (with timeout) so
-    // serverless runtimes do not freeze the request before the send.
+    // FormSubmit is submitted by the visitor's browser after this save succeeds,
+    // including a copy to the visitor's email. Avoid a duplicate server send.
     let notified = false;
-    if (!staff) {
+    const browserFormSubmit = process.env.NOTIFY_PROVIDER?.trim().toLowerCase() === "formsubmit";
+    if (!staff && !browserFormSubmit) {
       const result = await Promise.race([
         notifyNewBooking(booking),
         new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),

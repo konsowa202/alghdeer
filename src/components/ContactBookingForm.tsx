@@ -30,6 +30,56 @@ interface IssuedTicket {
   notes: string;
 }
 
+function sendFormSubmitCopy(ticket: IssuedTicket) {
+  const target = `formsubmit-${ticket.id}-${Date.now()}`;
+  const frame = document.createElement("iframe");
+  frame.name = target;
+  frame.hidden = true;
+  frame.setAttribute("aria-hidden", "true");
+
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = "https://formsubmit.co/abeer.alghader@gmail.com";
+  form.target = target;
+  form.hidden = true;
+
+  const fields: Record<string, string> = {
+    _subject: `حجز جديد ${ticket.id} — ${ticket.name}`,
+    _template: "table",
+    _captcha: "false",
+    "رقم التذكرة": ticket.id,
+    "اسم العميل": ticket.name,
+    "الجوال / واتساب": ticket.phone,
+    "البريد الإلكتروني": ticket.email || "—",
+    "الجهة / المناسبة": ticket.company,
+    "عدد الضيوف": String(ticket.groupSize),
+    "الموعد المطلوب": ticket.preferredAt,
+    "ملاحظات": ticket.notes || "—",
+    "لوحة التحكم": "https://www.alghder.com/dashboard/bookings",
+  };
+
+  if (ticket.email) {
+    fields._cc = ticket.email;
+    fields._replyto = ticket.email;
+    fields.email = ticket.email;
+  }
+
+  for (const [name, value] of Object.entries(fields)) {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  }
+
+  document.body.append(frame, form);
+  form.submit();
+  window.setTimeout(() => {
+    form.remove();
+    frame.remove();
+  }, 60_000);
+}
+
 export default function ContactBookingForm() {
   const { t, lang } = useLanguage();
   const isAr = lang === "ar";
@@ -137,7 +187,7 @@ export default function ContactBookingForm() {
       }
       const finalId = String(data.id);
 
-      setIssuedTicket({
+      const ticket: IssuedTicket = {
         id: finalId,
         name: name.trim(),
         phone: phone.trim() || "—",
@@ -147,7 +197,9 @@ export default function ContactBookingForm() {
         preferredAt: formattedDate,
         rawDate: rawIsoDate,
         notes: notes.trim(),
-      });
+      };
+      sendFormSubmitCopy(ticket);
+      setIssuedTicket(ticket);
     } finally {
       setLoading(false);
     }
