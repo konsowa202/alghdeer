@@ -27,7 +27,7 @@ export default function Philosophy() {
               scaleX: prefersNarrowTitles ? titleScaleXNarrow : titleScaleXWide,
               transformOrigin: "center center",
             }}
-            className="text-2xl sm:text-4xl md:text-5xl font-black leading-[1.6] mb-8 sm:mb-12 px-2"
+            className="text-2xl sm:text-4xl md:text-5xl font-black leading-[1.6] mb-12 px-2 pb-2 sm:mb-16 md:mb-20"
           >
             {isAr
               ? "الصحراء في الغدير ليست مجرد مكان، بل مسرحٌ حي يصنع أرقى الذكريات تحت النجوم"
