@@ -56,7 +56,7 @@ export default function Hero() {
             <span className="h-1.5 w-1.5 rounded-full bg-[#f4e98c]" />
           </motion.p>
 
-          <div className="w-full px-2 py-4 sm:py-6">
+          <div className="w-full px-2 pb-8 pt-4 sm:pb-12 sm:pt-6 md:pb-20">
             <motion.h1
               initial={{ y: 45, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
