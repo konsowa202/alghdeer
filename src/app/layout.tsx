@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
+
+const gaMeasurementId = "G-9C66382LPP";
 
 const ibmPlex = IBM_Plex_Sans({
   subsets: ["latin"],
@@ -67,6 +70,18 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={`${ibmPlex.variable}`}>
       <body>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${gaMeasurementId}');
+          `}
+        </Script>
         <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>

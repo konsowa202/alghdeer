@@ -52,8 +52,8 @@ export default function About() {
           >
             <div className="relative aspect-[4/5] sm:aspect-[4/4] overflow-hidden rounded-2xl shadow-2xl group">
               <img
-                src="/instagram/frames/alghdeer_gate.jpg"
-                alt={isAr ? "بوابة مخيم الغدير" : "Alghdeer Camp Gate"}
+                src="/instagram/frames/banquet_styling.jpg"
+                alt={isAr ? "تجهيزات الضيافة في مخيم الغدير" : "Alghdeer Camp Hospitality Setup"}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />

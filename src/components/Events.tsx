@@ -40,12 +40,12 @@ export default function Events() {
 
   const cards: BentoCardItem[] = [
     {
-      id: "oasis",
+      id: "camp",
       image: "/instagram/frames/glass_lounge.jpg",
       videoUrl: "/instagram/DXl3MV1Cp7o.mp4",
       permalink: "https://www.instagram.com/reel/DXl3MV1Cp7o/",
-      titleAr: "واحة الغدير",
-      titleEn: "ALGHDEER OASIS",
+      titleAr: "مخيم الغدير",
+      titleEn: "ALGHDEER CAMP",
       subAr: "جولة في القاعات والمجالس",
       subEn: "Camp & Pavilions Tour",
     },
@@ -112,7 +112,7 @@ export default function Events() {
         >
           {/* Left 2x2 Grid (6 cols) */}
           <div className="lg:col-span-6 grid grid-cols-2 gap-3 sm:gap-4">
-            {/* Card 1: Oasis Gate (Aquarabia style) */}
+            {/* Card 1: Gate (Aquarabia style) */}
             <motion.button
               type="button"
               onClick={() => openVideo(cards[0])}
@@ -207,7 +207,7 @@ export default function Events() {
               </div>
             </motion.button>
 
-            {/* Card 4: Aerial Camp Oasis (Qiddiya style) */}
+            {/* Card 4: Aerial Camp (Qiddiya style) */}
             <motion.button
               type="button"
               onClick={() => openVideo(cards[3])}
