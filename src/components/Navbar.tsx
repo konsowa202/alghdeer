@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import LiquidButton from "@/components/ui/LiquidButton";
 
 export default function Navbar() {
   const { lang, setLang, t } = useLanguage();
@@ -23,7 +22,7 @@ export default function Navbar() {
     { name: t("experiences"), href: "#experiences" },
     { name: t("facilities"), href: "#facilities" },
     { name: t("gallery"), href: "#gallery" },
-    { name: t("contact"), href: "#contact" },
+    { name: t("bookBtn"), href: "#contact" },
   ];
 
   return (
@@ -71,9 +70,6 @@ export default function Navbar() {
             >
               {lang === "en" ? "عربي" : "EN"}
             </button>
-            <LiquidButton href="#contact" variant="liquid-gold" size="sm" breathe={true}>
-              {t("bookBtn")}
-            </LiquidButton>
           </div>
 
           {/* Mobile controls */}
@@ -118,11 +114,6 @@ export default function Navbar() {
                   {link.name}
                 </motion.a>
               ))}
-              <div className="mt-4">
-                <LiquidButton href="#contact" variant="liquid-gold" size="lg" className="w-full" onClick={() => setIsOpen(false)}>
-                  {t("bookBtn")}
-                </LiquidButton>
-              </div>
             </div>
           </motion.div>
         )}

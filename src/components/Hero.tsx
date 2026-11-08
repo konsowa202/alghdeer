@@ -40,14 +40,14 @@ export default function Hero() {
 
       <motion.div
         style={{ y: contentY, opacity: contentOpacity }}
-        className="relative z-10 flex h-full items-center justify-center px-4 pb-16 pt-24 text-center sm:px-6 sm:pb-20"
+        className="relative z-10 flex h-full items-center justify-center px-4 pb-16 pt-32 text-center sm:px-6 sm:pb-20 sm:pt-36"
       >
         <div className="mx-auto flex w-full max-w-[1500px] flex-col items-center">
           <motion.p
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.25 }}
-            className={`mb-5 flex items-center gap-2 text-[10px] font-bold text-[#f4e98c] sm:mb-7 sm:text-xs ${
+            className={`mb-5 flex items-center gap-2 text-xs font-bold text-[#f4e98c] sm:mb-7 sm:text-sm md:text-base ${
               isAr ? "tracking-normal" : "uppercase tracking-[0.28em]"
             }`}
           >
@@ -75,7 +75,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.95 }}
-            className={`max-w-xl text-sm font-bold leading-[1.75] text-white sm:max-w-3xl sm:text-lg md:text-xl ${
+            className={`max-w-2xl text-base font-bold leading-[1.75] text-white sm:max-w-4xl sm:text-xl md:text-2xl ${
               isAr ? "tracking-normal" : "sm:uppercase sm:tracking-[0.055em]"
             }`}
           >
