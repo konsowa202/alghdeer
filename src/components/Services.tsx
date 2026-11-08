@@ -17,7 +17,7 @@ export default function Services() {
     prefersNarrowTitles ? 0.94 + p * 0.14 : 0.88 + p * 0.24,
   );
 
-  // 4 100% unique images: Real Golden Buffet at Sunset (DXmFce6CkDG.jpg), Campfire Majlis (nb_campfire_majlis.jpg), Real Traditional Band (DXl904UiqLC.jpg), and Starlit Royal Banquet (nb_royal_banquet.jpg)
+  // Real stills extracted from the camp's own video footage.
   const services = [
     {
       id: "01",
@@ -34,7 +34,7 @@ export default function Services() {
       desc: isAr
         ? "جلسات تراثية حول منقل النار والقهوة السعودية الأصيلة"
         : "Sunken desert majlis around a glowing firepit with Saudi coffee",
-      image: "/nano/nb_campfire_majlis.jpg",
+      image: "/instagram/frames/bohemian_majlis.jpg",
       video: "/instagram/DdFggAcKq19.mp4",
     },
     {
@@ -52,7 +52,7 @@ export default function Services() {
       desc: isAr
         ? "طاولات ضيافة ملكية مزينة بالزهور والشموع ودلال القهوة الفاخرة"
         : "Luxury dining tables styled with florals, candlelight, and brass Dallahs",
-      image: "/nano/nb_royal_banquet.jpg",
+      image: "/instagram/frames/banquet_styling.jpg",
       video: "/instagram/DXmAUzWitsj.mp4",
     },
   ];

@@ -17,13 +17,13 @@ export default function Experiences() {
     prefersNarrowTitles ? 0.94 + p * 0.14 : 0.88 + p * 0.24,
   );
 
-  // 3 100% unique images: Glass Pavilion, Real Jeep Convoy at Sunset, and the Boy with the Bear in front of the Glass Lounge
+  // Real stills extracted from the camp's own video footage.
   const experiences = [
     {
       id: "01",
       title: "exp1Title",
       desc: "exp1Desc",
-      image: "/nano/nb_glass_pavilion.jpg",
+      image: "/instagram/frames/glass_lounge.jpg",
       video: "/instagram/DXl3MV1Cp7o.mp4",
       objectPos: "object-center",
     },

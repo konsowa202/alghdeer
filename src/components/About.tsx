@@ -52,7 +52,7 @@ export default function About() {
           >
             <div className="relative aspect-[4/5] sm:aspect-[4/4] overflow-hidden rounded-2xl shadow-2xl group">
               <img
-                src="/nano/nb_about_gate.jpg"
+                src="/instagram/frames/alghdeer_gate.jpg"
                 alt={isAr ? "بوابة مخيم الغدير" : "Alghdeer Camp Gate"}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
               />

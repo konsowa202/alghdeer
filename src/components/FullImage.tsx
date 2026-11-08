@@ -16,7 +16,7 @@ export default function FullImage() {
     <section ref={ref} className="relative h-[55vh] sm:h-[75vh] overflow-hidden bg-black">
       <motion.div style={{ scale }} className="absolute inset-0">
         <img
-          src="/nano/nb_bohemian_walkway_cinematic.jpg"
+          src="/instagram/frames/camp_sunset.jpg"
           alt="الممشى البوهيمي في مخيمات الغدير"
           className="w-full h-full object-cover object-center"
         />

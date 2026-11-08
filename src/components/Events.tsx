@@ -41,7 +41,7 @@ export default function Events() {
   const cards: BentoCardItem[] = [
     {
       id: "oasis",
-      image: "/nano/wbk_card_majlis_gate.jpg",
+      image: "/instagram/frames/glass_lounge.jpg",
       videoUrl: "/instagram/DXl3MV1Cp7o.mp4",
       permalink: "https://www.instagram.com/reel/DXl3MV1Cp7o/",
       titleAr: "واحة الغدير",
@@ -51,7 +51,7 @@ export default function Events() {
     },
     {
       id: "safari",
-      image: "/nano/wbk_card_safari.jpg",
+      image: "/instagram/frames/desert_safari.jpg",
       videoUrl: "/instagram/DXl8V0yCkwI.mp4",
       permalink: "https://www.instagram.com/reel/DXl8V0yCkwI/",
       titleAr: "مملكة السفاري والتطعيس",
@@ -61,7 +61,7 @@ export default function Events() {
     },
     {
       id: "live",
-      image: "/nano/wbk_card_live_nights.jpg",
+      image: "/instagram/frames/live_music.jpg",
       videoUrl: "/instagram/DXl904UiqLC.mp4",
       permalink: "https://www.instagram.com/reel/DXl904UiqLC/",
       titleAr: "ليالي الطرب",
@@ -71,7 +71,7 @@ export default function Events() {
     },
     {
       id: "aerial",
-      image: "/nano/wbk_card_aerial_camp.jpg",
+      image: "/instagram/frames/fireworks.jpg",
       videoUrl: "/instagram/DXmC4HPiuuJ.mp4",
       permalink: "https://www.instagram.com/reel/DXmC4HPiuuJ/",
       titleAr: "أمسيات الشركات",
@@ -247,7 +247,7 @@ export default function Events() {
             className="lg:col-span-6 relative aspect-square rounded-[16px] overflow-hidden border border-white/10 group flex flex-col justify-between p-6 sm:p-10 md:p-12"
           >
             <img
-              src="/nano/wbk_portal_hero.jpg"
+              src="/instagram/frames/camp_portal.jpg"
               alt={isAr ? "رحلتك إلى الغدير تبدأ هنا" : "Your Journey to Alghdeer Starts Here"}
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
             />

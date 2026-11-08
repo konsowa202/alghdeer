@@ -35,7 +35,7 @@ export default function Facilities() {
       sub: isAr
         ? "واجهات بانورامية مكيفة ومجهزة بالكامل لاستضافة كبار الشخصيات والشركات باجتماعات استراتيجية وخصوصية تامة."
         : "Climate-controlled panoramic glass lounge for VIPs, board meetings & corporate galas.",
-      image: "/nano/nb_glass_pavilion.jpg",
+      image: "/instagram/frames/glass_lounge.jpg",
       tag: isAr ? "كبار الشخصيات • VIP" : "VIP PANORAMA",
       badgeTone: "gold" as const,
       icon: <Building2 size={24} className="text-[#ffd700]" />,
@@ -50,7 +50,7 @@ export default function Facilities() {
       sub: isAr
         ? "خيام بيضاء فسيحة ومجالس أرضية ومرتفعة بنقوش السدو حول منقل نار السمر تحت مظلات بوهيمية ساحرة."
         : "Spacious white canvas canopies and heritage majlis seating centered around a crackling campfire.",
-      image: "/nano/nb_campfire_majlis.jpg",
+      image: "/instagram/frames/bohemian_majlis.jpg",
       tag: isAr ? "نار السمر • MAJLIS" : "CAMPFIRE MAJLIS",
       badgeTone: "amber" as const,
       icon: <Tent size={24} className="text-[#cba135]" />,
@@ -65,7 +65,7 @@ export default function Facilities() {
       sub: isAr
         ? "طاولات ولائم مستديرة، سخانات بوفيه ذهبية، ومحطات شواء حية مع أشهى الأطباق الحجازية والشرقية."
         : "Round banquet tables, hammered gold chafing buffets & live open-fire grill stations.",
-      image: "/nano/nb_royal_banquet.jpg",
+      image: "/instagram/frames/royal_buffet.jpg",
       tag: isAr ? "ولائم فاخرة • GOURMET" : "ROYAL GOURMET",
       badgeTone: "gold" as const,
       icon: <Utensils size={24} className="text-[#ffd700]" />,
@@ -80,7 +80,7 @@ export default function Facilities() {
       sub: isAr
         ? "تعاون مع أرقى الكافيهات المختصة (مثل 95° CELSIUS) ودلال القهوة السعودية الأصيلة مع أجود التمور."
         : "Partnered with premier specialty coffee roasters (95° Celsius) alongside authentic Saudi coffee.",
-      image: "/coffee.png",
+      image: "/instagram/frames/specialty_coffee.jpg",
       tag: isAr ? "قهوة مختصة • 95°" : "SPECIALTY COFFEE",
       badgeTone: "gold" as const,
       icon: <Coffee size={24} className="text-[#e5b33d]" />,
@@ -95,7 +95,7 @@ export default function Facilities() {
       sub: isAr
         ? "مسرح مفتوح مهيأ للفرق التراثية، استعراضات التنورة المضيئة، وأنظمة صوت وإضاءة سينمائية متطورة."
         : "Open-air stage designed for folklore bands, glowing LED performances, and night-sky fireworks.",
-      image: "/nano/wbk_card_live_nights.jpg",
+      image: "/instagram/frames/live_stage.jpg",
       tag: isAr ? "عروض حية • STAGE" : "LIVE SHOWS",
       badgeTone: "amber" as const,
       icon: <Music size={24} className="text-[#ffd700]" />,
@@ -110,7 +110,7 @@ export default function Facilities() {
       sub: isAr
         ? "دبابات صحراوية 4x4، طاولات فرفيرة، ركوب خيل وجمال، وتحديات شبابية وعروض شخصيات للأطفال."
         : "Desert quad bikes, foosball tables, camel rides, youth challenges & mascots for kids.",
-      image: "/nano/wbk_card_safari.jpg",
+      image: "/instagram/frames/desert_safari.jpg",
       tag: isAr ? "مغامرة وسفاري • SAFARI" : "DESERT SAFARI",
       badgeTone: "gold" as const,
       icon: <Gamepad2 size={24} className="text-[#cba135]" />,
