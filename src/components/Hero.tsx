@@ -47,22 +47,24 @@ export default function Hero() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.25 }}
-            className="mb-5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.28em] text-[#f4e98c] sm:mb-7 sm:text-xs"
+            className={`mb-5 flex items-center gap-2 text-[10px] font-bold text-[#f4e98c] sm:mb-7 sm:text-xs ${
+              isAr ? "tracking-normal" : "uppercase tracking-[0.28em]"
+            }`}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-[#f4e98c]" />
             {isAr ? "مخيم شتوي • جدة • طريق بريمان" : "WINTER CAMP • JEDDAH • BURAYMAN"}
             <span className="h-1.5 w-1.5 rounded-full bg-[#f4e98c]" />
           </motion.p>
 
-          <div className="w-full overflow-hidden pb-3 sm:pb-5">
+          <div className="w-full px-2 py-4 sm:py-6">
             <motion.h1
-              initial={{ y: "105%", opacity: 0 }}
+              initial={{ y: 45, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 1.1, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className={`font-black text-[#f1e785] drop-shadow-[0_8px_30px_rgba(0,0,0,0.45)] ${
                 isAr
-                  ? "text-[clamp(5rem,20vw,16rem)] leading-[0.82] tracking-[-0.055em]"
-                  : "text-[clamp(3.4rem,14.2vw,14rem)] leading-[0.8] tracking-[-0.065em]"
+                  ? "text-[clamp(5rem,20vw,16rem)] leading-[1.08] tracking-normal"
+                  : "text-[clamp(3.4rem,14.2vw,14rem)] leading-[0.9] tracking-[-0.065em]"
               }`}
             >
               {isAr ? "الغدير" : "ALGHDEER"}
@@ -73,7 +75,9 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.95 }}
-            className="max-w-xl text-sm font-bold leading-[1.75] text-white sm:max-w-3xl sm:text-lg sm:uppercase sm:tracking-[0.055em] md:text-xl"
+            className={`max-w-xl text-sm font-bold leading-[1.75] text-white sm:max-w-3xl sm:text-lg md:text-xl ${
+              isAr ? "tracking-normal" : "sm:uppercase sm:tracking-[0.055em]"
+            }`}
           >
             {t("heroSub")}
           </motion.p>
