@@ -3,125 +3,81 @@
 import React, { useRef } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
-import LiquidButton from "@/components/ui/LiquidButton";
 
 export default function Hero() {
   const { t, lang } = useLanguage();
-  const narrow = useMediaQuery("(max-width: 767px)");
+  const isAr = lang === "ar";
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-
-  const extendWidthWide = useTransform(scrollYProgress, [0, 1], ["42%", "100%"]);
-  const extendWidthNarrow = useTransform(scrollYProgress, [0, 1], ["48%", "96%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.92, 1], [1, 1, 0]);
-  const y = useTransform(scrollYProgress, [0, 1], [0, -40]);
-  const imgScale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
-  const titleScaleXWide = useTransform(scrollYProgress, [0, 0.22, 1], [1, 1.36, 1.58]);
-  const titleScaleXNarrow = useTransform(scrollYProgress, [0, 0.22, 1], [1, 1.14, 1.26]);
-  const titleLetterWide = useTransform(scrollYProgress, [0, 0.22, 1], ["0em", "0.12em", "0.18em"]);
-  const titleLetterNarrow = useTransform(scrollYProgress, [0, 0.22, 1], ["0em", "0.07em", "0.11em"]);
-  const titleY = useTransform(scrollYProgress, [0, 1], [0, -8]);
-
-  const titleScaleX = narrow ? titleScaleXNarrow : titleScaleXWide;
-  const titleLetterSpacing = narrow ? titleLetterNarrow : titleLetterWide;
-  const extendWidth = narrow ? extendWidthNarrow : extendWidthWide;
+  const videoScale = useTransform(scrollYProgress, [0, 1], [1, 1.12]);
+  const contentY = useTransform(scrollYProgress, [0, 1], [0, -55]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.82, 1], [1, 1, 0]);
 
   return (
     <section
       ref={ref}
       id="home"
-      className="relative h-[85svh] sm:h-[90svh] md:h-[125vh] w-full overflow-hidden"
+      className="relative h-[100svh] min-h-[640px] w-full overflow-hidden bg-[#071c17]"
     >
-      {/* Video Background Layer with Ambient Overlays */}
-      <motion.div
-        style={{ scale: narrow ? 1 : imgScale }}
-        className="absolute inset-0 z-0"
-      >
+      <motion.div style={{ scale: videoScale }} className="absolute inset-0 z-0">
         <video
           src="/instagram/DXl2kAGijT4.mp4"
+          poster="/instagram/frames/frame_aframe_jeeps.jpg"
           autoPlay
           muted
           loop
           playsInline
           className="w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0 mix-blend-overlay opacity-25">
-          <img
-            src="/instagram/frames/frame_aframe_jeeps.jpg"
-            alt="مخيمات الغدير"
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/25" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent rtl:bg-gradient-to-l" />
+        <div className="absolute inset-0 bg-[#09241d]/35" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-[#071c17]/15 to-black/80" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_15%,rgba(0,0,0,0.48)_100%)]" />
+        <div
+          className="absolute inset-0 opacity-[0.13] mix-blend-soft-light"
+          style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.8) 0.7px, transparent 0.7px)", backgroundSize: "5px 5px" }}
+        />
       </motion.div>
 
       <motion.div
-        style={narrow ? undefined : { opacity, y }}
-        className="relative md:sticky top-0 h-full md:h-screen flex items-center justify-center z-10 pt-20 pb-8 sm:pt-24 sm:pb-10 md:py-0"
+        style={{ y: contentY, opacity: contentOpacity }}
+        className="relative z-10 flex h-full items-center justify-center px-4 pb-16 pt-24 text-center sm:px-6 sm:pb-20"
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-16 text-center">
-          <div className="overflow-visible mb-3 sm:mb-6">
-            <motion.div
-              initial={{ y: "80%", opacity: 0 }}
+        <div className="mx-auto flex w-full max-w-[1500px] flex-col items-center">
+          <motion.p
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.25 }}
+            className="mb-5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.28em] text-[#f4e98c] sm:mb-7 sm:text-xs"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-[#f4e98c]" />
+            {isAr ? "مخيم شتوي • جدة • طريق بريمان" : "WINTER CAMP • JEDDAH • BURAYMAN"}
+            <span className="h-1.5 w-1.5 rounded-full bg-[#f4e98c]" />
+          </motion.p>
+
+          <div className="w-full overflow-hidden pb-3 sm:pb-5">
+            <motion.h1
+              initial={{ y: "105%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 1.1, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className={`font-black text-[#f1e785] drop-shadow-[0_8px_30px_rgba(0,0,0,0.45)] ${
+                isAr
+                  ? "text-[clamp(5rem,20vw,16rem)] leading-[0.82] tracking-[-0.055em]"
+                  : "text-[clamp(3.4rem,14.2vw,14rem)] leading-[0.8] tracking-[-0.065em]"
+              }`}
             >
-              <motion.h1
-                style={{
-                  scaleX: lang === "ar" ? titleScaleX : 1,
-                  letterSpacing: lang === "ar" ? titleLetterSpacing : "0em",
-                  y: narrow ? 0 : titleY,
-                }}
-                className="hero-kashida text-[clamp(3.2rem,14vw,4.8rem)] sm:text-[5.4rem] md:text-[7rem] lg:text-[9.5rem] xl:text-[11rem] font-black text-white leading-[0.95] drop-shadow-[0_10px_35px_rgba(0,0,0,0.8)]"
-              >
-                {lang === "ar" ? "الغدير" : "ALGHDEER"}
-              </motion.h1>
-              <motion.div
-                style={{
-                  width: extendWidth,
-                }}
-                className="hero-extend-line mt-2.5 sm:mt-4 mx-auto"
-              />
-            </motion.div>
+              {isAr ? "الغدير" : "ALGHDEER"}
+            </motion.h1>
           </div>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 1.2 }}
-            className="text-white/80 text-xs sm:text-base md:text-xl max-w-sm sm:max-w-2xl mb-6 sm:mb-10 leading-relaxed mx-auto font-light drop-shadow-md px-2"
+            transition={{ duration: 0.8, delay: 0.95 }}
+            className="max-w-xl text-sm font-bold leading-[1.75] text-white sm:max-w-3xl sm:text-lg sm:uppercase sm:tracking-[0.055em] md:text-xl"
           >
             {t("heroSub")}
           </motion.p>
 
-          {/* Clean, Refined Liquid Buttons with Zero AI Clutter */}
-          <motion.div
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 1.6 }}
-            className="flex flex-col sm:flex-row gap-2.5 sm:gap-5 justify-center items-center"
-          >
-            {/* Primary Liquid Gold Button */}
-            <LiquidButton
-              href="#contact"
-              variant="liquid-gold"
-              size="lg"
-              breathe={true}
-            >
-              {t("inquireBtn")}
-            </LiquidButton>
-
-            {/* Secondary Frosted Liquid Glass Button */}
-            <LiquidButton
-              href="#events"
-              variant="liquid-glass"
-              size="lg"
-            >
-              {t("exploreBtn")}
-            </LiquidButton>
-          </motion.div>
         </div>
       </motion.div>
     </section>
