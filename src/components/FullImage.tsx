@@ -16,8 +16,8 @@ export default function FullImage() {
     <section ref={ref} className="relative h-[55vh] sm:h-[75vh] overflow-hidden bg-black">
       <motion.div style={{ scale }} className="absolute inset-0">
         <img
-          src="/instagram/frames/glass_lounge.jpg"
-          alt="القاعة الزجاجية في مخيمات الغدير"
+          src="/nano/nb_bohemian_walkway_cinematic.jpg"
+          alt="الممشى البوهيمي في مخيمات الغدير"
           className="w-full h-full object-cover object-center"
         />
         {/* Cinematic contrast overlays to keep text ultra-legible and preserve rich colors */}
