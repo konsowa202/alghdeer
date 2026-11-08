@@ -5,8 +5,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import TikTokIcon from "@/components/icons/TikTokIcon";
-import LiquidButton from "@/components/ui/LiquidButton";
-import { Play, X, Volume2, VolumeX, ExternalLink } from "lucide-react";
+import { Play, X, Volume2, VolumeX, ExternalLink, ArrowUpLeft } from "lucide-react";
 
 type BentoCardItem = {
   id: string;
@@ -264,18 +263,13 @@ export default function Events() {
                   : "Reserve your private night or corporate retreat at Alghdeer Camp"}
               </p>
 
-              {/* Liquid Golden CTA Button */}
-              <div className="inline-block">
-                <LiquidButton
-                  href="#contact"
-                  variant="liquid-gold"
-                  size="lg"
-                  breathe={true}
-                  className="font-black text-sm sm:text-base tracking-wider shadow-[0_15px_35px_rgba(203,161,53,0.55)]"
-                >
-                  {isAr ? "ابدأ رحلتك الآن" : "Start Your Journey"}
-                </LiquidButton>
-              </div>
+              <a
+                href="#contact"
+                className="group/cta inline-flex min-h-12 items-center gap-4 rounded-full border border-white/30 bg-black/20 px-6 py-3 text-sm font-bold text-white backdrop-blur-md transition-all duration-300 hover:border-[#f1e785] hover:bg-[#f1e785] hover:text-[#071c17] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f1e785] sm:text-base"
+              >
+                {isAr ? "ابدأ رحلتك الآن" : "Start Your Journey"}
+                <ArrowUpLeft className="h-5 w-5 transition-transform duration-300 group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5 rtl:rotate-[-90deg]" />
+              </a>
             </div>
 
             {/* Bottom Row: Brand Logo + Disclaimer */}
