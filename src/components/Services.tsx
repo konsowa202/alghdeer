@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { Play, X } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { Pause, Play } from "lucide-react";
 import Carousel3D from "@/components/Carousel3D";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
@@ -12,7 +12,6 @@ export default function Services() {
   const isAr = lang === "ar";
   const prefersNarrowTitles = useMediaQuery("(max-width: 767px)");
   const ref = useRef<HTMLElement>(null);
-  const [playing, setPlaying] = useState<{ id: string; title: string; video: string; image: string } | null>(null);
 
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const titleScaleX = useTransform(scrollYProgress, (p) =>
@@ -60,16 +59,8 @@ export default function Services() {
   ];
 
   // 8 cards around the ring (services shown twice) so the cylinder feels full
-  const ring = [...services, ...services].map((sv, i) => ({ id: `${sv.id}-${i}`, image: sv.image, title: sv.title, desc: sv.desc }));
+  const ring = [...services, ...services].map((sv, i) => ({ id: `${sv.id}-${i}`, image: sv.image, video: sv.video, title: sv.title, desc: sv.desc }));
 
-  useEffect(() => {
-    if (!playing) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setPlaying(null); };
-    window.addEventListener("keydown", onKey);
-    return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
-  }, [playing]);
 
   return (
     <section ref={ref} className="py-20 sm:py-32 md:py-40 bg-black text-white overflow-hidden">
@@ -94,8 +85,7 @@ export default function Services() {
       <Carousel3D
         isAr={isAr}
         items={ring}
-        onSelect={(i) => setPlaying(services[i % services.length])}
-        renderCaption={(_, i) => {
+        renderCaption={(_, i, ctl) => {
           const sv = services[i % services.length];
           return (
             <div dir={isAr ? "rtl" : "ltr"}>
@@ -105,11 +95,11 @@ export default function Services() {
               <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setPlaying(sv)}
+                  onClick={ctl.play}
                   className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 text-sm font-bold text-white backdrop-blur-md transition-colors hover:border-white/60 hover:bg-white/20"
                 >
-                  <Play size={13} className="fill-current" />
-                  {isAr ? "شاهد الفيديو" : "Watch video"}
+                  {ctl.playing ? <Pause size={13} className="fill-current" /> : <Play size={13} className="fill-current" />}
+                  {ctl.playing ? (isAr ? "إيقاف الفيديو" : "Stop video") : isAr ? "شاهد الفيديو" : "Watch video"}
                 </button>
                 <a
                   href="#contact"
@@ -123,38 +113,6 @@ export default function Services() {
         }}
       />
 
-      <AnimatePresence>
-        {playing && (
-          <motion.div
-            role="dialog"
-            aria-modal="true"
-            aria-label={playing.title}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setPlaying(null)}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-2xl"
-          >
-            <button type="button" onClick={() => setPlaying(null)} aria-label={isAr ? "إغلاق" : "Close"} className="absolute end-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white hover:bg-white hover:text-black sm:end-6 sm:top-6">
-              <X size={18} />
-            </button>
-            <motion.video
-              key={playing.id}
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 240, damping: 28 }}
-              onClick={(e) => e.stopPropagation()}
-              src={playing.video}
-              poster={playing.image}
-              autoPlay
-              controls
-              playsInline
-              className="max-h-[82svh] max-w-full rounded-[18px] shadow-[0_40px_120px_rgba(0,0,0,0.6)]"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
     </section>
   );
 }

@@ -25,13 +25,16 @@ type Props = {
   tint?: number; // flat dark overlay (0..1)
   className?: string;
   outline?: boolean;
+  /** when set, the playing video is painted onto every strip (so video bends too) */
+  video?: HTMLVideoElement | null;
 };
 
 export default function CurvedPlane({
   src, alt = "", bend, axis = "x", strips = 16, radius = 22,
-  imgY = "0%", imgScale = 1, shade = 0.55, tint = 0.25, className = "", outline = false,
+  imgY = "0%", imgScale = 1, shade = 0.55, tint = 0.25, className = "", outline = false, video = null,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const canvases = useRef<(HTMLCanvasElement | null)[]>([]);
   const [size, setSize] = useState({ w: 0, h: 0 });
 
   useEffect(() => {
@@ -44,6 +47,36 @@ export default function CurvedPlane({
 
   const L = axis === "x" ? size.h : size.w; // length along the bend
   const seg = L / strips;
+
+  // paint the video into each strip's canvas every frame (object-fit: cover maths)
+  useEffect(() => {
+    if (!video || !L) return;
+    const { w: W, h: H } = size;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    let raf = 0;
+    const draw = () => {
+      raf = requestAnimationFrame(draw);
+      const vw = video.videoWidth, vh = video.videoHeight;
+      if (!vw || !vh || video.readyState < 2) return;
+      const sc = Math.max(W / vw, H / vh);
+      const ox = (vw - W / sc) / 2, oy = (vh - H / sc) / 2;
+      canvases.current.forEach((cv, i) => {
+        if (!cv) return;
+        const bw = axis === "x" ? W : cv.clientWidth;
+        const bh = axis === "x" ? cv.clientHeight : H;
+        const pw = Math.max(1, Math.round(bw * dpr)), ph = Math.max(1, Math.round(bh * dpr));
+        if (cv.width !== pw) cv.width = pw;
+        if (cv.height !== ph) cv.height = ph;
+        const ctx = cv.getContext("2d");
+        if (!ctx) return;
+        const sx = axis === "x" ? ox : ox + (i * seg) / sc;
+        const sy = axis === "x" ? oy + (i * seg) / sc : oy;
+        ctx.drawImage(video, sx, sy, bw / sc, bh / sc, 0, 0, pw, ph);
+      });
+    };
+    draw();
+    return () => cancelAnimationFrame(raf);
+  }, [video, L, seg, size, axis]);
 
   return (
     <div ref={ref} role="img" aria-label={alt} className={`absolute inset-0 [transform-style:preserve-3d] ${className}`}>
@@ -66,6 +99,8 @@ export default function CurvedPlane({
             shade={shade}
             tint={tint}
             outline={outline}
+            hasVideo={Boolean(video)}
+            canvasRef={(el) => { canvases.current[i] = el; }}
           />
         ))}
     </div>
@@ -73,12 +108,13 @@ export default function CurvedPlane({
 }
 
 function Strip({
-  i, n, seg, L, W, H, axis, bend, src, radius, imgY, imgScale, shade, tint, outline,
+  i, n, seg, L, W, H, axis, bend, src, radius, imgY, imgScale, shade, tint, outline, hasVideo, canvasRef,
 }: {
   i: number; n: number; seg: number; L: number; W: number; H: number; axis: "x" | "y";
   bend: MotionValue<number>; src: string; radius: number;
   imgY: MotionValue<string> | string; imgScale: MotionValue<number> | number;
   shade: number; tint: number; outline: boolean;
+  hasVideo: boolean; canvasRef: (el: HTMLCanvasElement | null) => void;
 }) {
   const c0 = (i + 0.5) * seg - L / 2; // strip centre on the flat plane
 
@@ -139,6 +175,9 @@ function Strip({
         style={{ ...imgBox, y: imgY, scale: imgScale, filter }}
         className="pointer-events-none absolute max-w-none select-none object-cover"
       />
+      {hasVideo && (
+        <motion.canvas ref={canvasRef} style={{ filter }} className="pointer-events-none absolute inset-0 h-full w-full" />
+      )}
       <div className="pointer-events-none absolute inset-0 transition-colors duration-300" style={{ ...borders, borderRadius: "inherit" }} />
     </motion.div>
   );
