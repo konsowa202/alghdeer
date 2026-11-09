@@ -4,6 +4,7 @@ import React, { useRef } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowLeft, Play } from "lucide-react";
+import FluidButton from "@/components/ui/FluidButton";
 
 export default function Hero() {
   const { t, lang } = useLanguage();
@@ -89,31 +90,22 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 1.15, ease: [0.16, 1, 0.3, 1] }}
             className="mt-8 flex w-full flex-col items-center justify-center gap-3 sm:mt-10 sm:w-auto sm:flex-row sm:gap-4"
           >
-            <motion.a
+            <FluidButton
               href="#contact"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              className="group relative inline-flex min-h-[56px] w-full max-w-xs items-center justify-between gap-4 overflow-hidden rounded-full bg-[#f1e785] py-2 pe-2 ps-7 text-base font-black text-[#071c17] shadow-[0_18px_50px_rgba(241,231,133,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:w-auto sm:max-w-none sm:text-lg"
+              icon={<ArrowLeft size={18} className="ltr:rotate-180" />}
+              className="w-full max-w-xs sm:w-auto sm:max-w-none"
             >
-              <span aria-hidden className="pointer-events-none absolute inset-y-0 -start-1/2 w-1/3 skew-x-[-20deg] bg-white/50 opacity-0 blur-md transition-all duration-700 group-hover:start-[120%] group-hover:opacity-100" />
-              <span className="relative">{isAr ? "احجز ليلتك الآن" : "Book Your Night"}</span>
-              <span className="relative grid h-10 w-10 place-items-center rounded-full bg-[#071c17] text-[#f1e785] transition-transform duration-300 group-hover:rotate-[-45deg] rtl:group-hover:rotate-45">
-                <ArrowLeft size={18} className="ltr:rotate-180" />
-              </span>
-            </motion.a>
-
-            <motion.a
+              {isAr ? "احجز ليلتك الآن" : "Book Your Night"}
+            </FluidButton>
+            <FluidButton
               href="#events"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              className="group inline-flex min-h-[56px] w-full max-w-xs items-center justify-between gap-4 rounded-full border border-white/30 bg-white/10 py-2 pe-2 ps-7 text-base font-bold text-white backdrop-blur-md transition-colors duration-300 hover:border-white/60 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f1e785] sm:w-auto sm:max-w-none sm:text-lg"
+              borderOpacity={0.45}
+              pulse={false}
+              icon={<Play size={14} className="fill-current" />}
+              className="w-full max-w-xs sm:w-auto sm:max-w-none [&>a]:bg-white/5 [&>a]:backdrop-blur-md"
             >
               {isAr ? "شاهد فعالياتنا" : "Watch Our Events"}
-              <span className="relative grid h-10 w-10 place-items-center rounded-full bg-white text-black">
-                <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-white/40 motion-reduce:animate-none" />
-                <Play size={14} className="relative fill-current" />
-              </span>
-            </motion.a>
+            </FluidButton>
           </motion.div>
         </div>
       </motion.div>
