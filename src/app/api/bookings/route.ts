@@ -133,16 +133,18 @@ export async function POST(req: Request) {
       source: staff ? "staff" : "website",
     }, staff?.accessToken);
 
-    // FormSubmit is submitted by the visitor's browser after this save succeeds,
-    // including a copy to the visitor's email. Avoid a duplicate server send.
+    // Trigger notification to staff/management for all public website submissions
     let notified = false;
-    const browserFormSubmit = process.env.NOTIFY_PROVIDER?.trim().toLowerCase() === "formsubmit";
-    if (!staff && !browserFormSubmit) {
-      const result = await Promise.race([
-        notifyNewBooking(booking),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
-      ]);
-      notified = result?.sent ?? false;
+    if (!staff) {
+      try {
+        const result = await Promise.race([
+          notifyNewBooking(booking),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 7000)),
+        ]);
+        notified = result?.sent ?? false;
+      } catch (err) {
+        console.error("[bookings] notification error:", err);
+      }
     }
 
     // Output whitelist — return only what the ticket UI needs

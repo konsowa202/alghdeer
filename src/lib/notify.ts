@@ -1,5 +1,6 @@
 import type { BookingRecord } from "./bookings-types";
 import { BOOKING_STATUS_LABELS } from "./bookings-types";
+import { isEmailValid } from "./bookings-store";
 
 /**
  * Booking email notifications.
@@ -25,10 +26,12 @@ function escapeHtml(s: string): string {
 }
 
 function notifyRecipients(): string[] {
-  return (process.env.NOTIFY_EMAIL ?? "")
+  const list = (process.env.NOTIFY_EMAIL ?? "")
     .split(",")
     .map((e) => e.trim())
     .filter(Boolean);
+  if (list.length > 0) return list;
+  return ["abeer.alghader@gmail.com"];
 }
 
 function formatWhen(iso: string): string {
@@ -48,16 +51,21 @@ function buildEmailHtml(b: BookingRecord, dashboardUrl: string): string {
       <td style="padding:10px 14px;color:#ffffff;font-size:14px;font-weight:bold;border-bottom:1px solid #22242b;">${value}</td>
     </tr>`;
 
+  const cleanPhone = b.phone && b.phone !== "—" ? b.phone.replace(/[^0-9]/g, "") : "";
+  const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}` : "";
+
   return `<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <body style="margin:0;padding:24px;background:#0b0c10;font-family:Tahoma,Arial,sans-serif;">
-  <div style="max-width:520px;margin:0 auto;background:#14151b;border:1px solid #26272f;border-radius:16px;overflow:hidden;">
-    <div style="background:#cba135;padding:18px 24px;">
-      <div style="color:#0b0c10;font-size:18px;font-weight:900;">حجز جديد — مخيمات الغدير</div>
-      <div style="color:#0b0c10;font-size:12px;opacity:.75;">تم استلام طلب حجز من الموقع</div>
+  <div style="max-width:540px;margin:0 auto;background:#14151b;border:1px solid #26272f;border-radius:16px;overflow:hidden;">
+    <div style="background:#cba135;padding:20px 24px;">
+      <div style="color:#0b0c10;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">FORM SUBMITTED • تم إرسال الفورم</div>
+      <div style="color:#0b0c10;font-size:20px;font-weight:900;">طلب حجز جديد — مخيمات الغدير</div>
+      <div style="color:#0b0c10;font-size:12px;opacity:.85;margin-top:2px;">تم استلام طلب تذكرة جديد من واجهة الموقع</div>
     </div>
     <table style="width:100%;border-collapse:collapse;background:#14151b;">
-      ${row("رقم التذكرة", `<span style="font-family:monospace;color:#d4b458;">${escapeHtml(b.id)}</span>`)}
+      ${row("حالة الطلب", '<span style="color:#4ade80;font-weight:bold;">تم إرسال الفورم (Form Submitted)</span>')}
+      ${row("رقم التذكرة", `<span style="font-family:monospace;color:#d4b458;font-size:15px;">${escapeHtml(b.id)}</span>`)}
       ${row("اسم العميل", escapeHtml(b.name))}
       ${row("الجوال / واتساب", `<span dir="ltr">${escapeHtml(b.phone)}</span>`)}
       ${b.email ? row("البريد الإلكتروني", `<span dir="ltr">${escapeHtml(b.email)}</span>`) : ""}
@@ -65,14 +73,18 @@ function buildEmailHtml(b: BookingRecord, dashboardUrl: string): string {
       ${row("عدد الضيوف", `${b.groupSize} شخص`)}
       ${row("الموعد المطلوب", escapeHtml(formatWhen(b.preferredAt)))}
       ${b.notes ? row("ملاحظات", escapeHtml(b.notes)) : ""}
-      ${row("الحالة", BOOKING_STATUS_LABELS[b.status])}
+      ${row("الحالة الحالية", BOOKING_STATUS_LABELS[b.status])}
     </table>
-    <div style="padding:20px 24px;">
-      <a href="${dashboardUrl}" style="display:block;text-align:center;background:#cba135;color:#0b0c10;text-decoration:none;font-weight:900;font-size:14px;padding:14px;border-radius:10px;">
-        فتح لوحة التحكم
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:12px;">
+      ${waUrl ? `
+      <a href="${waUrl}" style="display:block;text-align:center;background:#25D366;color:#ffffff;text-decoration:none;font-weight:900;font-size:14px;padding:12px;border-radius:10px;margin-bottom:8px;">
+        مراسلة العميل مباشرة على واتساب
+      </a>` : ""}
+      <a href="${dashboardUrl}/bookings" style="display:block;text-align:center;background:#cba135;color:#0b0c10;text-decoration:none;font-weight:900;font-size:14px;padding:12px;border-radius:10px;">
+        فتح لوحة التحكم للحجوزات
       </a>
-      <div style="text-align:center;color:#5a5b64;font-size:11px;margin-top:14px;">
-        ${escapeHtml(new Date(b.createdAt).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" }))} — نظام حجوزات الغدير
+      <div style="text-align:center;color:#5a5b64;font-size:11px;margin-top:10px;">
+        ${escapeHtml(new Date(b.createdAt).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" }))} — نظام حجوزات مخيمات الغدير
       </div>
     </div>
   </div>
@@ -81,17 +93,21 @@ function buildEmailHtml(b: BookingRecord, dashboardUrl: string): string {
 }
 
 function buildEmailText(b: BookingRecord, dashboardUrl: string): string {
+  const cleanPhone = b.phone && b.phone !== "—" ? b.phone.replace(/[^0-9]/g, "") : "";
   return [
-    "حجز جديد — مخيمات الغدير",
+    "[Form Submitted] طلب حجز جديد — مخيمات الغدير",
+    "تم إرسال نموذج الحجز بنجاح عبر الموقع الإلكتروني",
+    "----------------------------------------",
     `رقم التذكرة: ${b.id}`,
-    `الاسم: ${b.name}`,
-    `الجوال: ${b.phone}`,
-    b.email ? `البريد: ${b.email}` : null,
-    `الجهة: ${b.company}`,
-    `عدد الضيوف: ${b.groupSize}`,
-    `الموعد: ${formatWhen(b.preferredAt)}`,
+    `اسم العميل: ${b.name}`,
+    `الجوال / واتساب: ${b.phone}`,
+    b.email ? `البريد الإلكتروني: ${b.email}` : null,
+    `الجهة / المناسبة: ${b.company}`,
+    `عدد الضيوف: ${b.groupSize} شخص`,
+    `الموعد المطلوب: ${formatWhen(b.preferredAt)}`,
     b.notes ? `ملاحظات: ${b.notes}` : null,
-    `لوحة التحكم: ${dashboardUrl}`,
+    cleanPhone ? `واتساب العميل: https://wa.me/${cleanPhone}` : null,
+    `لوحة التحكم: ${dashboardUrl}/bookings`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -123,30 +139,34 @@ async function sendViaSmtp(
   html: string,
   text: string
 ): Promise<boolean> {
-  if (!process.env.SMTP_HOST) return false;
+  const host =
+    process.env.SMTP_HOST?.trim() ||
+    (process.env.SMTP_USER?.includes("gmail.com") || process.env.GMAIL_APP_PASSWORD
+      ? "smtp.gmail.com"
+      : "");
+  if (!host) return false;
   try {
-    // Optional dependency — resolved at runtime only (never bundled), so the
-    // build succeeds whether or not nodemailer is installed.
     const spec = "nodemailer";
     const mod = await import(/* webpackIgnore: true */ spec).catch(() => null);
     if (!mod) return false;
     const nodemailer = mod.default ?? mod;
-    const port = Number(process.env.SMTP_PORT || 465);
+    const port = Number(process.env.SMTP_PORT || (host === "smtp.gmail.com" ? 465 : 587));
+    const user = process.env.SMTP_USER?.trim() || process.env.GMAIL_USER?.trim();
+    const pass = process.env.SMTP_PASS?.trim() || process.env.GMAIL_APP_PASSWORD?.trim();
     const transport = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
+      host,
       port,
       secure: port === 465,
-      auth: process.env.SMTP_USER
-        ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
-        : undefined,
+      auth: user && pass ? { user, pass } : undefined,
     });
     await transport.sendMail({
-      from: process.env.EMAIL_FROM?.trim() || process.env.SMTP_USER,
+      from: process.env.EMAIL_FROM?.trim() || user || "Alghdeer <bookings@alghder.com>",
       to: to.join(", "),
       subject,
       html,
       text,
     });
+    console.log(`[notify] SMTP email sent successfully to ${to.join(", ")}`);
     return true;
   } catch (err) {
     console.error("[notify] SMTP failed:", err);
@@ -180,19 +200,56 @@ async function sendViaWeb3Forms(
 async function sendViaFormSubmit(
   to: string[],
   subject: string,
-  text: string
+  booking: BookingRecord,
+  dashboardUrl: string
 ): Promise<boolean> {
-  // Zero-config fallback: https://formsubmit.co — the FIRST submission sends
-  // an activation email to NOTIFY_EMAIL; click "Activate" once and every
-  // following booking lands in the inbox.
   if (to.length === 0) return false;
+  const recipient = to[0] || "abeer.alghader@gmail.com";
   try {
-    const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to[0])}`, {
+    const cleanPhone =
+      booking.phone && booking.phone !== "—" ? booking.phone.replace(/[^0-9]/g, "") : "";
+    const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}` : "";
+
+    const payload: Record<string, string> = {
+      _subject: subject,
+      _template: "table",
+      _captcha: "false",
+      "حالة النموذج": "تم إرسال الفورم (Form Submitted)",
+      "رقم التذكرة": booking.id,
+      "اسم العميل": booking.name,
+      "الجوال / واتساب": booking.phone,
+      "البريد الإلكتروني": booking.email || "—",
+      "الجهة / المناسبة": booking.company || "—",
+      "عدد الضيوف": `${booking.groupSize} شخص`,
+      "الموعد المطلوب": formatWhen(booking.preferredAt),
+      "ملاحظات": booking.notes || "—",
+      "تاريخ الإرسال": formatWhen(booking.createdAt),
+      "واتساب العميل": waUrl || "—",
+      "لوحة التحكم": `${dashboardUrl}/bookings`,
+    };
+
+    if (booking.email && isEmailValid(booking.email)) {
+      payload._replyto = booking.email;
+    }
+
+    const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(recipient)}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ _subject: subject, _captcha: "false", message: text }),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Referer: "https://www.alghder.com/",
+        Origin: "https://www.alghder.com",
+        "User-Agent": "Alghdeer-Notification-Service/1.0",
+      },
+      body: JSON.stringify(payload),
     });
-    if (!res.ok) console.error("[notify] FormSubmit failed:", res.status);
+
+    const data = (await res.json().catch(() => null)) as { success?: string | boolean; message?: string } | null;
+    if (data?.success === "true" || data?.success === true) {
+      console.log(`[notify] FormSubmit sent successfully to ${recipient}`);
+      return true;
+    }
+    console.warn(`[notify] FormSubmit response:`, data?.message || res.status);
     return res.ok;
   } catch (err) {
     console.error("[notify] FormSubmit error:", err);
@@ -207,19 +264,15 @@ export type NotifyResult = {
 
 function selectedProvider(recipientCount: number): NotifyResult["provider"] {
   const preferred = process.env.NOTIFY_PROVIDER?.trim().toLowerCase();
-  if (preferred === "formsubmit") return recipientCount > 0 ? "formsubmit" : "none";
   if (preferred === "resend" && process.env.RESEND_API_KEY?.trim()) return "resend";
-  if (preferred === "smtp" && process.env.SMTP_HOST?.trim()) return "smtp";
+  if (preferred === "smtp" && (process.env.SMTP_HOST?.trim() || process.env.SMTP_PASS?.trim() || process.env.GMAIL_APP_PASSWORD?.trim())) return "smtp";
   if (preferred === "web3forms" && process.env.WEB3FORMS_ACCESS_KEY?.trim()) return "web3forms";
-  return process.env.RESEND_API_KEY?.trim()
-    ? "resend"
-    : process.env.SMTP_HOST?.trim()
-      ? "smtp"
-      : process.env.WEB3FORMS_ACCESS_KEY?.trim()
-        ? "web3forms"
-        : recipientCount > 0
-          ? "formsubmit"
-          : "none";
+  if (preferred === "formsubmit") return recipientCount > 0 ? "formsubmit" : "none";
+
+  if (process.env.RESEND_API_KEY?.trim()) return "resend";
+  if (process.env.SMTP_HOST?.trim() || process.env.SMTP_PASS?.trim() || process.env.GMAIL_APP_PASSWORD?.trim()) return "smtp";
+  if (process.env.WEB3FORMS_ACCESS_KEY?.trim()) return "web3forms";
+  return recipientCount > 0 ? "formsubmit" : "none";
 }
 
 /** Non-secret configuration health for the authenticated system-status page. */
@@ -248,18 +301,28 @@ export async function notifyNewBooking(booking: BookingRecord): Promise<NotifyRe
       return { sent: false, provider: "none" };
     }
 
-    const subject = `حجز جديد ${booking.id} — ${booking.name}`;
+    const subject = `[Form Submitted] حجز جديد ${booking.id} — ${booking.name}`;
     const html = buildEmailHtml(booking, dashboardUrl);
     const text = buildEmailText(booking, dashboardUrl);
-    const sent = provider === "resend"
-      ? await sendViaResend(to, subject, html, text)
-      : provider === "smtp"
-        ? await sendViaSmtp(to, subject, html, text)
-        : provider === "web3forms"
-          ? await sendViaWeb3Forms(to, subject, html, text)
-          : await sendViaFormSubmit(to, subject, text);
 
-    if (!sent) console.error(`[notify] Selected provider failed: ${provider}`);
+    let sent = false;
+    if (provider === "resend") {
+      sent = await sendViaResend(to, subject, html, text);
+    } else if (provider === "smtp") {
+      sent = await sendViaSmtp(to, subject, html, text);
+    } else if (provider === "web3forms") {
+      sent = await sendViaWeb3Forms(to, subject, html, text);
+    } else {
+      sent = await sendViaFormSubmit(to, subject, booking, dashboardUrl);
+    }
+
+    // Fallback cascade: if selected provider failed, attempt FormSubmit
+    if (!sent && provider !== "formsubmit") {
+      console.warn(`[notify] Provider ${provider} failed, attempting fallback via FormSubmit...`);
+      sent = await sendViaFormSubmit(to, subject, booking, dashboardUrl);
+    }
+
+    if (!sent) console.error(`[notify] Notification failed for booking ${booking.id}`);
     return { sent, provider: sent ? provider : "none" };
   } catch (err) {
     console.error("[notify] Unexpected error:", err);

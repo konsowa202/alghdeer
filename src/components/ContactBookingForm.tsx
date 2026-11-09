@@ -31,54 +31,45 @@ interface IssuedTicket {
   notes: string;
 }
 
-function sendFormSubmitCopy(ticket: IssuedTicket) {
-  const target = `formsubmit-${ticket.id}-${Date.now()}`;
-  const frame = document.createElement("iframe");
-  frame.name = target;
-  frame.hidden = true;
-  frame.setAttribute("aria-hidden", "true");
+async function sendFormSubmitCopy(ticket: IssuedTicket) {
+  try {
+    const cleanPhone =
+      ticket.phone && ticket.phone !== "—" ? ticket.phone.replace(/[^0-9]/g, "") : "";
+    const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}` : "—";
 
-  const form = document.createElement("form");
-  form.method = "POST";
-  form.action = "https://formsubmit.co/abeer.alghader@gmail.com";
-  form.target = target;
-  form.hidden = true;
+    const fields: Record<string, string> = {
+      _subject: `[Form Submitted] حجز جديد ${ticket.id} — ${ticket.name}`,
+      _template: "table",
+      _captcha: "false",
+      "حالة النموذج": "تم إرسال الفورم (Form Submitted)",
+      "رقم التذكرة": ticket.id,
+      "اسم العميل": ticket.name,
+      "الجوال / واتساب": ticket.phone,
+      "البريد الإلكتروني": ticket.email || "—",
+      "الجهة / المناسبة": ticket.company,
+      "عدد الضيوف": `${ticket.groupSize} شخص`,
+      "الموعد المطلوب": ticket.preferredAt,
+      "ملاحظات": ticket.notes || "—",
+      "واتساب العميل": waUrl,
+      "لوحة التحكم": "https://www.alghder.com/dashboard/bookings",
+    };
 
-  const fields: Record<string, string> = {
-    _subject: `حجز جديد ${ticket.id} — ${ticket.name}`,
-    _template: "table",
-    _captcha: "false",
-    "رقم التذكرة": ticket.id,
-    "اسم العميل": ticket.name,
-    "الجوال / واتساب": ticket.phone,
-    "البريد الإلكتروني": ticket.email || "—",
-    "الجهة / المناسبة": ticket.company,
-    "عدد الضيوف": String(ticket.groupSize),
-    "الموعد المطلوب": ticket.preferredAt,
-    "ملاحظات": ticket.notes || "—",
-    "لوحة التحكم": "https://www.alghder.com/dashboard/bookings",
-  };
+    if (ticket.email) {
+      fields._replyto = ticket.email;
+    }
 
-  if (ticket.email) {
-    fields._cc = ticket.email;
-    fields._replyto = ticket.email;
-    fields.email = ticket.email;
+    await fetch("https://formsubmit.co/ajax/abeer.alghader@gmail.com", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(fields),
+      keepalive: true,
+    });
+  } catch (err) {
+    console.warn("[booking-form] client notification error:", err);
   }
-
-  for (const [name, value] of Object.entries(fields)) {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = name;
-    input.value = value;
-    form.appendChild(input);
-  }
-
-  document.body.append(frame, form);
-  form.submit();
-  window.setTimeout(() => {
-    form.remove();
-    frame.remove();
-  }, 60_000);
 }
 
 export default function ContactBookingForm() {

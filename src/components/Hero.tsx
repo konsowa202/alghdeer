@@ -82,6 +82,20 @@ export default function Hero() {
             {t("heroSub")}
           </motion.p>
 
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 1.15 }}
+            className="mt-6 sm:mt-8"
+          >
+            <a
+              href="#contact"
+              className="group inline-flex min-h-12 items-center gap-4 rounded-full border border-white/35 bg-black/20 px-6 py-3 text-sm font-bold text-white backdrop-blur-md transition-all duration-300 hover:border-[#f1e785] hover:bg-[#f1e785] hover:text-[#071c17] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f1e785] sm:text-base"
+            >
+              {isAr ? "احجز تجربتك" : "Book Your Experience"}
+              <span aria-hidden="true" className="text-xl leading-none transition-transform duration-300 group-hover:-translate-y-0.5 ltr:group-hover:translate-x-1 rtl:group-hover:-translate-x-1">↗</span>
+            </a>
+          </motion.div>
         </div>
       </motion.div>
     </section>

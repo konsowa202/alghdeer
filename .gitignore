@@ -41,6 +41,7 @@ next-env.d.ts
 # Local customer data and private backups
 /backups/
 /data/bookings.json
+*.csv
 
 # Font files (Optional: keep if you want them on GitHub, but common to ignore large binaries)
 # Thmanyah-Font-Family.zip
