@@ -1,12 +1,14 @@
 "use client";
 
-import React from "react";
-import { motion, MotionValue, useReducedMotion, useTransform } from "framer-motion";
+import React, { useEffect, useRef } from "react";
+import { motion, useInView, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { Play } from "lucide-react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export type AngledGalleryItem = {
   id: string;
   image: string;
+  previewVideo?: string;
   titleAr: string;
   titleEn: string;
   subAr: string;
@@ -16,77 +18,157 @@ export type AngledGalleryItem = {
 type Props = {
   items: AngledGalleryItem[];
   isAr: boolean;
-  progress: MotionValue<number>;
   onOpen: (index: number) => void;
+  intro?: React.ReactNode;
+  outro?: React.ReactNode;
 };
 
-const rotations = [5, -4, 4, -5];
-const offsets = [-5, 5, -4, 4];
-
-export default function AngledGallery({ items, isAr, progress, onOpen }: Props) {
-  const reduceMotion = useReducedMotion();
-
+/**
+ * Angled Gallery — full-bleed cards that enter tilted in 3D, flatten while
+ * centred, then tilt the opposite way as they leave (scroll-linked, Framer Motion).
+ */
+export default function AngledGallery({ items, isAr, onOpen, intro, outro }: Props) {
   return (
-    <div className="relative -mx-4 space-y-5 overflow-hidden py-8 sm:-mx-6 sm:space-y-8 sm:py-12 lg:-mx-16">
-      {items.map((item, index) => (
-        <AngledCard
-          key={item.id}
-          item={item}
-          index={index}
-          isAr={isAr}
-          progress={progress}
-          reduced={Boolean(reduceMotion)}
-          onOpen={() => onOpen(index)}
-        />
-      ))}
+    <div className="relative">
+      {intro && <Intro>{intro}</Intro>}
+      <div className="flex flex-col items-center gap-[7svh] sm:gap-[9svh]">
+        {items.map((item, index) => (
+          <AngledCard key={item.id} item={item} index={index} isAr={isAr} onOpen={() => onOpen(index)} />
+        ))}
+      </div>
+      {outro && <Outro>{outro}</Outro>}
     </div>
   );
 }
 
-function AngledCard({ item, index, isAr, progress, reduced, onOpen }: {
+function Intro({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, -140]);
+  const scale = useTransform(scrollYProgress, [0, 1], reduce ? [1, 1] : [1, 0.86]);
+  const opacity = useTransform(scrollYProgress, [0, 0.75], [1, 0]);
+  return (
+    <div ref={ref} className="flex h-[70svh] min-h-[460px] items-center justify-center px-4 sm:h-[86svh]">
+      <motion.div style={{ y, scale, opacity }} className="text-center">
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
+function Outro({ children }: { children: React.ReactNode }) {
+  const reduce = useReducedMotion();
+  return (
+    <div className="flex min-h-[80svh] items-center justify-center px-4 py-24">
+      <motion.div
+        initial={reduce ? false : { opacity: 0, y: 60, filter: "blur(14px)" }}
+        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        viewport={{ once: false, amount: 0.5 }}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        className="text-center"
+      >
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
+function AngledCard({ item, index, isAr, onOpen }: {
   item: AngledGalleryItem;
   index: number;
   isAr: boolean;
-  progress: MotionValue<number>;
-  reduced: boolean;
   onOpen: () => void;
 }) {
-  const start = index * 0.1;
-  const end = Math.min(start + 0.65, 1);
-  const rotate = useTransform(progress, [start, end], reduced ? [0, 0] : [rotations[index], 0]);
-  const x = useTransform(progress, [start, end], reduced ? ["0%", "0%"] : [`${offsets[index]}%`, "0%"]);
-  const scale = useTransform(progress, [start, end], reduced ? [1, 1] : [1.08, 1]);
+  const ref = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const reduce = Boolean(useReducedMotion());
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const centred = useInView(ref, { amount: 0.6 });
+  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start end", "end start"] });
+
+  // alternate the tilt direction per card; softer on phones
+  const s = index % 2 === 0 ? 1 : -1;
+  const k = reduce ? 0 : isDesktop ? 1 : 0.55;
+  const F = [0, 0.4, 0.6, 1]; // flat zone while centred
+
+  const rotateX = useTransform(p, F, [22 * k, 0, 0, -22 * k]);
+  const rotateY = useTransform(p, F, [-14 * s * k, 0, 0, 14 * s * k]);
+  const rotateZ = useTransform(p, F, [-6 * s * k, 0, 0, 6 * s * k]);
+  const scale = useTransform(p, F, [1 - 0.16 * k, 1, 1, 1 - 0.16 * k]);
+  const imgY = useTransform(p, [0, 1], reduce ? ["0%", "0%"] : ["-10%", "10%"]);
+  const imgScale = useTransform(p, F, reduce ? [1, 1, 1, 1] : [1.25, 1.05, 1.05, 1.25]);
+  const textOpacity = useTransform(p, [0.28, 0.42, 0.58, 0.72], [0, 1, 1, 0]);
+  const textBlur = useTransform(p, [0.28, 0.42, 0.58, 0.72], reduce ? [0, 0, 0, 0] : [12, 0, 0, 12]);
+  const textFilter = useTransform(textBlur, (b) => `blur(${b}px)`);
+  const textY = useTransform(p, [0.28, 0.5, 0.72], reduce ? [0, 0, 0] : [50, 0, -50]);
+  const textSpacing = useTransform(p, [0.28, 0.45], isAr || reduce ? ["0em", "0em"] : ["0.18em", "-0.01em"]);
+
+  // play the muted preview only while the card is centred
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (centred && !reduce) v.play().catch(() => {});
+    else v.pause();
+  }, [centred, reduce]);
+
+  const title = isAr ? item.titleAr : item.titleEn;
+  const sub = isAr ? item.subAr : item.subEn;
 
   return (
-    <div className="px-2 sm:px-8">
-      <motion.button
-        type="button"
-        onClick={onOpen}
-        style={{ rotate, x, scale }}
-        className="group relative block h-[42vh] min-h-[290px] w-full overflow-hidden rounded-[22px] border border-white/15 bg-[#111] text-center shadow-[0_30px_80px_rgba(0,0,0,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f1e785] sm:h-[54vh] sm:min-h-[430px]"
+    <div ref={ref} className="w-full [perspective:1400px]">
+      <motion.div
+        style={{ rotateX, rotateY, rotate: rotateZ, scale, transformStyle: "preserve-3d" }}
+        className="relative mx-auto h-[72svh] min-h-[420px] w-[94vw] max-w-[1500px] overflow-hidden rounded-[18px] bg-[#0d0d0d] will-change-transform sm:h-[88svh] sm:min-h-[560px] sm:rounded-[26px]"
       >
-        <motion.img
-          src={item.image}
-          alt={isAr ? item.titleAr : item.titleEn}
-          loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
-          style={{ scale: reduced ? 1 : 1.04 }}
-        />
-        <div className="absolute inset-0 bg-black/35 transition-colors duration-500 group-hover:bg-black/25" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/55" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center px-6" dir={isAr ? "rtl" : "ltr"}>
-          <span className="mb-3 text-[10px] font-bold uppercase tracking-[0.32em] text-[#f1e785] sm:text-xs">
-            {String(index + 1).padStart(2, "0")} — {isAr ? item.subAr : item.subEn}
-          </span>
-          <h3 className="max-w-5xl text-4xl font-black leading-[1.15] text-white drop-shadow-lg sm:text-6xl md:text-7xl">
-            {isAr ? item.titleAr : item.titleEn}
-          </h3>
-          <span className="mt-6 inline-flex min-h-12 items-center gap-3 rounded-full border border-white/35 bg-black/20 px-5 py-3 text-xs font-bold backdrop-blur-md transition-all group-hover:border-[#f1e785] group-hover:bg-[#f1e785] group-hover:text-black sm:text-sm">
-            <Play size={15} className="fill-current" />
+        <motion.div style={{ y: imgY, scale: imgScale }} className="absolute -inset-y-[10%] inset-x-0">
+          <img src={item.image} alt={title} loading="lazy" draggable={false} className="h-full w-full object-cover" />
+          {item.previewVideo && isDesktop && (
+            <motion.video
+              ref={videoRef}
+              src={item.previewVideo}
+              muted
+              loop
+              playsInline
+              preload="none"
+              initial={false}
+              animate={{ opacity: centred ? 1 : 0 }}
+              transition={{ duration: 0.8 }}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          )}
+        </motion.div>
+        <div className="absolute inset-0 bg-black/30" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.55)_100%)]" />
+
+        <motion.div
+          style={{ opacity: textOpacity, filter: textFilter, y: textY }}
+          dir={isAr ? "rtl" : "ltr"}
+          className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
+        >
+          <motion.h3
+            style={{ letterSpacing: textSpacing }}
+            className={`max-w-[14ch] font-black leading-[1.05] text-white drop-shadow-[0_10px_40px_rgba(0,0,0,0.45)] ${
+              isAr ? "text-[clamp(3rem,10vw,9rem)]" : "text-[clamp(2.6rem,8.5vw,8rem)] uppercase"
+            }`}
+          >
+            {title}
+          </motion.h3>
+          <p className="mt-3 text-xs font-bold text-white/85 sm:mt-4 sm:text-base">
+            {sub} <span className="text-[#f1e785]">• {String(index + 1).padStart(2, "0")}</span>
+          </p>
+          <button
+            type="button"
+            onClick={onOpen}
+            className="group/btn mt-6 inline-flex min-h-11 items-center gap-2.5 rounded-full border border-white/40 bg-white/10 py-1.5 pe-1.5 ps-5 text-xs font-bold text-white backdrop-blur-md transition-all duration-300 hover:border-[#f1e785] hover:bg-[#f1e785] hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f1e785] sm:mt-8 sm:text-sm"
+          >
             {isAr ? "شاهد التجربة" : "Watch the experience"}
-          </span>
-        </div>
-      </motion.button>
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-black transition-transform duration-300 group-hover/btn:scale-110">
+              <Play size={12} className="fill-current" />
+            </span>
+          </button>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

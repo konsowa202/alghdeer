@@ -2,11 +2,10 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { motion, useScroll, useTransform, AnimatePresence, useReducedMotion } from "framer-motion";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import TikTokIcon from "@/components/icons/TikTokIcon";
 import AngledGallery from "@/components/AngledGallery";
-import { Play, X, Volume2, VolumeX, ExternalLink, ArrowUpLeft } from "lucide-react";
+import { X, Volume2, VolumeX, ExternalLink, ArrowUpLeft } from "lucide-react";
 
 type EventItem = {
   id: string;
@@ -29,14 +28,11 @@ const cards: EventItem[] = [
 export default function Events() {
   const { lang } = useLanguage();
   const isAr = lang === "ar";
-  const prefersNarrowTitles = useMediaQuery("(max-width: 767px)");
   const reduceMotion = useReducedMotion();
   const ref = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const [activeVideo, setActiveVideo] = useState<EventItem | null>(null);
   const [isMuted, setIsMuted] = useState(false);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const titleScaleX = useTransform(scrollYProgress, (p) => reduceMotion ? 1 : prefersNarrowTitles ? 1 + p * 0.12 : 1 + p * 0.25);
   const openVideo = (card: EventItem) => { setActiveVideo(card); setIsMuted(false); };
 
   useEffect(() => {
@@ -49,53 +45,58 @@ export default function Events() {
     return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", onKeyDown); };
   }, [activeVideo]);
 
+  const items = cards.map((c) => ({ ...c, previewVideo: c.videoUrl }));
+
   return (
-    <section ref={ref} id="events" className="overflow-hidden bg-black py-16 text-white sm:py-28 md:py-36">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-16">
-        <div className="mb-10 flex flex-col justify-between gap-4 sm:mb-14 sm:flex-row sm:items-end">
-          <div>
-            <p className="mb-3 text-xs uppercase tracking-[0.35em] text-[#cba135]">{isAr ? "عالم الغدير" : "DISCOVER ALGHDEER"}</p>
-            <motion.h2 style={{ scaleX: titleScaleX, transformOrigin: isAr ? "right center" : "left center" }} className="text-4xl font-black leading-[1.1] sm:text-6xl md:text-7xl">
-              {isAr ? "فعالياتنا" : "OUR EVENTS"}
-            </motion.h2>
-          </div>
-          <p className="text-xs text-white/50 sm:text-sm">{isAr ? "اسكرول واستكشف، واضغط لمشاهدة التجربة" : "Scroll to explore, then open an experience"}</p>
-        </div>
-
-        <AngledGallery items={cards} isAr={isAr} progress={scrollYProgress} onOpen={(index) => openVideo(cards[index])} />
-
-        <motion.div
-          initial={reduceMotion ? false : { opacity: 0, y: 35 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.7 }}
-          dir={isAr ? "rtl" : "ltr"}
-          className="group relative mt-16 flex min-h-[430px] flex-col justify-between overflow-hidden rounded-[22px] border border-white/10 p-6 sm:mt-24 sm:min-h-[520px] sm:p-10 md:p-12"
-        >
-          <img src="/instagram/frames/camp_portal.jpg" alt={isAr ? "رحلتك إلى الغدير تبدأ هنا" : "Your Journey to Alghdeer Starts Here"} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/25 to-black/85" />
-          <div className="relative z-10 mx-auto max-w-lg pt-2 text-center sm:pt-4">
-            <h3 className="mb-2 text-2xl font-black leading-[1.25] text-white drop-shadow-lg sm:mb-3 sm:text-4xl md:text-[2.6rem]">{isAr ? "رحلتك إلى الغدير تبدأ هنا" : "Your Journey to Alghdeer Starts Here"}</h3>
-            <p className="mb-5 text-xs font-medium leading-relaxed text-white/85 sm:mb-6 sm:text-base md:text-lg">{isAr ? "احجز تجربتك وليلتك الخاصة الآن في مخيمات الغدير بجدة" : "Reserve your private night or corporate retreat at Alghdeer Camp"}</p>
-            <a href="#contact" className="group/cta inline-flex min-h-12 items-center gap-4 rounded-full border border-white/30 bg-black/20 px-6 py-3 text-sm font-bold text-white backdrop-blur-md transition-all duration-300 hover:border-[#f1e785] hover:bg-[#f1e785] hover:text-[#071c17] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f1e785] sm:text-base">
+    <section ref={ref} id="events" className="overflow-hidden bg-black text-white">
+      <AngledGallery
+        items={items}
+        isAr={isAr}
+        onOpen={(index) => openVideo(cards[index])}
+        intro={
+          <>
+            <p className="mb-5 text-xs font-bold uppercase tracking-[0.35em] text-[#cba135] sm:text-sm">
+              {isAr ? "عالم الغدير" : "DISCOVER ALGHDEER"}
+            </p>
+            <h2 className={`font-black leading-[1] text-white ${isAr ? "text-[clamp(4.5rem,17vw,13rem)]" : "text-[clamp(3.5rem,12vw,11rem)] uppercase tracking-[-0.03em]"}`}>
+              {isAr ? "فعالياتنا" : "Our Events"}
+            </h2>
+            <p className="mt-6 inline-flex items-center gap-3 text-sm text-white/60 sm:text-base">
+              <span className="relative flex h-8 w-5 justify-center rounded-full border border-white/40 pt-1.5" aria-hidden>
+                <motion.span
+                  animate={reduceMotion ? undefined : { y: [0, 8, 0], opacity: [1, 0.2, 1] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                  className="h-1.5 w-1 rounded-full bg-white"
+                />
+              </span>
+              {isAr ? "اسكرول واستكشف" : "Scroll to explore"}
+            </p>
+          </>
+        }
+        outro={
+          <>
+            <h3 className={`font-black leading-[1] text-white ${isAr ? "text-[clamp(4rem,14vw,11rem)]" : "text-[clamp(3.5rem,12vw,10rem)] uppercase"}`}>
+              {isAr ? "احجز ليلتك" : "Book Your Night"}
+            </h3>
+            <p className="mt-4 text-sm font-bold uppercase tracking-[0.2em] text-white/60 sm:text-base">
+              {isAr ? "رحلتك إلى الغدير تبدأ من هنا" : "Your journey to Alghdeer starts here"}
+            </p>
+            <a
+              href="#contact"
+              className="group/cta mt-8 inline-flex min-h-12 items-center gap-3 rounded-full bg-[#f1e785] py-1.5 pe-1.5 ps-6 text-sm font-black text-[#071c17] transition-transform duration-300 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:text-base"
+            >
               {isAr ? "ابدأ رحلتك الآن" : "Start Your Journey"}
-              <ArrowUpLeft className="h-5 w-5 transition-transform duration-300 group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5 rtl:rotate-[-90deg]" />
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-[#071c17] text-[#f1e785]">
+                <ArrowUpLeft className="h-5 w-5 transition-transform duration-300 group-hover/cta:-translate-y-0.5 ltr:rotate-90" />
+              </span>
             </a>
-          </div>
-          <div className="relative z-10 flex items-end justify-between gap-4 pt-6">
-            <img src="/logo-dark-bg.png" alt="ALGHDEER camp" className="h-6 w-auto object-contain sm:h-8" />
-            <p className="max-w-[200px] text-end text-[9px] leading-snug text-white/65 sm:text-[11px]">{isAr ? "*تُطبق الشروط والأحكام • متاح لحجوزات الشركات والعائلات" : "*Terms apply • Available for corporate & private bookings"}</p>
-          </div>
-          <div className="absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-r from-[#8a6412] via-[#cba135] to-[#f3db8b]" />
-        </motion.div>
-
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-6 border-t border-white/10 pt-6 sm:mt-10">
-          <div className="flex items-center gap-8">
-            <a href="https://www.instagram.com/alghdeer_sa" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2.5 text-xs uppercase tracking-[0.2em] text-white/50 transition-colors hover:text-[#cba135]"><span>Instagram @alghdeer_sa</span></a>
-            <a href="https://www.tiktok.com/@alghdeer_sa" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2.5 text-xs uppercase tracking-[0.2em] text-white/50 transition-colors hover:text-[#cba135]"><TikTokIcon className="shrink-0" size={16} /><span>TikTok</span></a>
-          </div>
-        </div>
-      </div>
+            <div className="mt-12 flex items-center justify-center gap-8">
+              <a href="https://www.instagram.com/alghdeer_sa" target="_blank" rel="noopener noreferrer" className="text-xs uppercase tracking-[0.2em] text-white/50 transition-colors hover:text-[#cba135]">Instagram @alghdeer_sa</a>
+              <a href="https://www.tiktok.com/@alghdeer_sa" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-white/50 transition-colors hover:text-[#cba135]"><TikTokIcon className="shrink-0" size={16} /><span>TikTok</span></a>
+            </div>
+          </>
+        }
+      />
 
       <AnimatePresence>
         {activeVideo && (
