@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import { motion, useInView, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { Play } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import CurvedPlane from "@/components/CurvedPlane";
 
 export type AngledGalleryItem = {
   id: string;
@@ -89,22 +90,28 @@ function AngledCard({ item, index, isAr, onOpen }: {
 
   // alternate the tilt direction per card; softer on phones
   const s = index % 2 === 0 ? 1 : -1;
-  const k = reduce ? 0 : isDesktop ? 1 : 0.55;
+  const k = reduce ? 0 : isDesktop ? 1 : 0.7;
   const F = [0, 0.4, 0.6, 1]; // flat zone while centred
 
-  const rotateX = useTransform(p, F, [22 * k, 0, 0, -22 * k]);
-  const rotateY = useTransform(p, F, [-14 * s * k, 0, 0, 14 * s * k]);
-  const rotateZ = useTransform(p, F, [-6 * s * k, 0, 0, 6 * s * k]);
-  const scale = useTransform(p, F, [1 - 0.16 * k, 1, 1, 1 - 0.16 * k]);
-  const imgY = useTransform(p, [0, 1], reduce ? ["0%", "0%"] : ["-10%", "10%"]);
-  const imgScale = useTransform(p, F, reduce ? [1, 1, 1, 1] : [1.25, 1.05, 1.05, 1.25]);
+  // the page *bends* (warp) as it enters and leaves — this is the key look
+  // always convex (edges curl away) so the strips never cover the title
+  const bend = useTransform(p, F, [1.35 * k, 0, 0, 1.35 * k]);
+  const rotateX = useTransform(p, F, [16 * k, 0, 0, -16 * k]);
+  const rotateY = useTransform(p, F, [-22 * s * k, 0, 0, 22 * s * k]);
+  const rotateZ = useTransform(p, F, [-5 * s * k, 0, 0, 5 * s * k]);
+  const scale = useTransform(p, F, [1 - 0.12 * k, 1, 1, 1 - 0.12 * k]);
+  const imgY = useTransform(p, [0, 1], reduce ? ["0%", "0%"] : ["-7%", "7%"]);
+  const imgScale = useTransform(p, F, reduce ? [1, 1, 1, 1] : [1.18, 1.02, 1.02, 1.18]);
   const textOpacity = useTransform(p, [0.28, 0.42, 0.58, 0.72], [0, 1, 1, 0]);
   const textBlur = useTransform(p, [0.28, 0.42, 0.58, 0.72], reduce ? [0, 0, 0, 0] : [12, 0, 0, 12]);
   const textFilter = useTransform(textBlur, (b) => `blur(${b}px)`);
   const textY = useTransform(p, [0.28, 0.5, 0.72], reduce ? [0, 0, 0] : [50, 0, -50]);
   const textSpacing = useTransform(p, [0.28, 0.45], isAr || reduce ? ["0em", "0em"] : ["0.18em", "-0.01em"]);
 
-  // play the muted preview only while the card is centred
+  // the flat video layer is only visible while the card is flat (no bend)
+  const videoOpacity = useTransform(p, [0.39, 0.43, 0.57, 0.61], [0, 1, 1, 0]);
+
+  // play the muted preview only while the card is centred (and flat)
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -116,33 +123,35 @@ function AngledCard({ item, index, isAr, onOpen }: {
   const sub = isAr ? item.subAr : item.subEn;
 
   return (
-    <div ref={ref} className="w-full [perspective:1400px]">
+    <div ref={ref} className="w-full [perspective:1100px] sm:[perspective:1400px]">
       <motion.div
         style={{ rotateX, rotateY, rotate: rotateZ, scale, transformStyle: "preserve-3d" }}
-        className="relative mx-auto h-[72svh] min-h-[420px] w-[94vw] max-w-[1500px] overflow-hidden rounded-[18px] bg-[#0d0d0d] will-change-transform sm:h-[88svh] sm:min-h-[560px] sm:rounded-[26px]"
+        className="relative mx-auto h-[72svh] min-h-[420px] w-[94vw] max-w-[1500px] will-change-transform sm:h-[88svh] sm:min-h-[560px]"
       >
-        <motion.div style={{ y: imgY, scale: imgScale }} className="absolute -inset-y-[10%] inset-x-0">
-          <img src={item.image} alt={title} loading="lazy" draggable={false} className="h-full w-full object-cover" />
-          {item.previewVideo && isDesktop && (
-            <motion.video
-              ref={videoRef}
-              src={item.previewVideo}
-              muted
-              loop
-              playsInline
-              preload="none"
-              initial={false}
-              animate={{ opacity: centred ? 1 : 0 }}
-              transition={{ duration: 0.8 }}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          )}
-        </motion.div>
-        <div className="absolute inset-0 bg-black/30" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.55)_100%)]" />
+        <CurvedPlane
+          src={item.image}
+          alt={title}
+          bend={bend}
+          axis="x"
+          strips={isDesktop ? 22 : 14}
+          radius={isDesktop ? 26 : 18}
+          imgY={imgY}
+          imgScale={imgScale}
+          tint={0.3}
+          shade={0.6}
+        />
+
+        {item.previewVideo && isDesktop && (
+          <motion.div
+            style={{ z: 1, opacity: videoOpacity }}
+            className="pointer-events-none absolute inset-0 overflow-hidden rounded-[26px]"
+          >
+            <video ref={videoRef} src={item.previewVideo} muted loop playsInline preload="none" className="h-full w-full object-cover brightness-[0.7]" />
+          </motion.div>
+        )}
 
         <motion.div
-          style={{ opacity: textOpacity, filter: textFilter, y: textY }}
+          style={{ opacity: textOpacity, filter: textFilter, y: textY, z: 2 }}
           dir={isAr ? "rtl" : "ltr"}
           className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
         >

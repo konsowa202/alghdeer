@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
+import { Play, X } from "lucide-react";
+import Carousel3D from "@/components/Carousel3D";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export default function Services() {
@@ -10,7 +12,7 @@ export default function Services() {
   const isAr = lang === "ar";
   const prefersNarrowTitles = useMediaQuery("(max-width: 767px)");
   const ref = useRef<HTMLElement>(null);
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [playing, setPlaying] = useState<{ id: string; title: string; video: string; image: string } | null>(null);
 
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const titleScaleX = useTransform(scrollYProgress, (p) =>
@@ -57,10 +59,22 @@ export default function Services() {
     },
   ];
 
+  // 8 cards around the ring (services shown twice) so the cylinder feels full
+  const ring = [...services, ...services].map((sv, i) => ({ id: `${sv.id}-${i}`, image: sv.image, title: sv.title, desc: sv.desc }));
+
+  useEffect(() => {
+    if (!playing) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setPlaying(null); };
+    window.addEventListener("keydown", onKey);
+    return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
+  }, [playing]);
+
   return (
     <section ref={ref} className="py-20 sm:py-32 md:py-40 bg-black text-white overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-16">
-        <div className="mb-12 sm:mb-16 border-b border-white/10 pb-8">
+        <div className="mb-4 sm:mb-6 border-b border-white/10 pb-8">
           <p className="text-xs tracking-[0.35em] uppercase text-[#cba135] mb-3">
             {isAr ? "خدماتنا" : "OUR SERVICES"}
           </p>
@@ -75,52 +89,72 @@ export default function Services() {
           </motion.h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          {services.map((s, i) => {
-            const isHovered = hoveredIdx === i;
-            return (
-              <motion.div
-                key={s.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.08 }}
-                onMouseEnter={() => setHoveredIdx(i)}
-                onMouseLeave={() => setHoveredIdx(null)}
-                onClick={() => setHoveredIdx(isHovered ? null : i)}
-                className="group cursor-pointer overflow-hidden relative aspect-[16/10] rounded-2xl border border-white/10 hover:border-[#cba135]/60 transition-colors"
-              >
-                {/* Top Specular Glass Edge Highlight */}
-                <span className="pointer-events-none absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/50 to-transparent z-10" />
-
-                <img
-                  src={s.image}
-                  alt={s.title}
-                  className="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000"
-                />
-                {isHovered && (
-                  <video
-                    src={s.video}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover z-[1]"
-                  />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent z-[2]" />
-                <div className="absolute bottom-0 right-0 left-0 p-5 sm:p-6 z-[3]">
-                  <span className="text-[#cba135]/35 text-3xl sm:text-4xl font-black block mb-1">
-                    {s.id}
-                  </span>
-                  <h3 className="text-base sm:text-xl font-bold text-white">{s.title}</h3>
-                  <p className="text-white/65 text-xs sm:text-sm mt-1 leading-relaxed">{s.desc}</p>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
       </div>
+
+      <Carousel3D
+        isAr={isAr}
+        items={ring}
+        onSelect={(i) => setPlaying(services[i % services.length])}
+        renderCaption={(_, i) => {
+          const sv = services[i % services.length];
+          return (
+            <div dir={isAr ? "rtl" : "ltr"}>
+              <span className="text-sm font-black text-[#f1e785]">{sv.id}</span>
+              <h3 className="mt-1 text-2xl font-black text-white sm:text-4xl">{sv.title}</h3>
+              <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-white/60 sm:text-base">{sv.desc}</p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPlaying(sv)}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 text-sm font-bold text-white backdrop-blur-md transition-colors hover:border-white/60 hover:bg-white/20"
+                >
+                  <Play size={13} className="fill-current" />
+                  {isAr ? "شاهد الفيديو" : "Watch video"}
+                </button>
+                <a
+                  href="#contact"
+                  className="inline-flex min-h-11 items-center rounded-full bg-[#f1e785] px-6 text-sm font-black text-[#071c17] transition-transform hover:scale-[1.04]"
+                >
+                  {isAr ? "احجز هذه التجربة" : "Book this experience"}
+                </a>
+              </div>
+            </div>
+          );
+        }}
+      />
+
+      <AnimatePresence>
+        {playing && (
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={playing.title}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPlaying(null)}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-2xl"
+          >
+            <button type="button" onClick={() => setPlaying(null)} aria-label={isAr ? "إغلاق" : "Close"} className="absolute end-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white hover:bg-white hover:text-black sm:end-6 sm:top-6">
+              <X size={18} />
+            </button>
+            <motion.video
+              key={playing.id}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 240, damping: 28 }}
+              onClick={(e) => e.stopPropagation()}
+              src={playing.video}
+              poster={playing.image}
+              autoPlay
+              controls
+              playsInline
+              className="max-h-[82svh] max-w-full rounded-[18px] shadow-[0_40px_120px_rgba(0,0,0,0.6)]"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

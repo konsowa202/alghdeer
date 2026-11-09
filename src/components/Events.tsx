@@ -61,16 +61,6 @@ export default function Events() {
             <h2 className={`font-black leading-[1] text-white ${isAr ? "text-[clamp(4.5rem,17vw,13rem)]" : "text-[clamp(3.5rem,12vw,11rem)] uppercase tracking-[-0.03em]"}`}>
               {isAr ? "فعالياتنا" : "Our Events"}
             </h2>
-            <p className="mt-6 inline-flex items-center gap-3 text-sm text-white/60 sm:text-base">
-              <span className="relative flex h-8 w-5 justify-center rounded-full border border-white/40 pt-1.5" aria-hidden>
-                <motion.span
-                  animate={reduceMotion ? undefined : { y: [0, 8, 0], opacity: [1, 0.2, 1] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                  className="h-1.5 w-1 rounded-full bg-white"
-                />
-              </span>
-              {isAr ? "اسكرول واستكشف" : "Scroll to explore"}
-            </p>
           </>
         }
         outro={

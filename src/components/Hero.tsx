@@ -117,25 +117,6 @@ export default function Hero() {
           </motion.div>
         </div>
       </motion.div>
-
-      <motion.a
-        href="#events"
-        aria-label={isAr ? "اسكرول للأسفل" : "Scroll down"}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.6, duration: 0.8 }}
-        style={{ opacity: contentOpacity }}
-        className="absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 text-[11px] font-bold text-white/60 sm:flex"
-      >
-        <span className="flex h-9 w-6 justify-center rounded-full border border-white/40 pt-2">
-          <motion.span
-            animate={{ y: [0, 10, 0], opacity: [1, 0.2, 1] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-            className="h-1.5 w-1 rounded-full bg-white"
-          />
-        </span>
-        {isAr ? "اسكرول" : "SCROLL"}
-      </motion.a>
     </section>
   );
 }

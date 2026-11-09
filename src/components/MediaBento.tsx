@@ -41,6 +41,7 @@ const MOBILE_SLOTS: Slot[] = [
 ];
 const COLS = 4;
 const ROWS = 3;
+const M_ROWS = 7;
 const SPRING = { stiffness: 160, damping: 24, mass: 0.9 };
 
 function useTrackTemplate(values: MotionValue<number>[]) {
@@ -62,26 +63,60 @@ export default function MediaBento({ items, isAr }: Props) {
 
   /* Track springs — always 4 cols / 3 rows so hook count stays stable */
   const c0 = useSpring(1, SPRING), c1 = useSpring(1, SPRING), c2 = useSpring(1, SPRING), c3 = useSpring(1, SPRING);
-  const r0 = useSpring(1, SPRING), r1 = useSpring(1, SPRING), r2 = useSpring(1, SPRING);
+  const r0 = useSpring(1, SPRING), r1 = useSpring(1, SPRING), r2 = useSpring(1, SPRING), r3 = useSpring(1, SPRING);
+  const r4 = useSpring(1, SPRING), r5 = useSpring(1, SPRING), r6 = useSpring(1, SPRING);
   const cols = [c0, c1, c2, c3];
-  const rows = [r0, r1, r2];
+  const rows = [r0, r1, r2, r3, r4, r5, r6];
   const colTemplate = useTrackTemplate(cols);
-  const rowTemplate = useTrackTemplate(rows);
+  const rowTemplate = useTrackTemplate([r0, r1, r2]);
+  const mColTemplate = useTrackTemplate([c0, c1]);
+  const mRowTemplate = useTrackTemplate(rows);
+
+  /* Mobile: no hover — the tile nearest the screen centre becomes the focus.
+     Uses the *un-expanded* layout maths so the focus never jitters. */
+  const [focus, setFocus] = useState<number | null>(null);
+  useEffect(() => {
+    if (isDesktop || reduce) { setFocus(null); return; }
+    let raf = 0;
+    const measure = () => {
+      raf = 0;
+      const el = gridRef.current;
+      if (!el) return;
+      const box = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      if (box.bottom < vh * 0.2 || box.top > vh * 0.8) { setFocus(null); return; }
+      const rowH = box.height / M_ROWS;
+      const mid = vh / 2;
+      let best = 0, bestD = Infinity;
+      MOBILE_SLOTS.slice(0, items.length).forEach(([, , r, rs], i) => {
+        const cy = box.top + (r - 1 + rs / 2) * rowH;
+        const d = Math.abs(cy - mid);
+        if (d < bestD) { bestD = d; best = i; }
+      });
+      setFocus(best);
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(measure); };
+    measure();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); cancelAnimationFrame(raf); };
+  }, [isDesktop, reduce, items.length]);
 
   useEffect(() => {
     const colW = Array(COLS).fill(1);
-    const rowW = Array(ROWS).fill(1);
-    if (hovered !== null && isDesktop && !reduce) {
-      const [c, cs, r, rs] = DESKTOP_SLOTS[hovered];
-      const cg = cs > 1 ? 1.4 : 1.85;
-      const rg = rs > 1 ? 1.3 : 1.65;
+    const rowW = Array(isDesktop ? ROWS : M_ROWS).fill(1);
+    const target = isDesktop ? hovered : focus;
+    if (target !== null && !reduce) {
+      const [c, cs, r, rs] = (isDesktop ? DESKTOP_SLOTS : MOBILE_SLOTS)[target];
+      const cg = cs > 1 ? (isDesktop ? 1.4 : 1) : isDesktop ? 1.85 : 1.7;
+      const rg = rs > 1 ? (isDesktop ? 1.3 : 1.25) : isDesktop ? 1.65 : 1.6;
       for (let i = c - 1; i < c - 1 + cs; i++) colW[i] = cg;
       for (let i = r - 1; i < r - 1 + rs; i++) rowW[i] = rg;
     }
     cols.forEach((s, i) => s.set(colW[i]));
-    rows.forEach((s, i) => s.set(rowW[i]));
+    rows.forEach((s, i) => s.set(rowW[i] ?? 1));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hovered, isDesktop, reduce]);
+  }, [hovered, focus, isDesktop, reduce]);
 
   /* Pause tile videos when the grid is off-screen or a lightbox is open */
   useEffect(() => {
@@ -130,14 +165,14 @@ export default function MediaBento({ items, isAr }: Props) {
           style={
             isDesktop
               ? { gridTemplateColumns: colTemplate, gridTemplateRows: rowTemplate }
-              : { gridTemplateColumns: "1fr 1fr", gridAutoRows: "44vw" }
+              : { gridTemplateColumns: mColTemplate, gridTemplateRows: mRowTemplate }
           }
-          className="grid gap-1.5 md:h-[clamp(560px,84vh,880px)] sm:gap-2"
+          className="grid h-[calc(44vw*7)] gap-1.5 sm:gap-2 md:h-[clamp(560px,84vh,880px)]"
         >
           {slots.map((item, i) => {
             const [c, cs, r, rs] = (isDesktop ? DESKTOP_SLOTS : MOBILE_SLOTS)[i];
-            const isHot = hovered === i;
-            const dimmed = hovered !== null && !isHot;
+            const isHot = (isDesktop ? hovered : focus) === i;
+            const dimmed = (isDesktop ? hovered : focus) !== null && !isHot;
             const title = isAr ? item.titleAr : item.titleEn;
             return (
               <motion.button
@@ -145,7 +180,7 @@ export default function MediaBento({ items, isAr }: Props) {
                 type="button"
                 aria-label={`${isAr ? "فتح" : "Open"} ${title}`}
                 onClick={() => { setDir(0); setActive(i); }}
-                onMouseEnter={() => setHovered(i)}
+                onMouseEnter={() => isDesktop && setHovered(i)}
                 onFocus={() => setHovered(i)}
                 onBlur={() => setHovered(null)}
                 initial={reduce ? false : { opacity: 0, scale: 0.92, y: 24 }}
@@ -179,7 +214,7 @@ export default function MediaBento({ items, isAr }: Props) {
                 {/* dim the rest while one tile is focused */}
                 <motion.div
                   aria-hidden
-                  animate={{ opacity: dimmed ? 0.38 : 0 }}
+                  animate={{ opacity: dimmed ? (isDesktop ? 0.38 : 0.25) : 0 }}
                   transition={{ duration: 0.4 }}
                   className="pointer-events-none absolute inset-0 bg-black"
                 />
@@ -193,7 +228,7 @@ export default function MediaBento({ items, isAr }: Props) {
                 {/* hover label — desktop; always-on on touch */}
                 <motion.span
                   initial={false}
-                  animate={isDesktop ? { opacity: isHot ? 1 : 0, y: isHot ? 0 : 8 } : { opacity: 1, y: 0 }}
+                  animate={{ opacity: isHot ? 1 : 0, y: isHot ? 0 : 8 }}
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                   className="pointer-events-none absolute bottom-2.5 start-2.5 rounded-full bg-black/55 px-3 py-1.5 text-[11px] font-bold text-white backdrop-blur-md sm:bottom-3 sm:start-3 sm:text-xs"
                 >
