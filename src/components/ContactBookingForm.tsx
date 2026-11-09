@@ -6,6 +6,7 @@ import { minPreferredDatetimeLocal } from "@/lib/format-datetime-local";
 import { MIN_LEAD_MS } from "@/lib/bookings-types";
 import { downloadIcsFile } from "@/lib/calendar-wallet";
 import { downloadTicketImage } from "@/lib/ticket-canvas";
+import { trackBookingConversion } from "@/lib/analytics";
 import {
   CheckCircle2,
   Star,
@@ -198,6 +199,7 @@ export default function ContactBookingForm() {
         rawDate: rawIsoDate,
         notes: notes.trim(),
       };
+      trackBookingConversion(finalId);
       sendFormSubmitCopy(ticket);
       setIssuedTicket(ticket);
     } finally {
