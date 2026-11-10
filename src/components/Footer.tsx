@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Phone, MapPin, Instagram, MessageCircle } from "lucide-react";
 import TikTokIcon from "@/components/icons/TikTokIcon";
 import ContactBookingForm from "@/components/ContactBookingForm";
+import { trackContactClick } from "@/lib/analytics";
 
 export default function Footer() {
   const { t, lang } = useLanguage();
@@ -57,6 +58,7 @@ export default function Footer() {
           <div className="flex flex-wrap items-center gap-6 md:justify-center">
             <a
               href="tel:+966544493991"
+              onClick={() => trackContactClick("phone")}
               className="flex items-center gap-2.5 text-white/75 hover:text-[#cba135] transition-colors text-sm font-bold"
             >
               <Phone size={16} className="text-[#cba135]" />
@@ -64,6 +66,7 @@ export default function Footer() {
             </a>
             <a
               href="tel:+966594322226"
+              onClick={() => trackContactClick("phone")}
               className="flex items-center gap-2.5 text-white/75 hover:text-[#cba135] transition-colors text-sm font-bold"
             >
               <Phone size={16} className="text-[#cba135]" />
@@ -96,6 +99,7 @@ export default function Footer() {
             </a>
             <a
               href="https://wa.me/966544493991"
+              onClick={() => trackContactClick("whatsapp")}
               target="_blank"
               rel="noopener noreferrer"
               className="px-4 h-10 border border-[#cba135]/40 flex items-center gap-2 text-[#cba135] hover:text-black hover:bg-[#cba135] text-xs font-bold tracking-wider uppercase transition-all"

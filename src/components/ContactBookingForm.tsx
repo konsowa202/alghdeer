@@ -6,7 +6,7 @@ import { minPreferredDatetimeLocal } from "@/lib/format-datetime-local";
 import { MIN_LEAD_MS } from "@/lib/bookings-types";
 import { downloadIcsFile } from "@/lib/calendar-wallet";
 import { downloadTicketImage } from "@/lib/ticket-canvas";
-import { trackBookingConversion } from "@/lib/analytics";
+import { trackBooking, trackContactClick } from "@/lib/analytics";
 import {
   CheckCircle2,
   Star,
@@ -112,6 +112,9 @@ export default function ContactBookingForm() {
       return;
     }
 
+    // Never create analytics events for honeypot submissions.
+    if (website) return;
+
     setLoading(true);
 
     // Generate local unique ticket serial (e.g. ALG-4796)
@@ -190,7 +193,7 @@ export default function ContactBookingForm() {
         rawDate: rawIsoDate,
         notes: notes.trim(),
       };
-      trackBookingConversion(finalId);
+      trackBooking({ occasion: company.trim(), guests: guestCount });
       sendFormSubmitCopy(ticket);
       setIssuedTicket(ticket);
     } finally {
@@ -369,6 +372,7 @@ export default function ContactBookingForm() {
                 <div className="space-y-2 pt-1">
                   <a
                     href={directWaUrl}
+                    onClick={() => trackContactClick("whatsapp")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group relative w-full py-3.5 px-4 ticket-mask-cutout rounded-none bg-[#25D366] hover:bg-[#1faa53] text-black font-black text-xs tracking-wider uppercase transition-all duration-300 shadow-xl flex items-center justify-center gap-2 cursor-pointer overflow-hidden border-y border-dashed border-black/30"

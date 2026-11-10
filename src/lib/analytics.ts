@@ -1,21 +1,37 @@
+"use client";
+
+const ADS_BOOKING_CONVERSION = "AW-18563757916/uZxsCPq20bUdENzu8ZNF";
+
 type AnalyticsWindow = Window & {
-  dataLayer?: unknown[];
-  gtag?: (command: "event", eventName: "conversion", parameters: {
-    send_to: string;
-    transaction_id: string;
-  }) => void;
+  gtag?: (...args: unknown[]) => void;
 };
 
-export function trackBookingConversion(bookingId: string) {
+function gtag(...args: unknown[]) {
   if (typeof window === "undefined") return;
   const analyticsWindow = window as AnalyticsWindow;
-  analyticsWindow.dataLayer = analyticsWindow.dataLayer || [];
-  analyticsWindow.dataLayer.push({
-    event: "booking_form_submission",
-    booking_id: bookingId,
-  });
-  analyticsWindow.gtag?.("event", "conversion", {
-    send_to: "AW-18563757916/0n-kCLrV7rQdENzu8ZNF",
-    transaction_id: bookingId,
-  });
+  if (typeof analyticsWindow.gtag === "function") {
+    analyticsWindow.gtag(...args);
+  }
+}
+
+/** Call once only after the server confirms the booking was saved. */
+export function trackBooking({ occasion, guests }: { occasion: string; guests: number }) {
+  try {
+    gtag("event", "booking_submitted", {
+      occasion: String(occasion || "").slice(0, 100),
+      guests: Number(guests) || 0,
+    });
+    gtag("event", "conversion", { send_to: ADS_BOOKING_CONVERSION });
+  } catch {
+    // Analytics must never interrupt a successful booking.
+  }
+}
+
+/** Analytics contact clicks; these are not Google Ads conversions. */
+export function trackContactClick(kind: "whatsapp" | "phone") {
+  try {
+    gtag("event", kind === "whatsapp" ? "whatsapp_click" : "phone_click");
+  } catch {
+    // Tracking must never prevent the contact link from opening.
+  }
 }
