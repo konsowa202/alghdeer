@@ -99,6 +99,7 @@
     font-family: var(--font-body-ar), var(--font-ibm), sans-serif;
     background: linear-gradient(180deg, #0f1117 0%, #060607 100%);
     overflow-x: hidden;
+    overflow-x: clip;
     width: 100%;
     max-width: 100%;
     position: relative;

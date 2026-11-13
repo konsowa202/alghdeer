@@ -3,8 +3,7 @@
 import React, { useRef } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Pause, Play } from "lucide-react";
-import Carousel3D from "@/components/Carousel3D";
+import ServiceDeck, { type DeckItem } from "@/components/ServiceDeck";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export default function Services() {
@@ -19,15 +18,14 @@ export default function Services() {
   );
 
   // Real stills extracted from the camp's own video footage.
-  const services = [
+  const services: DeckItem[] = [
     {
       id: "01",
       title: isAr ? "البوفيه الملكي المفتوح" : "Open-Air Royal Buffet",
       desc: isAr
-        ? "صفوف السخانات النحاسية والذهبية الفاخرة ومحطات الشواء الحية"
-        : "Rows of golden-domed chafing dishes and live grill stations",
-      image: "/instagram/DXmFce6CkDG.jpg",
-      video: "/instagram/DXmEhiqCpK7.mp4",
+        ? "أبراج الفواكه الموسمية وصفوف السخانات الذهبية ومحطات الشواء الحية"
+        : "Seasonal fruit towers, golden chafing dishes and live grill stations",
+      image: "/instagram/DXmFkHbCtDS.jpg",
     },
     {
       id: "02",
@@ -37,6 +35,8 @@ export default function Services() {
         : "Sunken desert majlis around a glowing firepit with Saudi coffee",
       image: "/instagram/frames/bohemian_majlis.jpg",
       video: "/instagram/DdFggAcKq19.mp4",
+      // landscape clip turns blurry in the tall phone card — use a sharp portrait still
+      mobile: { image: "/instagram/C0_ANXSMVj2.jpg", video: null },
     },
     {
       id: "03",
@@ -46,6 +46,8 @@ export default function Services() {
         : "Authentic musical ensembles and LED Tanoura shows under the stars",
       image: "/instagram/DXl904UiqLC.jpg",
       video: "/instagram/DXl904UiqLC.mp4",
+      // portrait LED-show clip fits the phone card
+      mobile: { image: "/instagram/DXmCMTdih8s.jpg", video: "/instagram/DXmCMTdih8s.mp4" },
     },
     {
       id: "04",
@@ -55,15 +57,15 @@ export default function Services() {
         : "Luxury dining tables styled with florals, candlelight, and brass Dallahs",
       image: "/instagram/frames/banquet_styling.jpg",
       video: "/instagram/DXmAUzWitsj.mp4",
+      // the clip wanders to unrelated shots — show the sharp banquet-tables photo on phones
+      mobile: { image: "/instagram/DXmI-0gikCg.jpg", video: null },
     },
   ];
 
-  // 8 cards around the ring (services shown twice) so the cylinder feels full
-  const ring = [...services, ...services].map((sv, i) => ({ id: `${sv.id}-${i}`, image: sv.image, video: sv.video, title: sv.title, desc: sv.desc }));
-
+  const deck = services;
 
   return (
-    <section ref={ref} className="py-20 sm:py-32 md:py-40 bg-black text-white overflow-hidden">
+    <section ref={ref} className="bg-black pt-20 text-white [overflow-x:clip] sm:pt-32 md:pt-40">
       <div className="container mx-auto px-4 sm:px-6 lg:px-16">
         <div className="mb-4 sm:mb-6 border-b border-white/10 pb-8">
           <p className="text-xs tracking-[0.35em] uppercase text-[#cba135] mb-3">
@@ -82,36 +84,7 @@ export default function Services() {
 
       </div>
 
-      <Carousel3D
-        isAr={isAr}
-        items={ring}
-        renderCaption={(_, i, ctl) => {
-          const sv = services[i % services.length];
-          return (
-            <div dir={isAr ? "rtl" : "ltr"}>
-              <span className="text-sm font-black text-[#f1e785]">{sv.id}</span>
-              <h3 className="mt-1 text-2xl font-black text-white sm:text-4xl">{sv.title}</h3>
-              <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-white/60 sm:text-base">{sv.desc}</p>
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={ctl.play}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 text-sm font-bold text-white backdrop-blur-md transition-colors hover:border-white/60 hover:bg-white/20"
-                >
-                  {ctl.playing ? <Pause size={13} className="fill-current" /> : <Play size={13} className="fill-current" />}
-                  {ctl.playing ? (isAr ? "إيقاف الفيديو" : "Stop video") : isAr ? "شاهد الفيديو" : "Watch video"}
-                </button>
-                <a
-                  href="#contact"
-                  className="inline-flex min-h-11 items-center rounded-full bg-[#f1e785] px-6 text-sm font-black text-[#071c17] transition-transform hover:scale-[1.04]"
-                >
-                  {isAr ? "احجز هذه التجربة" : "Book this experience"}
-                </a>
-              </div>
-            </div>
-          );
-        }}
-      />
+      <ServiceDeck items={deck} isAr={isAr} />
 
     </section>
   );
