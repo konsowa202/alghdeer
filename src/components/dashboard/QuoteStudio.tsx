@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
+  CalendarDays,
   CheckCircle2,
   FileCheck2,
   FileText,
@@ -11,15 +12,27 @@ import {
   Printer,
   RefreshCw,
   Save,
+  Search,
   Sparkles,
   Trash2,
   UserRound,
+  UsersRound,
   Wand2,
+  X,
 } from "lucide-react";
 import type { BookingRecord } from "@/lib/bookings-types";
-import type { CommissionType, InvoiceInput, InvoiceLineItem, InvoiceRecord, InvoiceStatus } from "@/lib/invoices-types";
+import { BOOKING_STATUS_LABELS } from "@/lib/bookings-types";
+import type {
+  CommissionType,
+  InvoiceInput,
+  InvoiceLineItem,
+  InvoiceRecord,
+  InvoiceStatus,
+} from "@/lib/invoices-types";
 import { INVOICE_STATUS_LABELS } from "@/lib/invoices-types";
 import { formatSar, invoiceTotals } from "@/lib/invoice-pricing";
+import { buildCustomerProfiles, normalizePhone, type CustomerProfile } from "@/lib/customers";
+import { matchesNormalizedQuery } from "@/lib/search-normalize";
 import { SUPPLIER_COSTS, SUPPLIER_COSTS_NOTE, type SupplierCost } from "@/data/supplier-costs";
 
 const emptyDraft = (): InvoiceInput => ({
@@ -40,7 +53,8 @@ const emptyDraft = (): InvoiceInput => ({
   notes: "",
 });
 
-const inputClass = "w-full rounded-xl border border-white/10 bg-black/25 px-3.5 py-3 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-[#cba135]/60";
+const inputClass =
+  "w-full rounded-xl border border-white/10 bg-black/25 px-3.5 py-3 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-[#cba135]/60";
 const labelClass = "mb-1.5 block text-[11px] font-bold text-white/45";
 
 function toDateTimeLocal(iso: string | null) {
@@ -86,7 +100,15 @@ function costItem(cost: SupplierCost): InvoiceLineItem {
   };
 }
 
-export default function QuoteStudio({ initialBookingId = "", initialPhone = "", initialInvoiceId = "" }: { initialBookingId?: string; initialPhone?: string; initialInvoiceId?: string }) {
+export default function QuoteStudio({
+  initialBookingId = "",
+  initialPhone = "",
+  initialInvoiceId = "",
+}: {
+  initialBookingId?: string;
+  initialPhone?: string;
+  initialInvoiceId?: string;
+}) {
   const [form, setForm] = useState<InvoiceInput>(emptyDraft);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -99,9 +121,28 @@ export default function QuoteStudio({ initialBookingId = "", initialPhone = "", 
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState<InvoiceStatus | null>(null);
+  const [deletingInvoiceId, setDeletingInvoiceId] = useState<string | null>(null);
   const [invoiceSearch, setInvoiceSearch] = useState("");
+  const [clientSearch, setClientSearch] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [supplierId, setSupplierId] = useState("");
+  const pickerRef = useRef<HTMLDivElement>(null);
+
   const totals = useMemo(() => invoiceTotals(form), [form]);
+  const customers = useMemo(
+    () => buildCustomerProfiles(bookings, invoices),
+    [bookings, invoices]
+  );
+
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        setPickerOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -116,40 +157,56 @@ export default function QuoteStudio({ initialBookingId = "", initialPhone = "", 
         if (!res.ok) throw new Error(data.error || "تعذر تحميل الحجوزات");
         return data.bookings as BookingRecord[];
       }),
-    ]).then(([invoiceRows, bookingRows]) => {
-      if (!active) return;
-      setInvoices(invoiceRows);
-      setBookings(bookingRows);
-      const booking = bookingRows.find((row) => row.id === initialBookingId);
-      const existingInvoice = invoiceRows.find((row) => row.id === initialInvoiceId);
-      if (existingInvoice) {
-        setSelectedId(existingInvoice.id);
-        setInvoiceNumber(existingInvoice.invoiceNumber);
-        setForm(fromInvoice(existingInvoice));
-        setPrompt(existingInvoice.notes);
-      } else if (booking) {
-        setForm({
-          ...emptyDraft(),
-          bookingId: booking.id,
-          customerName: booking.name,
-          customerPhone: booking.phone === "—" ? "" : booking.phone,
-          customerEmail: booking.email || "",
-          company: booking.company === "—" ? "" : booking.company,
-          eventAt: booking.preferredAt,
-          guestCount: booking.groupSize,
-          notes: booking.notes,
-          items: [],
-        });
-        setPrompt(booking.notes || `حجز لعدد ${booking.groupSize} شخص بتاريخ ${booking.preferredAt}`);
-      } else if (initialPhone) {
-        setForm({ ...emptyDraft(), customerPhone: initialPhone });
-      }
-    }).catch((reason: Error) => {
-      if (active) setError(reason.message);
-    }).finally(() => {
-      if (active) setLoading(false);
-    });
-    return () => { active = false; };
+    ])
+      .then(([invoiceRows, bookingRows]) => {
+        if (!active) return;
+        setInvoices(invoiceRows);
+        setBookings(bookingRows);
+        const booking = bookingRows.find((row) => row.id === initialBookingId);
+        const existingInvoice = invoiceRows.find((row) => row.id === initialInvoiceId);
+        if (existingInvoice) {
+          setSelectedId(existingInvoice.id);
+          setInvoiceNumber(existingInvoice.invoiceNumber);
+          setForm(fromInvoice(existingInvoice));
+          setPrompt(existingInvoice.notes);
+        } else if (booking) {
+          setForm({
+            ...emptyDraft(),
+            bookingId: booking.id,
+            customerName: booking.name,
+            customerPhone: booking.phone === "—" ? "" : booking.phone,
+            customerEmail: booking.email || "",
+            company: booking.company === "—" ? "" : booking.company,
+            eventAt: booking.preferredAt,
+            guestCount: booking.groupSize,
+            notes: booking.notes,
+            items: [],
+          });
+          setPrompt(
+            booking.notes || `حجز لعدد ${booking.groupSize} شخص بتاريخ ${booking.preferredAt}`
+          );
+        } else if (initialPhone) {
+          const profiles = buildCustomerProfiles(bookingRows, invoiceRows);
+          const phoneKey = normalizePhone(initialPhone);
+          const matchedProfile = profiles.find((p) => p.phone === phoneKey);
+          setForm({
+            ...emptyDraft(),
+            customerName: matchedProfile?.name || "",
+            customerPhone: matchedProfile?.phone || initialPhone,
+            customerEmail: matchedProfile?.email || "",
+            company: matchedProfile?.company || "",
+          });
+        }
+      })
+      .catch((reason: Error) => {
+        if (active) setError(reason.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [initialBookingId, initialPhone, initialInvoiceId]);
 
   function update<K extends keyof InvoiceInput>(key: K, value: InvoiceInput[K]) {
@@ -157,7 +214,11 @@ export default function QuoteStudio({ initialBookingId = "", initialPhone = "", 
     setNotice("");
   }
 
-  function updateItem<K extends keyof InvoiceLineItem>(id: string, key: K, value: InvoiceLineItem[K]) {
+  function updateItem<K extends keyof InvoiceLineItem>(
+    id: string,
+    key: K,
+    value: InvoiceLineItem[K]
+  ) {
     setForm((current) => ({
       ...current,
       items: current.items.map((item) => {
@@ -175,6 +236,8 @@ export default function QuoteStudio({ initialBookingId = "", initialPhone = "", 
     setInvoiceNumber(invoice.invoiceNumber);
     setForm(fromInvoice(invoice));
     setPrompt(invoice.notes);
+    setClientSearch("");
+    setPickerOpen(false);
     setError("");
     setNotice(`تم فتح ${invoice.invoiceNumber} للتعديل.`);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -185,18 +248,17 @@ export default function QuoteStudio({ initialBookingId = "", initialPhone = "", 
     setInvoiceNumber("");
     setForm(emptyDraft());
     setPrompt("");
+    setClientSearch("");
+    setPickerOpen(false);
     setError("");
     setNotice("");
     setAiMessage("");
   }
 
-  function linkBooking(bookingId: string) {
-    const booking = bookings.find((row) => row.id === bookingId);
-    update("bookingId", bookingId || null);
-    if (!booking) return;
+  function linkBooking(booking: BookingRecord) {
     setForm((current) => ({
       ...current,
-      bookingId,
+      bookingId: booking.id,
       customerName: booking.name,
       customerPhone: booking.phone === "—" ? "" : booking.phone,
       customerEmail: booking.email || "",
@@ -205,6 +267,31 @@ export default function QuoteStudio({ initialBookingId = "", initialPhone = "", 
       guestCount: booking.groupSize,
       notes: current.notes || booking.notes,
     }));
+    setClientSearch("");
+    setPickerOpen(false);
+    setNotice(`تم ربط بيانات الحجز ${booking.id} (${booking.name}).`);
+  }
+
+  function selectCustomer(customer: CustomerProfile) {
+    const latestBooking = customer.bookings[0] || null;
+    setForm((current) => ({
+      ...current,
+      bookingId: latestBooking ? latestBooking.id : null,
+      customerName: customer.name === "عميل بدون اسم" ? current.customerName : customer.name,
+      customerPhone: customer.phone,
+      customerEmail: customer.email || current.customerEmail,
+      company: customer.company || current.company,
+      eventAt: latestBooking?.preferredAt || current.eventAt,
+      guestCount: latestBooking?.groupSize || current.guestCount,
+      notes: current.notes || latestBooking?.notes || "",
+    }));
+    setClientSearch("");
+    setPickerOpen(false);
+    setNotice(
+      latestBooking
+        ? `تم اختيار العميل ${customer.name} وربطه بأحدث حجز (${latestBooking.id}).`
+        : `تم تعبئة بيانات العميل ${customer.name} (${customer.phone}).`
+    );
   }
 
   async function generateDraft() {
@@ -231,7 +318,10 @@ export default function QuoteStudio({ initialBookingId = "", initialPhone = "", 
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "تعذر توليد المسودة");
-      update("items", data.items.map((item: InvoiceLineItem) => ({ ...item, id: crypto.randomUUID() })));
+      update(
+        "items",
+        data.items.map((item: InvoiceLineItem) => ({ ...item, id: crypto.randomUUID() }))
+      );
       setAiMessage([data.summaryAr, data.warningAr].filter(Boolean).join("\n"));
       setNotice("المسودة جاهزة للمراجعة — لم يتم حفظ أو اعتماد أي شيء تلقائيًا.");
     } catch (reason) {
@@ -249,24 +339,33 @@ export default function QuoteStudio({ initialBookingId = "", initialPhone = "", 
   }
 
   function addManualItem() {
-    update("items", [...form.items, {
-      id: crypto.randomUUID(),
-      descriptionAr: "",
-      descriptionEn: "",
-      quantity: 1,
-      unitAr: "خدمة",
-      unitEn: "service",
-      unitPrice: 0,
-      costMin: 0,
-      costMax: 0,
-      needsReview: true,
-    }]);
+    update("items", [
+      ...form.items,
+      {
+        id: crypto.randomUUID(),
+        descriptionAr: "",
+        descriptionEn: "",
+        quantity: 1,
+        unitAr: "خدمة",
+        unitEn: "service",
+        unitPrice: 0,
+        costMin: 0,
+        costMax: 0,
+        needsReview: true,
+      },
+    ]);
   }
 
   async function save(status: InvoiceStatus) {
     if (form.customerName.trim().length < 2) return setError("أدخل اسم العميل قبل الحفظ.");
     if (!form.items.length) return setError("أضف بندًا واحدًا على الأقل قبل الحفظ.");
-    if (status !== "draft" && form.items.some((item) => item.unitPrice <= 0 || item.needsReview || (!item.descriptionAr && !item.descriptionEn))) {
+    if (
+      status !== "draft" &&
+      form.items.some(
+        (item) =>
+          item.unitPrice <= 0 || item.needsReview || (!item.descriptionAr && !item.descriptionEn)
+      )
+    ) {
       return setError("راجع أسماء البنود والأسعار والبنود المعلّمة قبل الاعتماد أو الإصدار.");
     }
     setSaving(status);
@@ -290,7 +389,13 @@ export default function QuoteStudio({ initialBookingId = "", initialPhone = "", 
       setSelectedId(invoice.id);
       setInvoiceNumber(invoice.invoiceNumber);
       setForm(fromInvoice(invoice));
-      setNotice(status === "draft" ? "تم حفظ المسودة." : status === "approved" ? "تم اعتماد عرض السعر." : "تم إصدار الفاتورة بنجاح.");
+      setNotice(
+        status === "draft"
+          ? "تم حفظ المسودة."
+          : status === "approved"
+            ? "تم اعتماد عرض السعر."
+            : "تم إصدار الفاتورة بنجاح."
+      );
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "تعذر حفظ الفاتورة");
     } finally {
@@ -298,10 +403,64 @@ export default function QuoteStudio({ initialBookingId = "", initialPhone = "", 
     }
   }
 
-  const filteredInvoices = invoices.filter((invoice) => {
-    const query = invoiceSearch.trim().toLowerCase();
-    return !query || `${invoice.invoiceNumber} ${invoice.customerName} ${invoice.customerPhone}`.toLowerCase().includes(query);
-  });
+  async function handleDeleteInvoice(id: string, numberLabel: string) {
+    if (!window.confirm(`هل أنت متأكد من حذف الفاتورة ${numberLabel} نهائيًا؟`)) return;
+    setDeletingInvoiceId(id);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch(`/api/invoices/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "تعذر حذف الفاتورة.");
+      setInvoices((current) => current.filter((row) => row.id !== id));
+      if (selectedId === id) {
+        newQuote();
+      }
+      setNotice(`تم حذف الفاتورة ${numberLabel} نهائيًا.`);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "تعذر حذف الفاتورة.");
+    } finally {
+      setDeletingInvoiceId(null);
+    }
+  }
+
+  const matchedCustomers = useMemo(() => {
+    const query = clientSearch.trim();
+    if (!query) return customers.slice(0, 12);
+    return customers.filter((customer) =>
+      matchesNormalizedQuery(
+        query,
+        [customer.name, customer.company, customer.email, customer.phone],
+        [customer.phone]
+      )
+    );
+  }, [customers, clientSearch]);
+
+  const matchedBookings = useMemo(() => {
+    const query = clientSearch.trim();
+    if (!query) return bookings.slice(0, 12);
+    return bookings.filter((booking) =>
+      matchesNormalizedQuery(
+        query,
+        [booking.id, booking.name, booking.company, booking.email, booking.notes, booking.phone],
+        [booking.phone]
+      )
+    );
+  }, [bookings, clientSearch]);
+
+  const filteredInvoices = useMemo(() => {
+    const query = invoiceSearch.trim();
+    if (!query) return invoices;
+    return invoices.filter((invoice) =>
+      matchesNormalizedQuery(
+        query,
+        [invoice.invoiceNumber, invoice.customerName, invoice.company, invoice.customerPhone],
+        [invoice.customerPhone]
+      )
+    );
+  }, [invoices, invoiceSearch]);
 
   return (
     <div className="mx-auto max-w-[1600px] pb-24 md:pb-8" dir="rtl">
@@ -311,10 +470,18 @@ export default function QuoteStudio({ initialBookingId = "", initialPhone = "", 
             <Wand2 size={18} />
             <span className="text-xs font-bold">مساعد التسعير والفوترة</span>
           </div>
-          <h1 className="text-2xl font-black text-white md:text-3xl">من رسالة العميل إلى فاتورة معتمدة</h1>
-          <p className="mt-2 text-xs leading-6 text-white/40">مسودة ذكية، مراجعة يدوية كاملة، ثم اعتماد وإصدار وطباعة عربي/إنجليزي.</p>
+          <h1 className="text-2xl font-black text-white md:text-3xl">
+            من رسالة العميل إلى فاتورة معتمدة
+          </h1>
+          <p className="mt-2 text-xs leading-6 text-white/40">
+            مسودة ذكية، مراجعة يدوية كاملة، ثم اعتماد وإصدار وطباعة عربي/إنجليزي.
+          </p>
         </div>
-        <button type="button" onClick={newQuote} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#cba135]/35 bg-[#cba135]/10 px-5 py-3 text-sm font-bold text-[#e5c979] hover:bg-[#cba135]/15">
+        <button
+          type="button"
+          onClick={newQuote}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#cba135]/35 bg-[#cba135]/10 px-5 py-3 text-sm font-bold text-[#e5c979] hover:bg-[#cba135]/15"
+        >
           <Plus size={17} /> عرض سعر جديد
         </button>
       </div>
@@ -327,117 +494,682 @@ export default function QuoteStudio({ initialBookingId = "", initialPhone = "", 
                 <Sparkles size={18} className="text-[#d4b458]" />
                 <h2 className="text-sm font-bold text-white">حلّل رسالة العميل</h2>
               </div>
-              <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-white/35">لا يحفظ تلقائيًا</span>
+              <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-white/35">
+                لا يحفظ تلقائيًا
+              </span>
             </div>
-            <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} rows={4} maxLength={12000} placeholder="مثال: عميل عايز حجز لـ 200 شخص، بوفيه عشاء ودي جي وسماعات وإضاءات… أو الصق رسالة واتساب هنا" className={`${inputClass} resize-y leading-7`} />
+            <textarea
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+              rows={4}
+              maxLength={12000}
+              placeholder="مثال: عميل عايز حجز لـ 200 شخص، بوفيه عشاء ودي جي وسماعات وإضاءات… أو الصق رسالة واتساب هنا"
+              className={`${inputClass} resize-y leading-7`}
+            />
             <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-[10px] leading-5 text-white/30">{SUPPLIER_COSTS_NOTE}</p>
-              <button type="button" disabled={generating} onClick={generateDraft} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#cba135] px-5 py-3 text-xs font-black text-black hover:bg-[#d4b458] disabled:opacity-50">
-                {generating ? <RefreshCw size={16} className="animate-spin" /> : <Sparkles size={16} />}
+              <button
+                type="button"
+                disabled={generating}
+                onClick={generateDraft}
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#cba135] px-5 py-3 text-xs font-black text-black hover:bg-[#d4b458] disabled:opacity-50"
+              >
+                {generating ? (
+                  <RefreshCw size={16} className="animate-spin" />
+                ) : (
+                  <Sparkles size={16} />
+                )}
                 {generating ? "جاري تجهيز المسودة…" : "توليد جدول مسودة"}
               </button>
             </div>
-            {aiMessage ? <p className="mt-3 whitespace-pre-wrap rounded-xl border border-sky-400/15 bg-sky-400/[0.06] p-3 text-xs leading-6 text-sky-100/70">{aiMessage}</p> : null}
+            {aiMessage ? (
+              <p className="mt-3 whitespace-pre-wrap rounded-xl border border-sky-400/15 bg-sky-400/[0.06] p-3 text-xs leading-6 text-sky-100/70">
+                {aiMessage}
+              </p>
+            ) : null}
           </section>
 
-          {(error || notice) ? (
-            <div className={`flex items-start gap-2 rounded-xl border p-3 text-xs leading-6 ${error ? "border-red-400/20 bg-red-400/[0.07] text-red-200" : "border-emerald-400/20 bg-emerald-400/[0.07] text-emerald-200"}`}>
-              {error ? <AlertTriangle size={17} className="mt-0.5 shrink-0" /> : <CheckCircle2 size={17} className="mt-0.5 shrink-0" />}
+          {error || notice ? (
+            <div
+              className={`flex items-start gap-2 rounded-xl border p-3 text-xs leading-6 ${
+                error
+                  ? "border-red-400/20 bg-red-400/[0.07] text-red-200"
+                  : "border-emerald-400/20 bg-emerald-400/[0.07] text-emerald-200"
+              }`}
+            >
+              {error ? (
+                <AlertTriangle size={17} className="mt-0.5 shrink-0" />
+              ) : (
+                <CheckCircle2 size={17} className="mt-0.5 shrink-0" />
+              )}
               {error || notice}
             </div>
           ) : null}
 
           <section className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 md:p-5">
-            <div className="mb-5 flex items-center gap-2">
+            <div className="mb-5 flex flex-wrap items-center gap-2">
               <UserRound size={18} className="text-[#d4b458]" />
               <h2 className="text-sm font-bold text-white">بيانات العميل والحجز</h2>
-              {invoiceNumber ? <span className="mr-auto font-mono text-xs text-[#d4b458]" dir="ltr">{invoiceNumber}</span> : null}
+              {form.bookingId ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#cba135]/30 bg-[#cba135]/10 px-2.5 py-1 text-[10px] font-bold text-[#e5c979]">
+                  <span dir="ltr">{form.bookingId}</span>
+                  <button
+                    type="button"
+                    onClick={() => update("bookingId", null)}
+                    title="فك الربط بالحجز"
+                    className="rounded-full p-0.5 hover:bg-white/10"
+                  >
+                    <X size={11} />
+                  </button>
+                </span>
+              ) : null}
+              {invoiceNumber ? (
+                <span className="mr-auto font-mono text-xs text-[#d4b458]" dir="ltr">
+                  {invoiceNumber}
+                </span>
+              ) : null}
             </div>
+
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <label className="lg:col-span-3"><span className={labelClass}>ربط بحجز موجود (اختياري)</span><select value={form.bookingId || ""} onChange={(event) => linkBooking(event.target.value)} className={inputClass}><option value="">بدون ربط / حجز جديد</option>{bookings.map((booking) => <option key={booking.id} value={booking.id}>{booking.id} — {booking.name} — {booking.phone}</option>)}</select></label>
-              <label><span className={labelClass}>اسم العميل *</span><input value={form.customerName} onChange={(event) => update("customerName", event.target.value)} className={inputClass} placeholder="الاسم الكامل" /></label>
-              <label><span className={labelClass}>رقم الجوال</span><input dir="ltr" value={form.customerPhone} onChange={(event) => update("customerPhone", event.target.value)} className={`${inputClass} text-right`} placeholder="05xxxxxxxx" /></label>
-              <label><span className={labelClass}>البريد الإلكتروني</span><input dir="ltr" type="email" value={form.customerEmail} onChange={(event) => update("customerEmail", event.target.value)} className={`${inputClass} text-right`} placeholder="client@example.com" /></label>
-              <label><span className={labelClass}>الشركة / المناسبة</span><input value={form.company} onChange={(event) => update("company", event.target.value)} className={inputClass} /></label>
-              <label><span className={labelClass}>عدد الضيوف</span><input type="number" min={1} max={5000} value={form.guestCount} onChange={(event) => update("guestCount", Number(event.target.value))} className={inputClass} /></label>
-              <label><span className={labelClass}>تاريخ المناسبة</span><input type="datetime-local" value={toDateTimeLocal(form.eventAt)} onChange={(event) => update("eventAt", event.target.value)} className={inputClass} /></label>
+              {/* Searchable Customer & Booking Combobox */}
+              <div ref={pickerRef} className="relative lg:col-span-3">
+                <span className={labelClass}>
+                  بحث واختيار عميل أو حجز موجود (بالاسم أو رقم الجوال أو رقم التذكرة)
+                </span>
+                <div className="relative">
+                  <Search
+                    size={16}
+                    className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[#d4b458]/70"
+                  />
+                  <input
+                    value={clientSearch}
+                    onFocus={() => setPickerOpen(true)}
+                    onChange={(event) => {
+                      setClientSearch(event.target.value);
+                      setPickerOpen(true);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") setPickerOpen(false);
+                    }}
+                    className={`${inputClass} pl-10 pr-10`}
+                    placeholder="اكتب اسم العميل أو رقم الجوال (مثل: ابو ناصر، 055، ALG)…"
+                  />
+                  {clientSearch || pickerOpen ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (clientSearch) {
+                          setClientSearch("");
+                        } else {
+                          setPickerOpen(false);
+                        }
+                      }}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/40 hover:bg-white/10 hover:text-white"
+                    >
+                      <X size={14} />
+                    </button>
+                  ) : null}
+                </div>
+
+                {pickerOpen ? (
+                  <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-80 overflow-y-auto rounded-2xl border border-[#cba135]/30 bg-[#121319] p-2 shadow-2xl">
+                    {matchedCustomers.length === 0 && matchedBookings.length === 0 ? (
+                      <p className="p-4 text-center text-xs text-white/40">
+                        لا توجد نتائج مطابقة في العملاء أو الحجوزات — يمكنك إدخال البيانات يدويًا
+                        بالأسفل.
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {matchedCustomers.length > 0 ? (
+                          <div>
+                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-bold text-[#d4b458]">
+                              <UsersRound size={12} />
+                              <span>العملاء ({matchedCustomers.length})</span>
+                            </div>
+                            <div className="space-y-1">
+                              {matchedCustomers.map((customer) => (
+                                <button
+                                  key={`c-${customer.phone}`}
+                                  type="button"
+                                  onClick={() => selectCustomer(customer)}
+                                  className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-right transition-colors hover:bg-[#cba135]/10"
+                                >
+                                  <div className="min-w-0">
+                                    <p className="truncate text-xs font-bold text-white">
+                                      {customer.name}
+                                      {customer.company ? (
+                                        <span className="mr-2 font-normal text-white/45">
+                                          • {customer.company}
+                                        </span>
+                                      ) : null}
+                                    </p>
+                                    <p className="mt-0.5 text-[10px] text-white/40">
+                                      {customer.bookingCount} حجوزات • {customer.invoiceCount} فواتير
+                                    </p>
+                                  </div>
+                                  <span
+                                    className="shrink-0 font-mono text-xs text-[#d4b458]"
+                                    dir="ltr"
+                                  >
+                                    {customer.phone}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {matchedBookings.length > 0 ? (
+                          <div>
+                            <div className="flex items-center gap-1.5 border-t border-white/[0.06] px-2.5 pb-1.5 pt-2 text-[10px] font-bold text-sky-300">
+                              <CalendarDays size={12} />
+                              <span>الحجوزات الحالية ({matchedBookings.length})</span>
+                            </div>
+                            <div className="space-y-1">
+                              {matchedBookings.map((booking) => (
+                                <button
+                                  key={`b-${booking.id}`}
+                                  type="button"
+                                  onClick={() => linkBooking(booking)}
+                                  className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-right transition-colors hover:bg-sky-400/10"
+                                >
+                                  <div className="min-w-0">
+                                    <p className="truncate text-xs font-bold text-white">
+                                      <span
+                                        className="ml-2 font-mono text-[11px] text-sky-300"
+                                        dir="ltr"
+                                      >
+                                        {booking.id}
+                                      </span>
+                                      {booking.name}
+                                    </p>
+                                    <p className="mt-0.5 text-[10px] text-white/40">
+                                      {BOOKING_STATUS_LABELS[booking.status]} • {booking.groupSize}{" "}
+                                      شخص
+                                      {booking.company && booking.company !== "—"
+                                        ? ` • ${booking.company}`
+                                        : ""}
+                                    </p>
+                                  </div>
+                                  <span
+                                    className="shrink-0 font-mono text-xs text-white/60"
+                                    dir="ltr"
+                                  >
+                                    {booking.phone}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+
+              <label>
+                <span className={labelClass}>اسم العميل *</span>
+                <input
+                  value={form.customerName}
+                  onChange={(event) => update("customerName", event.target.value)}
+                  className={inputClass}
+                  placeholder="الاسم الكامل"
+                />
+              </label>
+              <label>
+                <span className={labelClass}>رقم الجوال</span>
+                <input
+                  dir="ltr"
+                  value={form.customerPhone}
+                  onChange={(event) => update("customerPhone", event.target.value)}
+                  className={`${inputClass} text-right`}
+                  placeholder="05xxxxxxxx"
+                />
+              </label>
+              <label>
+                <span className={labelClass}>البريد الإلكتروني</span>
+                <input
+                  dir="ltr"
+                  type="email"
+                  value={form.customerEmail}
+                  onChange={(event) => update("customerEmail", event.target.value)}
+                  className={`${inputClass} text-right`}
+                  placeholder="client@example.com"
+                />
+              </label>
+              <label>
+                <span className={labelClass}>الشركة / المناسبة</span>
+                <input
+                  value={form.company}
+                  onChange={(event) => update("company", event.target.value)}
+                  className={inputClass}
+                />
+              </label>
+              <label>
+                <span className={labelClass}>عدد الضيوف</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={5000}
+                  value={form.guestCount}
+                  onChange={(event) => update("guestCount", Number(event.target.value))}
+                  className={inputClass}
+                />
+              </label>
+              <label>
+                <span className={labelClass}>تاريخ المناسبة</span>
+                <input
+                  type="datetime-local"
+                  value={toDateTimeLocal(form.eventAt)}
+                  onChange={(event) => update("eventAt", event.target.value)}
+                  className={inputClass}
+                />
+              </label>
             </div>
           </section>
 
           <section className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.025]">
             <div className="flex flex-col gap-3 border-b border-white/[0.07] p-4 md:flex-row md:items-center md:justify-between md:p-5">
-              <div><h2 className="text-sm font-bold text-white">بنود عرض السعر</h2><p className="mt-1 text-[10px] text-white/30">كل بند قابل للتعديل قبل الاعتماد</p></div>
+              <div>
+                <h2 className="text-sm font-bold text-white">بنود عرض السعر</h2>
+                <p className="mt-1 text-[10px] text-white/30">كل بند قابل للتعديل قبل الاعتماد</p>
+              </div>
               <div className="flex flex-col gap-2 sm:flex-row">
-                <select value={supplierId} onChange={(event) => setSupplierId(event.target.value)} className="rounded-xl border border-white/10 bg-[#111216] px-3 py-2.5 text-xs text-white/70 outline-none"><option value="">إضافة من تكاليف الموردين…</option>{SUPPLIER_COSTS.map((cost) => <option key={cost.id} value={cost.id}>{cost.nameAr}{cost.min === null ? " — بدون سعر" : ` — ${cost.min} إلى ${cost.max}`}</option>)}</select>
-                <button type="button" onClick={addSupplierItem} disabled={!supplierId} className="rounded-xl border border-[#cba135]/30 px-3 py-2.5 text-xs font-bold text-[#d4b458] disabled:opacity-30">إضافة</button>
-                <button type="button" onClick={addManualItem} className="inline-flex items-center justify-center gap-1 rounded-xl border border-white/10 px-3 py-2.5 text-xs font-bold text-white/65 hover:bg-white/5"><Plus size={14} /> بند يدوي</button>
+                <select
+                  value={supplierId}
+                  onChange={(event) => setSupplierId(event.target.value)}
+                  className="rounded-xl border border-white/10 bg-[#111216] px-3 py-2.5 text-xs text-white/70 outline-none"
+                >
+                  <option value="">إضافة من تكاليف الموردين…</option>
+                  {SUPPLIER_COSTS.map((cost) => (
+                    <option key={cost.id} value={cost.id}>
+                      {cost.nameAr}
+                      {cost.min === null ? " — بدون سعر" : ` — ${cost.min} إلى ${cost.max}`}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={addSupplierItem}
+                  disabled={!supplierId}
+                  className="rounded-xl border border-[#cba135]/30 px-3 py-2.5 text-xs font-bold text-[#d4b458] disabled:opacity-30"
+                >
+                  إضافة
+                </button>
+                <button
+                  type="button"
+                  onClick={addManualItem}
+                  className="inline-flex items-center justify-center gap-1 rounded-xl border border-white/10 px-3 py-2.5 text-xs font-bold text-white/65 hover:bg-white/5"
+                >
+                  <Plus size={14} /> بند يدوي
+                </button>
               </div>
             </div>
 
             <div className="space-y-3 p-3 md:p-5">
               {form.items.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-white/10 px-4 py-12 text-center"><FileText size={28} className="mx-auto mb-3 text-white/15" /><p className="text-sm text-white/35">ولّد مسودة بالذكاء الاصطناعي أو أضف بندًا يدويًا</p></div>
-              ) : form.items.map((item, index) => (
-                <div key={item.id} className={`rounded-xl border p-3 ${item.needsReview ? "border-amber-400/25 bg-amber-400/[0.035]" : "border-white/[0.07] bg-black/15"}`}>
-                  <div className="mb-3 flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-white/35">بند {index + 1}{item.needsReview ? <span className="mr-2 text-amber-300">• يحتاج مراجعة السعر</span> : null}</span>
-                    <button type="button" aria-label="حذف البند" onClick={() => update("items", form.items.filter((row) => row.id !== item.id))} className="text-white/25 hover:text-red-300"><Trash2 size={16} /></button>
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-12">
-                    <label className="xl:col-span-3"><span className={labelClass}>البند بالعربية</span><input value={item.descriptionAr} onChange={(event) => updateItem(item.id, "descriptionAr", event.target.value)} className={`${inputClass} py-2.5`} /></label>
-                    <label className="xl:col-span-3"><span className={labelClass}>Item in English</span><input dir="ltr" value={item.descriptionEn} onChange={(event) => updateItem(item.id, "descriptionEn", event.target.value)} className={`${inputClass} py-2.5`} /></label>
-                    <label className="xl:col-span-1"><span className={labelClass}>العدد</span><input type="number" min={0.01} step={0.01} value={item.quantity} onChange={(event) => updateItem(item.id, "quantity", Number(event.target.value))} className={`${inputClass} py-2.5`} /></label>
-                    <label className="xl:col-span-2"><span className={labelClass}>الوحدة</span><input value={item.unitAr} onChange={(event) => updateItem(item.id, "unitAr", event.target.value)} className={`${inputClass} py-2.5`} /></label>
-                    <label className="xl:col-span-1"><span className={labelClass}>Unit</span><input dir="ltr" value={item.unitEn} onChange={(event) => updateItem(item.id, "unitEn", event.target.value)} className={`${inputClass} py-2.5`} /></label>
-                    <label className="xl:col-span-2"><span className={labelClass}>سعر الوحدة (ر.س)</span><input type="number" min={0} step={0.01} value={item.unitPrice} onChange={(event) => updateItem(item.id, "unitPrice", Number(event.target.value))} className={`${inputClass} py-2.5 font-bold text-[#e5c979]`} /></label>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between text-[10px] text-white/30"><span>تكلفة المورد: {item.costMin || item.costMax ? `${item.costMin ?? 0} — ${item.costMax ?? 0} ر.س` : "غير مسجلة"}</span><span className="font-bold text-white/55">الإجمالي: {formatSar(item.quantity * item.unitPrice)} ر.س</span></div>
+                <div className="rounded-xl border border-dashed border-white/10 px-4 py-12 text-center">
+                  <FileText size={28} className="mx-auto mb-3 text-white/15" />
+                  <p className="text-sm text-white/35">
+                    ولّد مسودة بالذكاء الاصطناعي أو أضف بندًا يدويًا
+                  </p>
                 </div>
-              ))}
+              ) : (
+                form.items.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className={`rounded-xl border p-3 ${
+                      item.needsReview
+                        ? "border-amber-400/25 bg-amber-400/[0.035]"
+                        : "border-white/[0.07] bg-black/15"
+                    }`}
+                  >
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-white/35">
+                        بند {index + 1}
+                        {item.needsReview ? (
+                          <span className="mr-2 text-amber-300">• يحتاج مراجعة السعر</span>
+                        ) : null}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="حذف البند"
+                        onClick={() =>
+                          update(
+                            "items",
+                            form.items.filter((row) => row.id !== item.id)
+                          )
+                        }
+                        className="text-white/25 hover:text-red-300"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-12">
+                      <label className="xl:col-span-3">
+                        <span className={labelClass}>البند بالعربية</span>
+                        <input
+                          value={item.descriptionAr}
+                          onChange={(event) =>
+                            updateItem(item.id, "descriptionAr", event.target.value)
+                          }
+                          className={`${inputClass} py-2.5`}
+                        />
+                      </label>
+                      <label className="xl:col-span-3">
+                        <span className={labelClass}>Item in English</span>
+                        <input
+                          dir="ltr"
+                          value={item.descriptionEn}
+                          onChange={(event) =>
+                            updateItem(item.id, "descriptionEn", event.target.value)
+                          }
+                          className={`${inputClass} py-2.5`}
+                        />
+                      </label>
+                      <label className="xl:col-span-1">
+                        <span className={labelClass}>العدد</span>
+                        <input
+                          type="number"
+                          min={0.01}
+                          step={0.01}
+                          value={item.quantity}
+                          onChange={(event) =>
+                            updateItem(item.id, "quantity", Number(event.target.value))
+                          }
+                          className={`${inputClass} py-2.5`}
+                        />
+                      </label>
+                      <label className="xl:col-span-2">
+                        <span className={labelClass}>الوحدة</span>
+                        <input
+                          value={item.unitAr}
+                          onChange={(event) => updateItem(item.id, "unitAr", event.target.value)}
+                          className={`${inputClass} py-2.5`}
+                        />
+                      </label>
+                      <label className="xl:col-span-1">
+                        <span className={labelClass}>Unit</span>
+                        <input
+                          dir="ltr"
+                          value={item.unitEn}
+                          onChange={(event) => updateItem(item.id, "unitEn", event.target.value)}
+                          className={`${inputClass} py-2.5`}
+                        />
+                      </label>
+                      <label className="xl:col-span-2">
+                        <span className={labelClass}>سعر الوحدة (ر.س)</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step={0.01}
+                          value={item.unitPrice}
+                          onChange={(event) =>
+                            updateItem(item.id, "unitPrice", Number(event.target.value))
+                          }
+                          className={`${inputClass} py-2.5 font-bold text-[#e5c979]`}
+                        />
+                      </label>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-[10px] text-white/30">
+                      <span>
+                        تكلفة المورد:{" "}
+                        {item.costMin || item.costMax
+                          ? `${item.costMin ?? 0} — ${item.costMax ?? 0} ر.س`
+                          : "غير مسجلة"}
+                      </span>
+                      <span className="font-bold text-white/55">
+                        الإجمالي: {formatSar(item.quantity * item.unitPrice)} ر.س
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </section>
 
           <section className="grid gap-5 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 md:p-5 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="grid content-start gap-4 sm:grid-cols-2">
-              <label><span className={labelClass}>الخصم (ر.س)</span><input type="number" min={0} value={form.discount} onChange={(event) => update("discount", Number(event.target.value))} className={inputClass} /></label>
-              <label><span className={labelClass}>نوع عمولة المنصة</span><select value={form.commissionType} onChange={(event) => update("commissionType", event.target.value as CommissionType)} className={inputClass}><option value="none">بدون عمولة</option><option value="percent">نسبة مئوية</option><option value="fixed">مبلغ ثابت</option></select></label>
-              <label><span className={labelClass}>قيمة العمولة {form.commissionType === "percent" ? "(%)" : "(ر.س)"}</span><input type="number" min={0} disabled={form.commissionType === "none"} value={form.commissionValue} onChange={(event) => update("commissionValue", Number(event.target.value))} className={`${inputClass} disabled:opacity-35`} /></label>
-              <label><span className={labelClass}>الضريبة (%)</span><input type="number" min={0} max={100} step={0.01} value={form.taxRate} onChange={(event) => update("taxRate", Number(event.target.value))} className={inputClass} /></label>
-              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 px-3 py-3 sm:col-span-2"><input type="checkbox" checked={form.showCommission} onChange={(event) => update("showCommission", event.target.checked)} className="accent-[#cba135]" /><span className="text-xs text-white/55">إظهار العمولة كسطر مستقل في النسخة المطبوعة</span></label>
-              <label className="sm:col-span-2"><span className={labelClass}>ملاحظات وشروط الفاتورة</span><textarea rows={3} value={form.notes} onChange={(event) => update("notes", event.target.value)} className={`${inputClass} resize-y`} /></label>
+              <label>
+                <span className={labelClass}>الخصم (ر.س)</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={form.discount}
+                  onChange={(event) => update("discount", Number(event.target.value))}
+                  className={inputClass}
+                />
+              </label>
+              <label>
+                <span className={labelClass}>نوع عمولة المنصة</span>
+                <select
+                  value={form.commissionType}
+                  onChange={(event) =>
+                    update("commissionType", event.target.value as CommissionType)
+                  }
+                  className={inputClass}
+                >
+                  <option value="none">بدون عمولة</option>
+                  <option value="percent">نسبة مئوية</option>
+                  <option value="fixed">مبلغ ثابت</option>
+                </select>
+              </label>
+              <label>
+                <span className={labelClass}>
+                  قيمة العمولة {form.commissionType === "percent" ? "(%)" : "(ر.س)"}
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  disabled={form.commissionType === "none"}
+                  value={form.commissionValue}
+                  onChange={(event) => update("commissionValue", Number(event.target.value))}
+                  className={`${inputClass} disabled:opacity-35`}
+                />
+              </label>
+              <label>
+                <span className={labelClass}>الضريبة (%)</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.01}
+                  value={form.taxRate}
+                  onChange={(event) => update("taxRate", Number(event.target.value))}
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 px-3 py-3 sm:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={form.showCommission}
+                  onChange={(event) => update("showCommission", event.target.checked)}
+                  className="accent-[#cba135]"
+                />
+                <span className="text-xs text-white/55">
+                  إظهار العمولة كسطر مستقل في النسخة المطبوعة
+                </span>
+              </label>
+              <label className="sm:col-span-2">
+                <span className={labelClass}>ملاحظات وشروط الفاتورة</span>
+                <textarea
+                  rows={3}
+                  value={form.notes}
+                  onChange={(event) => update("notes", event.target.value)}
+                  className={`${inputClass} resize-y`}
+                />
+              </label>
             </div>
             <div className="rounded-xl border border-[#cba135]/20 bg-black/25 p-4">
               <h3 className="mb-4 text-xs font-bold text-[#d4b458]">ملخص الحساب</h3>
               <div className="space-y-3 text-xs">
-                <div className="flex justify-between text-white/50"><span>الإجمالي الفرعي</span><span>{formatSar(totals.subtotal)} ر.س</span></div>
-                <div className="flex justify-between text-white/50"><span>الخصم</span><span>- {formatSar(totals.discount)} ر.س</span></div>
-                <div className="flex justify-between text-white/50"><span>العمولة</span><span>{formatSar(totals.commissionAmount)} ر.س</span></div>
-                <div className="flex justify-between text-white/50"><span>الضريبة</span><span>{formatSar(totals.taxAmount)} ر.س</span></div>
-                <div className="border-t border-[#cba135]/20 pt-4"><div className="flex items-end justify-between"><span className="font-bold text-white">الإجمالي النهائي</span><span className="text-xl font-black text-[#e5c979]">{formatSar(totals.total)} <small className="text-[10px]">ر.س</small></span></div></div>
+                <div className="flex justify-between text-white/50">
+                  <span>الإجمالي الفرعي</span>
+                  <span>{formatSar(totals.subtotal)} ر.س</span>
+                </div>
+                <div className="flex justify-between text-white/50">
+                  <span>الخصم</span>
+                  <span>- {formatSar(totals.discount)} ر.س</span>
+                </div>
+                <div className="flex justify-between text-white/50">
+                  <span>العمولة</span>
+                  <span>{formatSar(totals.commissionAmount)} ر.س</span>
+                </div>
+                <div className="flex justify-between text-white/50">
+                  <span>الضريبة</span>
+                  <span>{formatSar(totals.taxAmount)} ر.س</span>
+                </div>
+                <div className="border-t border-[#cba135]/20 pt-4">
+                  <div className="flex items-end justify-between">
+                    <span className="font-bold text-white">الإجمالي النهائي</span>
+                    <span className="text-xl font-black text-[#e5c979]">
+                      {formatSar(totals.total)} <small className="text-[10px]">ر.س</small>
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
 
           <div className="flex flex-col gap-2 rounded-2xl border border-white/[0.08] bg-[#101115] p-4 sm:flex-row sm:flex-wrap">
-            <button type="button" disabled={saving !== null} onClick={() => save("draft")} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-3 text-xs font-bold text-white/75 hover:bg-white/5 disabled:opacity-40">{saving === "draft" ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />} حفظ مسودة</button>
-            <button type="button" disabled={saving !== null} onClick={() => save("approved")} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#cba135]/35 bg-[#cba135]/10 px-4 py-3 text-xs font-bold text-[#e5c979] hover:bg-[#cba135]/15 disabled:opacity-40">{saving === "approved" ? <RefreshCw size={16} className="animate-spin" /> : <CheckCircle2 size={16} />} اعتماد عرض السعر</button>
-            <button type="button" disabled={saving !== null} onClick={() => save("issued")} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#cba135] px-4 py-3 text-xs font-black text-black hover:bg-[#d4b458] disabled:opacity-40">{saving === "issued" ? <RefreshCw size={16} className="animate-spin" /> : <FileCheck2 size={16} />} إصدار الفاتورة</button>
-            {selectedId ? <Link href={`/dashboard/invoices/${selectedId}/print`} target="_blank" className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-400/25 bg-sky-400/[0.07] px-4 py-3 text-xs font-bold text-sky-200"><Printer size={16} /> طباعة / PDF</Link> : null}
+            <button
+              type="button"
+              disabled={saving !== null}
+              onClick={() => save("draft")}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-3 text-xs font-bold text-white/75 hover:bg-white/5 disabled:opacity-40"
+            >
+              {saving === "draft" ? (
+                <RefreshCw size={16} className="animate-spin" />
+              ) : (
+                <Save size={16} />
+              )}{" "}
+              حفظ مسودة
+            </button>
+            <button
+              type="button"
+              disabled={saving !== null}
+              onClick={() => save("approved")}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#cba135]/35 bg-[#cba135]/10 px-4 py-3 text-xs font-bold text-[#e5c979] hover:bg-[#cba135]/15 disabled:opacity-40"
+            >
+              {saving === "approved" ? (
+                <RefreshCw size={16} className="animate-spin" />
+              ) : (
+                <CheckCircle2 size={16} />
+              )}{" "}
+              اعتماد عرض السعر
+            </button>
+            <button
+              type="button"
+              disabled={saving !== null}
+              onClick={() => save("issued")}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#cba135] px-4 py-3 text-xs font-black text-black hover:bg-[#d4b458] disabled:opacity-40"
+            >
+              {saving === "issued" ? (
+                <RefreshCw size={16} className="animate-spin" />
+              ) : (
+                <FileCheck2 size={16} />
+              )}{" "}
+              إصدار الفاتورة
+            </button>
+            {selectedId ? (
+              <>
+                <Link
+                  href={`/dashboard/invoices/${selectedId}/print`}
+                  target="_blank"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-400/25 bg-sky-400/[0.07] px-4 py-3 text-xs font-bold text-sky-200"
+                >
+                  <Printer size={16} /> طباعة / PDF
+                </Link>
+                <button
+                  type="button"
+                  disabled={deletingInvoiceId === selectedId}
+                  onClick={() => void handleDeleteInvoice(selectedId, invoiceNumber || selectedId)}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-400/25 bg-red-400/[0.07] px-4 py-3 text-xs font-bold text-red-300 hover:bg-red-400/15 disabled:opacity-40"
+                >
+                  {deletingInvoiceId === selectedId ? (
+                    <RefreshCw size={16} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={16} />
+                  )}
+                  حذف الفاتورة
+                </button>
+              </>
+            ) : null}
           </div>
         </div>
 
         <aside className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 xl:sticky xl:top-24">
-          <div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-bold text-white">الفواتير المحفوظة</h2><span className="rounded-full bg-white/5 px-2 py-1 text-[10px] text-white/40">{invoices.length}</span></div>
-          <input value={invoiceSearch} onChange={(event) => setInvoiceSearch(event.target.value)} className={`${inputClass} mb-4 py-2.5 text-xs`} placeholder="بحث بالاسم أو رقم الفاتورة…" />
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-white">الفواتير المحفوظة</h2>
+            <span className="rounded-full bg-white/5 px-2 py-1 text-[10px] text-white/40">
+              {invoices.length}
+            </span>
+          </div>
+          <input
+            value={invoiceSearch}
+            onChange={(event) => setInvoiceSearch(event.target.value)}
+            className={`${inputClass} mb-4 py-2.5 text-xs`}
+            placeholder="بحث بالاسم أو رقم الجوال أو الفاتورة…"
+          />
           <div className="max-h-[70vh] space-y-2 overflow-y-auto pl-1">
-            {loading ? <div className="py-10 text-center"><RefreshCw size={20} className="mx-auto animate-spin text-[#cba135]" /></div> : null}
-            {!loading && filteredInvoices.length === 0 ? <p className="rounded-xl border border-dashed border-white/10 p-5 text-center text-xs leading-6 text-white/30">لا توجد فواتير محفوظة بعد.</p> : null}
+            {loading ? (
+              <div className="py-10 text-center">
+                <RefreshCw size={20} className="mx-auto animate-spin text-[#cba135]" />
+              </div>
+            ) : null}
+            {!loading && filteredInvoices.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-white/10 p-5 text-center text-xs leading-6 text-white/30">
+                {invoiceSearch.trim() ? "لا توجد فواتير مطابقة للبحث." : "لا توجد فواتير محفوظة بعد."}
+              </p>
+            ) : null}
             {filteredInvoices.map((invoice) => (
-              <button key={invoice.id} type="button" onClick={() => selectInvoice(invoice)} className={`w-full rounded-xl border p-3 text-right transition-colors ${selectedId === invoice.id ? "border-[#cba135]/40 bg-[#cba135]/[0.08]" : "border-white/[0.07] bg-black/15 hover:bg-white/[0.035]"}`}>
-                <div className="flex items-center justify-between gap-2"><span className="font-mono text-[10px] text-[#d4b458]" dir="ltr">{invoice.invoiceNumber}</span><span className="text-[10px] text-white/35">{INVOICE_STATUS_LABELS[invoice.status]}</span></div>
-                <p className="mt-2 truncate text-xs font-bold text-white/80">{invoice.customerName}</p>
-                <div className="mt-2 flex items-center justify-between text-[10px] text-white/35"><span dir="ltr">{invoice.customerPhone || "—"}</span><span className="font-bold text-white/65">{formatSar(invoice.total)} ر.س</span></div>
-              </button>
+              <div
+                key={invoice.id}
+                className={`group relative rounded-xl border transition-colors ${
+                  selectedId === invoice.id
+                    ? "border-[#cba135]/40 bg-[#cba135]/[0.08]"
+                    : "border-white/[0.07] bg-black/15 hover:bg-white/[0.035]"
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => selectInvoice(invoice)}
+                  className="w-full p-3 text-right"
+                >
+                  <div className="flex items-center justify-between gap-2 pl-6">
+                    <span className="font-mono text-[10px] text-[#d4b458]" dir="ltr">
+                      {invoice.invoiceNumber}
+                    </span>
+                    <span className="text-[10px] text-white/35">
+                      {INVOICE_STATUS_LABELS[invoice.status]}
+                    </span>
+                  </div>
+                  <p className="mt-2 truncate text-xs font-bold text-white/80">
+                    {invoice.customerName}
+                  </p>
+                  <div className="mt-2 flex items-center justify-between text-[10px] text-white/35">
+                    <span dir="ltr">{invoice.customerPhone || "—"}</span>
+                    <span className="font-bold text-white/65">{formatSar(invoice.total)} ر.س</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  title="حذف الفاتورة"
+                  disabled={deletingInvoiceId === invoice.id}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void handleDeleteInvoice(invoice.id, invoice.invoiceNumber);
+                  }}
+                  className="absolute left-2.5 top-2.5 rounded-lg p-1 text-white/25 transition-colors hover:bg-red-400/15 hover:text-red-300 disabled:opacity-40"
+                >
+                  {deletingInvoiceId === invoice.id ? (
+                    <RefreshCw size={13} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={13} />
+                  )}
+                </button>
+              </div>
             ))}
           </div>
         </aside>

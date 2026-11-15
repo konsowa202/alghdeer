@@ -1,5 +1,6 @@
 import type { BookingRecord } from "./bookings-types";
 import type { InvoiceRecord } from "./invoices-types";
+import { normalizePhoneDigits } from "./search-normalize";
 
 export type CustomerProfile = {
   phone: string;
@@ -15,7 +16,7 @@ export type CustomerProfile = {
 };
 
 export function normalizePhone(value: string) {
-  const digits = value.replace(/\D/g, "");
+  const digits = normalizePhoneDigits(value);
   return digits.length >= 5 ? digits : "";
 }
 

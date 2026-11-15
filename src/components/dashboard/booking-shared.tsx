@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import type { BookingRecord, BookingStatus } from "@/lib/bookings-types";
 import { BOOKING_STATUS_LABELS } from "@/lib/bookings-types";
+import { matchesNormalizedQuery } from "@/lib/search-normalize";
 
 /* ------------------------------------------------------------------ */
 /* Formatting helpers                                                  */
@@ -324,14 +325,15 @@ export function useBookingsFilter(rows: BookingRecord[]) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = query.trim();
     return rows.filter((r) => {
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
       if (!q) return true;
-      return [r.name, r.phone, r.email ?? "", r.company, r.notes, r.id]
-        .join(" ")
-        .toLowerCase()
-        .includes(q);
+      return matchesNormalizedQuery(
+        q,
+        [r.name, r.phone, r.email ?? "", r.company, r.notes, r.id],
+        [r.phone]
+      );
     });
   }, [rows, query, statusFilter]);
 

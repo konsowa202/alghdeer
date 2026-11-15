@@ -177,3 +177,11 @@ export async function updateInvoice(id: string, input: InvoiceInput, accessToken
   if (!rows[0]) throw new Error("Invoice changed concurrently. Refresh and retry.");
   return normalize(rows[0]);
 }
+
+export async function deleteInvoice(id: string, accessToken: string): Promise<boolean> {
+  const response = await request(`?id=eq.${encodeURIComponent(id)}&select=id`, accessToken, {
+    method: "DELETE",
+    headers: { Prefer: "return=representation" },
+  });
+  return ((await response.json()) as { id: string }[]).length > 0;
+}
