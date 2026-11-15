@@ -612,9 +612,9 @@ export default function QuoteStudio({
                 </div>
 
                 {pickerOpen ? (
-                  <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-80 overflow-y-auto rounded-2xl border border-[#cba135]/30 bg-[#121319] p-2 shadow-2xl">
+                  <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-80 overflow-y-auto rounded-2xl border border-[#cba135]/40 bg-[#14151b] p-2 shadow-2xl">
                     {matchedCustomers.length === 0 && matchedBookings.length === 0 ? (
-                      <p className="p-4 text-center text-xs text-white/40">
+                      <p className="p-4 text-center text-xs text-white/60">
                         لا توجد نتائج مطابقة في العملاء أو الحجوزات — يمكنك إدخال البيانات يدويًا
                         بالأسفل.
                       </p>
@@ -622,7 +622,7 @@ export default function QuoteStudio({
                       <div className="space-y-3">
                         {matchedCustomers.length > 0 ? (
                           <div>
-                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-bold text-[#d4b458]">
+                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-bold text-[#e5c979]">
                               <UsersRound size={12} />
                               <span>العملاء ({matchedCustomers.length})</span>
                             </div>
@@ -632,23 +632,23 @@ export default function QuoteStudio({
                                   key={`c-${customer.phone}`}
                                   type="button"
                                   onClick={() => selectCustomer(customer)}
-                                  className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-right transition-colors hover:bg-[#cba135]/10"
+                                  className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-right transition-colors hover:bg-[#cba135]/15"
                                 >
                                   <div className="min-w-0">
                                     <p className="truncate text-xs font-bold text-white">
                                       {customer.name}
                                       {customer.company ? (
-                                        <span className="mr-2 font-normal text-white/45">
+                                        <span className="mr-2 font-normal text-white/65">
                                           • {customer.company}
                                         </span>
                                       ) : null}
                                     </p>
-                                    <p className="mt-0.5 text-[10px] text-white/40">
+                                    <p className="mt-0.5 text-[10px] text-white/60">
                                       {customer.bookingCount} حجوزات • {customer.invoiceCount} فواتير
                                     </p>
                                   </div>
                                   <span
-                                    className="shrink-0 font-mono text-xs text-[#d4b458]"
+                                    className="shrink-0 font-mono text-xs text-[#e5c979]"
                                     dir="ltr"
                                   >
                                     {customer.phone}
@@ -661,7 +661,7 @@ export default function QuoteStudio({
 
                         {matchedBookings.length > 0 ? (
                           <div>
-                            <div className="flex items-center gap-1.5 border-t border-white/[0.06] px-2.5 pb-1.5 pt-2 text-[10px] font-bold text-sky-300">
+                            <div className="flex items-center gap-1.5 border-t border-white/[0.08] px-2.5 pb-1.5 pt-2 text-[11px] font-bold text-sky-300">
                               <CalendarDays size={12} />
                               <span>الحجوزات الحالية ({matchedBookings.length})</span>
                             </div>
@@ -671,7 +671,7 @@ export default function QuoteStudio({
                                   key={`b-${booking.id}`}
                                   type="button"
                                   onClick={() => linkBooking(booking)}
-                                  className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-right transition-colors hover:bg-sky-400/10"
+                                  className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-right transition-colors hover:bg-sky-400/15"
                                 >
                                   <div className="min-w-0">
                                     <p className="truncate text-xs font-bold text-white">
@@ -683,7 +683,7 @@ export default function QuoteStudio({
                                       </span>
                                       {booking.name}
                                     </p>
-                                    <p className="mt-0.5 text-[10px] text-white/40">
+                                    <p className="mt-0.5 text-[10px] text-white/60">
                                       {BOOKING_STATUS_LABELS[booking.status]} • {booking.groupSize}{" "}
                                       شخص
                                       {booking.company && booking.company !== "—"
@@ -692,7 +692,7 @@ export default function QuoteStudio({
                                     </p>
                                   </div>
                                   <span
-                                    className="shrink-0 font-mono text-xs text-white/60"
+                                    className="shrink-0 font-mono text-xs text-white/80"
                                     dir="ltr"
                                   >
                                     {booking.phone}
@@ -763,7 +763,7 @@ export default function QuoteStudio({
                   type="datetime-local"
                   value={toDateTimeLocal(form.eventAt)}
                   onChange={(event) => update("eventAt", event.target.value)}
-                  className={inputClass}
+                  className={`${inputClass} [color-scheme:dark]`}
                 />
               </label>
             </div>
@@ -779,11 +779,13 @@ export default function QuoteStudio({
                 <select
                   value={supplierId}
                   onChange={(event) => setSupplierId(event.target.value)}
-                  className="rounded-xl border border-white/10 bg-[#111216] px-3 py-2.5 text-xs text-white/70 outline-none"
+                  className="rounded-xl border border-white/15 bg-[#14151b] px-3 py-2.5 text-xs text-white [color-scheme:dark] outline-none focus:border-[#cba135]/60"
                 >
-                  <option value="">إضافة من تكاليف الموردين…</option>
+                  <option value="" className="bg-[#14151b] text-white/75">
+                    إضافة من تكاليف الموردين…
+                  </option>
                   {SUPPLIER_COSTS.map((cost) => (
-                    <option key={cost.id} value={cost.id}>
+                    <option key={cost.id} value={cost.id} className="bg-[#14151b] text-white">
                       {cost.nameAr}
                       {cost.min === null ? " — بدون سعر" : ` — ${cost.min} إلى ${cost.max}`}
                     </option>
@@ -948,11 +950,17 @@ export default function QuoteStudio({
                   onChange={(event) =>
                     update("commissionType", event.target.value as CommissionType)
                   }
-                  className={inputClass}
+                  className={`${inputClass} bg-[#14151b] [color-scheme:dark]`}
                 >
-                  <option value="none">بدون عمولة</option>
-                  <option value="percent">نسبة مئوية</option>
-                  <option value="fixed">مبلغ ثابت</option>
+                  <option value="none" className="bg-[#14151b] text-white">
+                    بدون عمولة
+                  </option>
+                  <option value="percent" className="bg-[#14151b] text-white">
+                    نسبة مئوية
+                  </option>
+                  <option value="fixed" className="bg-[#14151b] text-white">
+                    مبلغ ثابت
+                  </option>
                 </select>
               </label>
               <label>

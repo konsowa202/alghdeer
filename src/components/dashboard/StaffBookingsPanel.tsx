@@ -315,10 +315,10 @@ function DesktopRow({
             disabled={isBusy}
             value={order.status}
             onChange={(e) => onStatus(e.target.value as BookingStatus)}
-            className="bg-white/5 border border-white/15 text-white/80 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#cba135] disabled:opacity-40"
+            className="bg-[#14151b] border border-white/15 text-white text-xs rounded-lg px-2 py-1.5 [color-scheme:dark] focus:outline-none focus:ring-1 focus:ring-[#cba135] disabled:opacity-40"
           >
             {(Object.keys(BOOKING_STATUS_LABELS) as BookingStatus[]).map((k) => (
-              <option key={k} value={k} className="bg-[#14151b]">
+              <option key={k} value={k} className="bg-[#14151b] text-white">
                 {BOOKING_STATUS_LABELS[k]}
               </option>
             ))}

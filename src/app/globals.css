@@ -241,3 +241,17 @@
 
 /* ── Selection ── */
 ::selection { background: white; color: black; }
+
+/* ── Dashboard dark native controls (select dropdowns & date pickers) ── */
+.dashboard-shell select,
+.dashboard-shell input[type="date"],
+.dashboard-shell input[type="time"],
+.dashboard-shell input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+.dashboard-shell select option,
+.dashboard-shell select optgroup {
+  background-color: #14151b;
+  color: #f8fafc;
+}

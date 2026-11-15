@@ -145,10 +145,10 @@ export default function AddBookingForm({
           <select
             value={addStatus}
             onChange={(e) => setAddStatus(e.target.value as BookingStatus)}
-            className={inputCls}
+            className={`${inputCls} bg-[#14151b] [color-scheme:dark]`}
           >
             {(Object.keys(BOOKING_STATUS_LABELS) as BookingStatus[]).map((k) => (
-              <option key={k} value={k}>
+              <option key={k} value={k} className="bg-[#14151b] text-white">
                 {BOOKING_STATUS_LABELS[k]}
               </option>
             ))}

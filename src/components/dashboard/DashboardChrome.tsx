@@ -69,7 +69,7 @@ export default function DashboardChrome({ children }: { children: React.ReactNod
   const current = NAV_ITEMS.find((item) => isActive(pathname, item.href)) ?? NAV_ITEMS[0]!;
 
   return (
-    <div className="min-h-screen bg-[#0b0c10] flex" dir="rtl">
+    <div className="dashboard-shell min-h-screen bg-[#0b0c10] flex" dir="rtl">
       <aside className="hidden md:flex md:w-64 lg:w-[272px] md:h-screen md:sticky md:top-0 bg-[#08090b] border-l border-white/[0.08] flex-col shrink-0 z-40">
         <div className="h-24 px-6 border-b border-white/[0.07] flex items-center">
           <Link href="/dashboard" aria-label="لوحة تحكم الغدير">
