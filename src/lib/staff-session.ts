@@ -11,7 +11,7 @@ export type StaffContext = {
  * A valid Auth account alone never grants access to dashboard customer data.
  */
 export async function getStaffContext(): Promise<StaffContext | null> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
     error,

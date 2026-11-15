@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
   const email = String(body.email ?? "").trim().slice(0, 200);
   const password = String(body.password ?? "").slice(0, 200);
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {

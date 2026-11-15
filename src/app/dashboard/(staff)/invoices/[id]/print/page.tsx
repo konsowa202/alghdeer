@@ -7,10 +7,11 @@ import { formatSar } from "@/lib/invoice-pricing";
 
 const money = (value: number) => `${formatSar(value)} SAR`;
 
-export default async function InvoicePrintPage({ params }: { params: { id: string } }) {
+export default async function InvoicePrintPage(props: { params: { id: string } | Promise<{ id: string }> }) {
+  const { id } = await Promise.resolve(props.params);
   const staff = await getStaffContext();
   if (!staff) notFound();
-  const invoice = await getInvoice(params.id, staff.accessToken);
+  const invoice = await getInvoice(id, staff.accessToken);
   if (!invoice) notFound();
   const isIssued = invoice.status === "issued";
   const eventDate = invoice.eventAt

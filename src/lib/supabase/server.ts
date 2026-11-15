@@ -2,8 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getSupabaseConfig } from "./config";
 
-export function createSupabaseServerClient() {
-  const cookieStore = cookies();
+export async function createSupabaseServerClient() {
+  const cookieStore = await Promise.resolve(cookies());
   const { url, publishableKey } = getSupabaseConfig();
 
   return createServerClient(url, publishableKey, {

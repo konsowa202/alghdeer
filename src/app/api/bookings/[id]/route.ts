@@ -37,10 +37,11 @@ async function guardStaff(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } | Promise<{ id: string }> }
 ) {
   const guard = await guardStaff(req);
   if ("response" in guard) return guard.response;
+  const { id } = await Promise.resolve(context.params);
 
   let body: { status?: string };
   try {
@@ -54,7 +55,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
-  const updated = await updateBookingStatus(params.id, status, guard.staff.accessToken);
+  const updated = await updateBookingStatus(id, status, guard.staff.accessToken);
   if (!updated) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -63,12 +64,13 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } | Promise<{ id: string }> }
 ) {
   const guard = await guardStaff(req);
   if ("response" in guard) return guard.response;
+  const { id } = await Promise.resolve(context.params);
 
-  const ok = await deleteBooking(params.id, guard.staff.accessToken);
+  const ok = await deleteBooking(id, guard.staff.accessToken);
   if (!ok) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

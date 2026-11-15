@@ -8,12 +8,16 @@ import { rateLimit } from "@/lib/rate-limit";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  _req: Request,
+  context: { params: { id: string } | Promise<{ id: string }> }
+) {
   const staff = await getStaffContext();
   if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!UUID_RE.test(params.id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const { id } = await Promise.resolve(context.params);
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
   try {
-    const invoice = await getInvoice(params.id, staff.accessToken);
+    const invoice = await getInvoice(id, staff.accessToken);
     return invoice ? NextResponse.json({ invoice }) : NextResponse.json({ error: "Not found" }, { status: 404 });
   } catch (error) {
     console.error("[invoices] get error:", error);
@@ -21,11 +25,15 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(
+  req: Request,
+  context: { params: { id: string } | Promise<{ id: string }> }
+) {
   const staff = await getStaffContext();
   if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isSameOriginRequest(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (!UUID_RE.test(params.id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const { id } = await Promise.resolve(context.params);
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const limit = rateLimit(`invoices:${staff.userId}`, 90, 10 * 60 * 1000);
   if (!limit.ok) return NextResponse.json({ error: "طلبات كثيرة. حاول بعد قليل." }, { status: 429 });
   try {
@@ -40,7 +48,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (input.status !== "draft" && input.items.some((item) => item.unitPrice <= 0 || item.needsReview)) {
       return NextResponse.json({ error: "راجع الأسعار والبنود المعلّمة قبل الاعتماد أو الإصدار." }, { status: 400 });
     }
-    const invoice = await updateInvoice(params.id, input, staff.accessToken);
+    const invoice = await updateInvoice(id, input, staff.accessToken);
     return invoice ? NextResponse.json({ invoice }) : NextResponse.json({ error: "Not found" }, { status: 404 });
   } catch (error) {
     console.error("[invoices] update error:", error);
@@ -52,15 +60,19 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  req: Request,
+  context: { params: { id: string } | Promise<{ id: string }> }
+) {
   const staff = await getStaffContext();
   if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isSameOriginRequest(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (!UUID_RE.test(params.id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const { id } = await Promise.resolve(context.params);
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const limit = rateLimit(`invoices:${staff.userId}`, 90, 10 * 60 * 1000);
   if (!limit.ok) return NextResponse.json({ error: "طلبات كثيرة. حاول بعد قليل." }, { status: 429 });
   try {
-    const ok = await deleteInvoice(params.id, staff.accessToken);
+    const ok = await deleteInvoice(id, staff.accessToken);
     return ok ? NextResponse.json({ ok: true }) : NextResponse.json({ error: "Not found" }, { status: 404 });
   } catch (error) {
     console.error("[invoices] delete error:", error);
