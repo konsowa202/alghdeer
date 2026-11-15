@@ -201,11 +201,19 @@ export default function GateScannerPanel() {
           await videoRef.current.play().catch(() => {});
         }
         rafId = requestAnimationFrame(scanLoop);
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          setCameraError(
-            "تعذر الوصول إلى الكاميرا — تأكد من منح إذن الكاميرا أو استخدم مسح صورة / إدخال الكود."
-          );
+          const name = err instanceof DOMException ? err.name : "";
+          let message =
+            "تعذر الوصول إلى الكاميرا — تأكد من منح إذن الكاميرا أو استخدم مسح صورة / إدخال الكود.";
+          if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+            message = "لا توجد كاميرا متصلة بهذا الجهاز — استخدم جهاز مسح USB أو رفع صورة QR أو الإدخال اليدوي.";
+          } else if (name === "NotReadableError" || name === "TrackStartError") {
+            message = "الكاميرا مستخدمة حاليًا في برنامج أو تبويب آخر — أغلقه ثم أعد المحاولة.";
+          } else if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+            message = "تم حظر إذن الكاميرا من المتصفح أو سياسة الأمان — اسمح للكاميرا من إعدادات الموقع وأعد المحاولة.";
+          }
+          setCameraError(message);
           setCameraActive(false);
         }
       }
@@ -475,6 +483,7 @@ export default function GateScannerPanel() {
               <div className="relative overflow-hidden rounded-2xl border border-[#cba135]/40 bg-black aspect-[4/3]">
                 <video
                   ref={videoRef}
+                  autoPlay
                   playsInline
                   muted
                   className="h-full w-full object-cover"
