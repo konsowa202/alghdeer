@@ -10,6 +10,7 @@ import {
   Home,
   Inbox,
   LayoutDashboard,
+  QrCode,
   ShieldCheck,
   UsersRound,
 } from "lucide-react";
@@ -50,6 +51,13 @@ const NAV_ITEMS = [
     mobileLabel: "العملاء",
     description: "ملفات العملاء وسجل الحجوزات والفواتير",
     icon: UsersRound,
+  },
+  {
+    href: "/dashboard/scanner",
+    label: "اسكانر البوابة",
+    mobileLabel: "الاسكانر",
+    description: "مسح تذاكر QR وضبط أعداد الضيوف والأساور",
+    icon: QrCode,
   },
   {
     href: "/dashboard/system",
@@ -136,14 +144,14 @@ export default function DashboardChrome({ children }: { children: React.ReactNod
       </div>
 
       <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 bg-[#090a0d]/95 border-t border-white/10 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]" aria-label="التنقل الرئيسي للموبايل">
-        <div className="grid grid-cols-6 h-[72px] px-1">
+        <div className="grid grid-cols-7 h-[72px] px-0.5">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = isActive(pathname, item.href);
             return (
-              <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`relative flex flex-col items-center justify-center gap-1.5 text-[10px] font-bold ${active ? "text-[#e5c979]" : "text-white/35"}`}>
-                {active ? <span className="absolute top-0 w-8 h-0.5 rounded-full bg-[#d4b458]" /> : null}
-                <span className={`w-9 h-8 rounded-xl flex items-center justify-center ${active ? "bg-[#cba135]/12" : ""}`}><Icon size={19} strokeWidth={active ? 2.4 : 1.8} /></span>
+              <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`relative flex flex-col items-center justify-center gap-1 text-[9px] font-bold ${active ? "text-[#e5c979]" : "text-white/35"}`}>
+                {active ? <span className="absolute top-0 w-7 h-0.5 rounded-full bg-[#d4b458]" /> : null}
+                <span className={`w-8 h-8 rounded-xl flex items-center justify-center ${active ? "bg-[#cba135]/12" : ""}`}><Icon size={18} strokeWidth={active ? 2.4 : 1.8} /></span>
                 {item.mobileLabel}
               </Link>
             );

@@ -5,7 +5,9 @@
  * ready to save directly to the user's phone gallery / downloads.
  */
 
+import QRCode from "qrcode";
 import type { TicketDetails } from "./calendar-wallet";
+import { buildTicketQrPayload } from "./ticket-qr";
 
 export async function generateTicketCanvas(ticket: TicketDetails): Promise<HTMLCanvasElement> {
   const width = 1200;
@@ -239,31 +241,34 @@ export async function generateTicketCanvas(ticket: TicketDetails): Promise<HTMLC
   ctx.font = "10px monospace";
   ctx.fillText("SEASON WINTER 2026", stubCenterX, 460);
 
-  // Optional: Try to load QR Code into left box if available
+  // Generate high-contrast QR Code locally (works offline & never fails CORS)
   try {
-    const qrData = `https://alghdeer.vercel.app/ticket/${ticket.id}?guest=${encodeURIComponent(
-      ticket.name
-    )}&date=${encodeURIComponent(ticket.preferredAt)}`;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(
-      qrData
-    )}&color=1a1610&bgcolor=f4ead2`;
+    const qrData = buildTicketQrPayload({
+      id: ticket.id,
+      name: ticket.name,
+      preferredAt: ticket.preferredAt,
+    });
+    const qrUrl = await QRCode.toDataURL(qrData, {
+      width: 220,
+      margin: 1,
+      color: { dark: "#1a1610", light: "#f4ead2" },
+    });
 
     const img = new Image();
-    img.crossOrigin = "anonymous";
     await new Promise<void>((resolve) => {
       img.onload = () => {
-        ctx.drawImage(img, 70, 310, 95, 95);
-        ctx.fillStyle = "rgba(26, 22, 16, 0.6)";
+        ctx.drawImage(img, 68, 302, 104, 104);
+        ctx.fillStyle = "rgba(26, 22, 16, 0.7)";
         ctx.font = "bold 9px monospace";
         ctx.textAlign = "center";
-        ctx.fillText("SCAN AT GATE", 117, 420);
+        ctx.fillText("SCAN AT GATE", 120, 420);
         resolve();
       };
-      img.onerror = () => resolve(); // silent fallback
+      img.onerror = () => resolve();
       img.src = qrUrl;
     });
   } catch {
-    // Graceful fallback if network is offline
+    // Graceful fallback if QR generation fails
   }
 
   return canvas;

@@ -13,6 +13,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Ticket,
   Trash2,
   UserRound,
   UsersRound,
@@ -20,10 +21,11 @@ import {
 import type { CustomerProfile } from "@/lib/customers";
 import { normalizePhone } from "@/lib/customers";
 import { matchesNormalizedQuery } from "@/lib/search-normalize";
-import { BOOKING_STATUS_LABELS } from "@/lib/bookings-types";
+import { BOOKING_STATUS_LABELS, type BookingRecord } from "@/lib/bookings-types";
 import { INVOICE_STATUS_LABELS } from "@/lib/invoices-types";
 import { formatSar } from "@/lib/invoice-pricing";
 import { formatCreated, formatWhen, waHref } from "./booking-shared";
+import TicketPassModal from "./TicketPassModal";
 
 const inputClass =
   "w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#cba135]/60";
@@ -34,6 +36,7 @@ export default function CustomersPanel({ initialPhone = "" }: { initialPhone?: s
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [ticketBooking, setTicketBooking] = useState<BookingRecord | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -369,12 +372,21 @@ export default function CustomersPanel({ initialPhone = "" }: { initialPhone?: s
                           {booking.notes}
                         </p>
                       ) : null}
-                      <Link
-                        href={`/dashboard/invoices?booking=${booking.id}`}
-                        className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-[#d4b458]"
-                      >
-                        <Plus size={13} /> إنشاء عرض سعر من الحجز
-                      </Link>
+                      <div className="mt-3 flex flex-wrap items-center gap-4">
+                        <Link
+                          href={`/dashboard/invoices?booking=${booking.id}`}
+                          className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#d4b458]"
+                        >
+                          <Plus size={13} /> إنشاء عرض سعر من الحجز
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => setTicketBooking(booking)}
+                          className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 hover:text-emerald-200"
+                        >
+                          <Ticket size={13} /> عرض / إصدار التذكرة (QR)
+                        </button>
+                      </div>
                     </article>
                   ))
                 )}
@@ -442,6 +454,15 @@ export default function CustomersPanel({ initialPhone = "" }: { initialPhone?: s
           </div>
         ) : null}
       </div>
+
+      <TicketPassModal
+        booking={ticketBooking}
+        onClose={() => setTicketBooking(null)}
+        onBookingUpdated={(updated) => {
+          setTicketBooking(updated);
+          void loadCustomers();
+        }}
+      />
     </div>
   );
 }

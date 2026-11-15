@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import QRCode from "qrcode";
 import { useLanguage } from "@/context/LanguageContext";
 import { minPreferredDatetimeLocal } from "@/lib/format-datetime-local";
 import { MIN_LEAD_MS } from "@/lib/bookings-types";
 import { downloadIcsFile } from "@/lib/calendar-wallet";
 import { downloadTicketImage } from "@/lib/ticket-canvas";
+import { buildTicketQrPayload } from "@/lib/ticket-qr";
 import { trackBooking, trackContactClick } from "@/lib/analytics";
 import {
   CheckCircle2,
@@ -207,11 +209,32 @@ export default function ContactBookingForm() {
       )}`
     : "https://wa.me/966544493991";
 
-  const qrImageUrl = issuedTicket
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
-        `ALGHDEER-PASS:${issuedTicket.id}|GUEST:${issuedTicket.name}|DATE:${issuedTicket.preferredAt}|STATUS:CONFIRMED`
-      )}&color=0B0C10&bgcolor=f4ead2`
-    : "";
+  const [qrImageUrl, setQrImageUrl] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    if (!issuedTicket) {
+      setQrImageUrl("");
+      return;
+    }
+    QRCode.toDataURL(
+      buildTicketQrPayload({
+        id: issuedTicket.id,
+        name: issuedTicket.name,
+        preferredAt: issuedTicket.preferredAt,
+      }),
+      { width: 240, margin: 1, color: { dark: "#0B0C10", light: "#f4ead2" } }
+    )
+      .then((url) => {
+        if (active) setQrImageUrl(url);
+      })
+      .catch(() => {
+        if (active) setQrImageUrl("");
+      });
+    return () => {
+      active = false;
+    };
+  }, [issuedTicket]);
 
   return (
     <div className="relative w-full">

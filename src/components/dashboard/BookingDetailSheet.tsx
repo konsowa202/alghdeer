@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   X,
@@ -15,10 +15,11 @@ import {
   Check,
   CircleDot,
   FileText,
+  Ticket,
   UsersRound,
 } from "lucide-react";
-import type { BookingRecord, BookingStatus } from "@/lib/bookings-types";
-import { BOOKING_STATUS_LABELS } from "@/lib/bookings-types";
+import { isBookingQrActive, type BookingRecord, type BookingStatus, BOOKING_STATUS_LABELS } from "@/lib/bookings-types";
+import TicketPassModal from "./TicketPassModal";
 import {
   formatWhen,
   formatCreated,
@@ -51,9 +52,11 @@ export default function BookingDetailSheet({
   onClose: () => void;
   sheet?: boolean;
 }) {
+  const [showTicket, setShowTicket] = useState(false);
   const isBusy = controller.busyId === booking.id;
   const wa = waHref(booking.phone);
   const tel = telHref(booking.phone);
+  const qrActive = isBookingQrActive(booking.status);
 
   async function copyId() {
     try {
@@ -75,6 +78,7 @@ export default function BookingDetailSheet({
   );
 
   return (
+    <>
     <div
       className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm md:p-4"
       onClick={onClose}
@@ -182,6 +186,13 @@ export default function BookingDetailSheet({
             <Link href={`/dashboard/customers?phone=${encodeURIComponent(booking.phone)}`} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 text-xs font-bold text-white/65 hover:bg-white/[0.06]">
               <UsersRound size={16} /> ملف العميل
             </Link>
+            <button
+              type="button"
+              onClick={() => setShowTicket(true)}
+              className="col-span-2 flex items-center justify-center gap-2 rounded-xl bg-[#cba135] px-4 py-3 text-xs font-black text-black hover:bg-[#d4b458]"
+            >
+              <Ticket size={16} /> إصدار / عرض تذكرة الدخول (QR)
+            </button>
           </div>
 
           {/* Details */}
@@ -202,6 +213,12 @@ export default function BookingDetailSheet({
             )}
             {detailRow("الجهة / المناسبة", booking.company)}
             {detailRow("عدد الضيوف", `${booking.groupSize} شخص`)}
+            {detailRow(
+              "حالة QR والأساور",
+              <span className={qrActive ? "text-emerald-300 font-bold" : "text-amber-300 font-bold"}>
+                {qrActive ? "QR مفعل" : "QR غير مفعل"} • {booking.checkedInCount} / {booking.groupSize} إسورة
+              </span>
+            )}
             {detailRow("موعد المناسبة", formatWhen(booking.preferredAt))}
             {detailRow("تاريخ التسجيل", formatCreated(booking.createdAt))}
             {detailRow(
@@ -304,5 +321,11 @@ export default function BookingDetailSheet({
         </div>
       </div>
     </div>
+    <TicketPassModal
+      booking={showTicket ? booking : null}
+      onClose={() => setShowTicket(false)}
+      onBookingUpdated={() => void controller.refresh()}
+    />
+    </>
   );
 }

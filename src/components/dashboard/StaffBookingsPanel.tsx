@@ -15,6 +15,7 @@ import {
   VolumeX,
   Eye,
   CalendarPlus,
+  Ticket,
 } from "lucide-react";
 import type { BookingRecord, BookingStatus } from "@/lib/bookings-types";
 import { BOOKING_STATUS_LABELS } from "@/lib/bookings-types";
@@ -28,6 +29,7 @@ import {
 } from "./booking-shared";
 import BookingDetailSheet from "./BookingDetailSheet";
 import AddBookingForm from "./AddBookingForm";
+import TicketPassModal from "./TicketPassModal";
 
 const FILTER_TABS: { key: StatusFilter; label: string }[] = [
   { key: "all", label: "الكل" },
@@ -43,6 +45,7 @@ export default function StaffBookingsPanel() {
   const { query, setQuery, statusFilter, setStatusFilter, filtered } =
     useBookingsFilter(controller.rows);
   const [selected, setSelected] = useState<BookingRecord | null>(null);
+  const [ticketBooking, setTicketBooking] = useState<BookingRecord | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
   const {
@@ -237,6 +240,7 @@ export default function StaffBookingsPanel() {
                     isBusy={busyId === order.id}
                     onStatus={(s) => setStatus(order.id, s)}
                     onOpen={() => setSelected(order)}
+                    onTicket={() => setTicketBooking(order)}
                   />
                 ))
               )}
@@ -252,6 +256,12 @@ export default function StaffBookingsPanel() {
           onClose={() => setSelected(null)}
         />
       ) : null}
+
+      <TicketPassModal
+        booking={ticketBooking ? rows.find((r) => r.id === ticketBooking.id) ?? ticketBooking : null}
+        onClose={() => setTicketBooking(null)}
+        onBookingUpdated={() => void refresh()}
+      />
     </div>
   );
 }
@@ -261,11 +271,13 @@ function DesktopRow({
   isBusy,
   onStatus,
   onOpen,
+  onTicket,
 }: {
   order: BookingRecord;
   isBusy: boolean;
   onStatus: (s: BookingStatus) => void;
   onOpen: () => void;
+  onTicket: () => void;
 }) {
   const wa = waHref(order.phone);
   return (
@@ -323,6 +335,15 @@ function DesktopRow({
               </option>
             ))}
           </select>
+          <button
+            type="button"
+            onClick={onTicket}
+            title="إصدار / عرض التذكرة (QR)"
+            className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-[#cba135]/30 bg-[#cba135]/10 text-[#e5c979] hover:bg-[#cba135]/20"
+          >
+            <Ticket size={13} />
+            تذكرة
+          </button>
           <button
             type="button"
             onClick={onOpen}
