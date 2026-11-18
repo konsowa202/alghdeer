@@ -9,6 +9,7 @@ import {
   FileCheck2,
   FileText,
   Plus,
+  Presentation,
   Printer,
   RefreshCw,
   Save,
@@ -1082,6 +1083,13 @@ export default function QuoteStudio({
             </button>
             {selectedId ? (
               <>
+                <Link
+                  href={`/dashboard/invoices/${selectedId}/proposal`}
+                  target="_blank"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#cba135]/40 bg-gradient-to-l from-[#cba135]/20 to-[#cba135]/5 px-4 py-3 text-xs font-bold text-[#f1d17c] hover:from-[#cba135]/30"
+                >
+                  <Presentation size={16} /> البروبوزل
+                </Link>
                 <Link
                   href={`/dashboard/invoices/${selectedId}/print`}
                   target="_blank"
