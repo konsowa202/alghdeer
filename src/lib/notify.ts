@@ -124,6 +124,7 @@ async function sendViaResend(
   const from = process.env.EMAIL_FROM?.trim() || "Alghdeer Bookings <onboarding@resend.dev>";
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
+    signal: AbortSignal.timeout(10_000),
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({ from, to, subject, html, text }),
   });
@@ -184,6 +185,7 @@ async function sendViaWeb3Forms(
   if (!key) return false;
   const res = await fetch("https://api.web3forms.com/submit", {
     method: "POST",
+    signal: AbortSignal.timeout(10_000),
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       access_key: key,
@@ -234,6 +236,7 @@ async function sendViaFormSubmit(
 
     const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(recipient)}`, {
       method: "POST",
+      signal: AbortSignal.timeout(10_000),
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

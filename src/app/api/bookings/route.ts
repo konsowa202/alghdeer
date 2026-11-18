@@ -11,6 +11,7 @@ import { MIN_LEAD_MS, type BookingStatus } from "@/lib/bookings-types";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { isSameOriginRequest } from "@/lib/request-guard";
 import { notifyNewBooking } from "@/lib/notify";
+import { runAfterResponse } from "@/lib/after-response";
 
 const ALLOWED_STAFF_POST_STATUS: BookingStatus[] = [
   "pending",
@@ -133,19 +134,9 @@ export async function POST(req: Request) {
       source: staff ? "staff" : "website",
     }, staff?.accessToken);
 
-    // Trigger notification to staff/management for all public website submissions
-    let notified = false;
-    if (!staff) {
-      try {
-        const result = await Promise.race([
-          notifyNewBooking(booking),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 7000)),
-        ]);
-        notified = result?.sent ?? false;
-      } catch (err) {
-        console.error("[bookings] notification error:", err);
-      }
-    }
+    // Email the team in the background — the guest gets the ticket as soon as
+    // the booking is saved instead of waiting for the email provider.
+    if (!staff) runAfterResponse(notifyNewBooking(booking));
 
     // Output whitelist — return only what the ticket UI needs
     return NextResponse.json({
@@ -157,7 +148,6 @@ export async function POST(req: Request) {
       groupSize: booking.groupSize,
       preferredAt: booking.preferredAt,
       status: booking.status,
-      notified,
     });
   } catch (error) {
     // Detailed errors stay in server logs. Never issue a fake ticket when the

@@ -1,11 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { getSupabaseConfig } from "./config";
+import { fetchWithTimeout, getSupabaseConfig } from "./config";
 
 export async function updateSupabaseSession(req: NextRequest) {
   let response = NextResponse.next({ request: req });
   const { url, publishableKey } = getSupabaseConfig();
   const supabase = createServerClient(url, publishableKey, {
+    global: { fetch: fetchWithTimeout() },
     cookies: {
       getAll() {
         return req.cookies.getAll();
@@ -20,16 +21,17 @@ export async function updateSupabaseSession(req: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() also refreshes an expired session (writing the new cookies),
+  // but verifies the JWT without an extra Auth round trip when possible.
+  const { data: claimsData } = await supabase.auth.getClaims().catch(() => ({ data: null }));
+  const userId = claimsData?.claims?.sub;
 
   let isStaff = false;
-  if (user) {
+  if (userId) {
     const { data } = await supabase
       .from("staff_members")
       .select("user_id")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .eq("is_active", true)
       .maybeSingle();
     isStaff = Boolean(data);

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type StaffContext = {
@@ -7,36 +8,41 @@ export type StaffContext = {
 };
 
 /**
- * Validates the user with Supabase Auth, then checks the active staff grant.
+ * Verifies the signed-in user, then checks the active staff grant.
  * A valid Auth account alone never grants access to dashboard customer data.
+ *
+ * - getClaims() verifies the JWT signature (locally with the project's signing
+ *   keys, or via the Auth server for legacy keys) instead of always doing an
+ *   extra network round trip like getUser().
+ * - cache() runs the check once per request, so the layout and the page of
+ *   the same dashboard render share one result instead of repeating it.
  */
-export async function getStaffContext(): Promise<StaffContext | null> {
+export const getStaffContext = cache(async (): Promise<StaffContext | null> => {
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (error || !user) return null;
+  const { data: claimsData, error } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  if (error || !claims?.sub) return null;
 
-  const { data: membership, error: membershipError } = await supabase
-    .from("staff_members")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .eq("is_active", true)
-    .maybeSingle();
+  const [{ data: membership, error: membershipError }, { data: sessionData }] = await Promise.all([
+    supabase
+      .from("staff_members")
+      .select("user_id")
+      .eq("user_id", claims.sub)
+      .eq("is_active", true)
+      .maybeSingle(),
+    supabase.auth.getSession(),
+  ]);
   if (membershipError || !membership) return null;
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.access_token) return null;
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) return null;
 
   return {
-    userId: user.id,
-    email: user.email || "",
-    accessToken: session.access_token,
+    userId: claims.sub,
+    email: typeof claims.email === "string" ? claims.email : "",
+    accessToken,
   };
-}
+});
 
 export async function isStaffSession(): Promise<boolean> {
   return Boolean(await getStaffContext());

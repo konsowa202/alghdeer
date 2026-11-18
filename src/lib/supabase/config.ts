@@ -15,3 +15,21 @@ export function getSupabaseConfig() {
 
   return { url, publishableKey };
 }
+
+/**
+ * fetch with a hard deadline. Supabase Auth/PostgREST calls made through
+ * supabase-js have no timeout of their own, so a stalled connection could keep
+ * a dashboard request (and the browser) waiting until the platform kills it.
+ */
+export function fetchWithTimeout(ms = 8000): typeof fetch {
+  return (input, init = {}) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    const upstream = init.signal;
+    if (upstream) {
+      if (upstream.aborted) controller.abort();
+      else upstream.addEventListener("abort", () => controller.abort(), { once: true });
+    }
+    return fetch(input, { ...init, signal: controller.signal }).finally(() => clearTimeout(timer));
+  };
+}

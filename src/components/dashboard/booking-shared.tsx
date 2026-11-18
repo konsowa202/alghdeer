@@ -126,7 +126,11 @@ export function useBookingsController() {
     } catch {}
   }, []);
 
+  const inFlightRef = useRef(false);
   const refresh = useCallback(async () => {
+    // Never stack requests: a slow refresh must finish before the next starts.
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setLoadError("");
     try {
       const res = await fetch("/api/bookings", {
@@ -160,15 +164,27 @@ export function useBookingsController() {
     } catch {
       setLoadError("تعذر تحديث الحجوزات، تأكد من الاتصال بالإنترنت.");
     } finally {
+      inFlightRef.current = false;
       setLoading(false);
     }
   }, [beep, soundOn]);
 
+  // Keep the latest refresh in a ref so toggling sound doesn't restart polling.
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
+
   useEffect(() => {
-    void refresh();
-    const interval = setInterval(() => void refresh(), 10000);
-    return () => clearInterval(interval);
-  }, [refresh]);
+    void refreshRef.current();
+    const tick = () => {
+      if (document.visibilityState === "visible") void refreshRef.current();
+    };
+    const interval = setInterval(tick, 15000);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", tick);
+    };
+  }, []);
 
   const stats = useMemo<BookingStats>(() => {
     const startOfToday = new Date();
