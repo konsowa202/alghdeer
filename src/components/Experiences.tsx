@@ -90,6 +90,8 @@ export default function Experiences() {
                 <img
                   src={exp.image}
                   alt={t(exp.title)}
+                  loading="lazy"
+                  decoding="async"
                   className={`absolute inset-0 w-full h-full object-cover ${exp.objectPos} opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000`}
                 />
                 {isHovered && (

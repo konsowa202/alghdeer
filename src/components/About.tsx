@@ -53,6 +53,8 @@ export default function About() {
             <div className="relative aspect-[4/5] sm:aspect-[4/4] overflow-hidden rounded-2xl shadow-2xl group">
               <img
                 src="/instagram/C0_ANXSMVj2.jpg"
+                loading="lazy"
+                decoding="async"
                 alt={isAr ? "المجلس العربي داخل خيمة الغدير" : "Traditional Majlis Inside Alghdeer Tent"}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
               />

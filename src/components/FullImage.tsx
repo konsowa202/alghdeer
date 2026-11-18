@@ -17,6 +17,8 @@ export default function FullImage() {
       <motion.div style={{ scale }} className="absolute inset-0">
         <img
           src="/nano/nb_bohemian_walkway_cinematic.jpg"
+          loading="lazy"
+          decoding="async"
           alt="الممشى البوهيمي في مخيمات الغدير"
           className="w-full h-full object-cover object-center"
         />
