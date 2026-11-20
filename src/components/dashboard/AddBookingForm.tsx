@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import type { BookingStatus } from "@/lib/bookings-types";
 import { BOOKING_STATUS_LABELS } from "@/lib/bookings-types";
 import type { BookingsController } from "./booking-shared";
+import DateTimeField from "./DateTimeField";
+import GuestFields from "./GuestFields";
+import { guestTotal, type GuestBreakdown } from "@/lib/guests";
 
 const inputCls =
   "w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#cba135]";
@@ -20,7 +23,7 @@ export default function AddBookingForm({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
-  const [groupSize, setGroupSize] = useState("");
+  const [guests, setGuests] = useState<GuestBreakdown>({ adults: 0, children: 0, extras: 0 });
   const [preferredLocal, setPreferredLocal] = useState("");
   const [notes, setNotes] = useState("");
   const [addStatus, setAddStatus] = useState<BookingStatus>("pending");
@@ -30,9 +33,13 @@ export default function AddBookingForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setAddError("");
-    const n = Number(groupSize);
-    if (!Number.isFinite(n) || n < 1) {
-      setAddError("أدخل عدداً صحيحاً للمجموعة.");
+    const n = guestTotal(guests);
+    if (n < 1) {
+      setAddError("أدخل عدد الكبار أو الأطفال أو المرافقين.");
+      return;
+    }
+    if (!preferredLocal) {
+      setAddError("اختر تاريخ ووقت المناسبة.");
       return;
     }
     setAdding(true);
@@ -43,6 +50,7 @@ export default function AddBookingForm({
         email: email.trim(),
         company: company.trim(),
         groupSize: n,
+        guestBreakdown: guests,
         preferredLocal,
         notes: notes.trim(),
         status: addStatus,
@@ -55,7 +63,7 @@ export default function AddBookingForm({
       setPhone("");
       setEmail("");
       setCompany("");
-      setGroupSize("");
+      setGuests({ adults: 0, children: 0, extras: 0 });
       setPreferredLocal("");
       setNotes("");
       setAddStatus("pending");
@@ -111,24 +119,11 @@ export default function AddBookingForm({
       </div>
       <div>
         <label className={labelCls}>عدد الأشخاص</label>
-        <input
-          required
-          type="number"
-          min={1}
-          value={groupSize}
-          onChange={(e) => setGroupSize(e.target.value)}
-          className={`${inputCls} [color-scheme:dark]`}
-        />
+        <GuestFields value={guests} onChange={setGuests} inputClassName={inputCls} labelClassName={labelCls} />
       </div>
       <div>
         <label className={labelCls}>تاريخ ووقت المناسبة</label>
-        <input
-          required
-          type="datetime-local"
-          value={preferredLocal}
-          onChange={(e) => setPreferredLocal(e.target.value)}
-          className={`${inputCls} [color-scheme:dark]`}
-        />
+        <DateTimeField required value={preferredLocal} onChange={setPreferredLocal} />
       </div>
       <div className="md:col-span-2">
         <label className={labelCls}>ملاحظات وطلبات خاصة</label>

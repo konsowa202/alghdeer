@@ -10,29 +10,20 @@ import React, {
 import type { BookingRecord, BookingStatus } from "@/lib/bookings-types";
 import { BOOKING_STATUS_LABELS } from "@/lib/bookings-types";
 import { matchesNormalizedQuery } from "@/lib/search-normalize";
+import { formatDateTime, riyadhLocalToIso } from "@/lib/format-date";
+import type { GuestBreakdown } from "@/lib/guests";
 
 /* ------------------------------------------------------------------ */
 /* Formatting helpers                                                  */
 /* ------------------------------------------------------------------ */
 
+/** e.g. "20-Nov-2026 · 7:30 PM" (Gregorian, Riyadh time, month names). */
 export function formatWhen(iso: string) {
-  const d = new Date(iso);
-  if (!Number.isFinite(d.getTime())) return "—";
-  return d.toLocaleString("ar-SA", {
-    timeZone: "Asia/Riyadh",
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+  return formatDateTime(iso);
 }
 
 export function formatCreated(iso: string) {
-  const d = new Date(iso);
-  if (!Number.isFinite(d.getTime())) return "—";
-  return d.toLocaleString("ar-SA", {
-    timeZone: "Asia/Riyadh",
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+  return formatDateTime(iso);
 }
 
 export function waHref(phone: string): string | null {
@@ -266,12 +257,13 @@ export function useBookingsController() {
       email: string;
       company: string;
       groupSize: number;
+      guestBreakdown?: GuestBreakdown | null;
       preferredLocal: string;
       notes: string;
       status: BookingStatus;
     }): Promise<{ ok: boolean; error?: string }> => {
-      const d = new Date(input.preferredLocal);
-      if (!Number.isFinite(d.getTime())) {
+      const preferredIso = riyadhLocalToIso(input.preferredLocal);
+      if (!preferredIso) {
         return { ok: false, error: "اختر تاريخاً ووقتاً صالحين." };
       }
       try {
@@ -285,8 +277,9 @@ export function useBookingsController() {
             email: input.email,
             company: input.company,
             groupSize: input.groupSize,
+            guestBreakdown: input.guestBreakdown ?? null,
             notes: input.notes,
-            preferredAt: d.toISOString(),
+            preferredAt: preferredIso,
             status: input.status,
           }),
         });

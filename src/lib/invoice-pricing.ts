@@ -1,3 +1,4 @@
+import { cleanBreakdown, guestTotal } from "./guests";
 import type { CommissionType, InvoiceInput, InvoiceLineItem, InvoiceStatus } from "./invoices-types";
 
 const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
@@ -71,6 +72,7 @@ export function normalizeInvoiceInput(body: Record<string, unknown>): InvoiceInp
     ? new Date(eventAtRaw).toISOString()
     : null;
   const totals = calculateTotals(items, body.discount, commissionType, body.commissionValue, body.taxRate);
+  const guestBreakdown = cleanBreakdown(body.guestBreakdown);
 
   return {
     bookingId: cleanText(body.bookingId, 80) || null,
@@ -79,7 +81,8 @@ export function normalizeInvoiceInput(body: Record<string, unknown>): InvoiceInp
     customerEmail: cleanText(body.customerEmail, 160),
     company: cleanText(body.company, 120),
     eventAt,
-    guestCount: Math.floor(cleanNumber(body.guestCount, 1, 5000)),
+    guestCount: guestBreakdown ? guestTotal(guestBreakdown) : Math.floor(cleanNumber(body.guestCount, 1, 5000)),
+    guestBreakdown,
     status,
     items,
     discount: totals.discount,

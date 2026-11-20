@@ -132,6 +132,14 @@ export default function ProposalDeck({ invoice, initialLang }: { invoice: Invoic
   const welcome = s.welcome || t(DEFAULT_WELCOME);
   const perPerson = invoice.guestCount > 0 ? Math.round((invoice.total / invoice.guestCount) * 100) / 100 : 0;
   const itemPages = chunk(invoice.items, ITEMS_PER_SLIDE);
+  const gb = invoice.guestBreakdown;
+  const guestParts = gb
+    ? [
+        gb.adults ? `${n(gb.adults)} ${L("بالغ", "adults")}` : "",
+        gb.children ? `${n(gb.children)} ${L("طفل", "children")}` : "",
+        gb.extras ? `${n(gb.extras)} ${L("مرافق", "staff")}` : "",
+      ].filter(Boolean).join(" · ")
+    : "";
   const qty = (it: InvoiceRecord["items"][number]) => `${n(it.quantity)} ${ar ? it.unitAr : it.unitEn}`;
   const metaLine = `${invoice.guestCount > 0 ? `${n(invoice.guestCount)} ${L("ضيف", "guests")} — ` : ""}${fmtDate(invoice.eventAt)}`;
 
@@ -189,7 +197,7 @@ export default function ProposalDeck({ invoice, initialLang }: { invoice: Invoic
         </div>
         <div className="pp-abs pp-meta" style={{ insetInlineStart: 128, top: 790, width: 652 }}>
           <div className="pp-meta-pill"><p className="pp-meta-k">{L("تاريخ المناسبة", "Event date")}</p><p className="pp-meta-v">{fmtDate(invoice.eventAt)}</p></div>
-          <div className="pp-meta-pill"><p className="pp-meta-k">{L("عدد الضيوف", "Guests")}</p><p className="pp-meta-v">{n(invoice.guestCount)} {L("ضيف", "guests")}</p></div>
+          <div className="pp-meta-pill"><p className="pp-meta-k">{L("عدد الضيوف", "Guests")}</p><p className="pp-meta-v">{n(invoice.guestCount)} {L("ضيف", "guests")}</p>{guestParts ? <p className="pp-meta-k" style={{ fontSize: 20, marginTop: 2 }}>{guestParts}</p> : null}</div>
           <div className="pp-meta-pill"><p className="pp-meta-k">{L("الموقع", "Location")}</p><p className="pp-meta-v">{L("جدة — بريمان", "Jeddah — Briman")}</p></div>
           <div className="pp-meta-pill"><p className="pp-meta-k">{L("رقم العرض", "Proposal no.")}</p><p className="pp-meta-v" dir="ltr">{invoice.invoiceNumber}</p></div>
         </div>

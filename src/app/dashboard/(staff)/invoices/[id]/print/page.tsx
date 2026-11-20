@@ -4,6 +4,8 @@ import PrintInvoiceButton from "@/components/dashboard/PrintInvoiceButton";
 import { getStaffContext } from "@/lib/staff-session";
 import { getInvoice } from "@/lib/invoices-store";
 import { formatSar } from "@/lib/invoice-pricing";
+import { formatDateTime, formatShortDate } from "@/lib/format-date";
+import { breakdownLabel } from "@/lib/guests";
 
 const money = (value: number) => `${formatSar(value)} SAR`;
 
@@ -14,10 +16,8 @@ export default async function InvoicePrintPage(props: { params: { id: string } |
   const invoice = await getInvoice(id, staff.accessToken);
   if (!invoice) notFound();
   const isIssued = invoice.status === "issued";
-  const eventDate = invoice.eventAt
-    ? new Intl.DateTimeFormat("ar-SA", { dateStyle: "long", timeZone: "Asia/Riyadh" }).format(new Date(invoice.eventAt))
-    : "—";
-  const issueDate = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "Asia/Riyadh" }).format(new Date(invoice.updatedAt));
+  const eventDate = invoice.eventAt ? formatDateTime(invoice.eventAt) : "—";
+  const issueDate = formatShortDate(invoice.updatedAt);
 
   return (
     <div className="invoice-page" dir="rtl">
@@ -45,8 +45,8 @@ export default async function InvoicePrintPage(props: { params: { id: string } |
         <div className="invoice-meta">
           <div><span className="invoice-label">التاريخ / Date</span><span className="invoice-value invoice-ltr">{issueDate}</span></div>
           <div><span className="invoice-label">الحالة / Status</span><span className="invoice-status">{isIssued ? "صادرة / Issued" : invoice.status === "approved" ? "معتمد / Approved" : "مسودة / Draft"}</span></div>
-          <div><span className="invoice-label">تاريخ المناسبة / Event</span><span className="invoice-value">{eventDate}</span></div>
-          <div><span className="invoice-label">عدد الضيوف / Guests</span><span className="invoice-value">{invoice.guestCount}</span></div>
+          <div><span className="invoice-label">تاريخ المناسبة / Event</span><span className="invoice-value invoice-ltr">{eventDate}</span></div>
+          <div><span className="invoice-label">عدد الضيوف / Guests</span><span className="invoice-value">{invoice.guestCount}</span>{invoice.guestBreakdown ? <span className="invoice-label" style={{ marginTop: 6, marginBottom: 0 }}>{breakdownLabel(invoice.guestBreakdown)}</span> : null}</div>
         </div>
         <section className="invoice-customer">
           <div className="customer-box">

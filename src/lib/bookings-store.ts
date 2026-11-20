@@ -8,6 +8,7 @@ import type {
 } from "./bookings-types";
 import { isBookingQrActive, isBookingStatus, MIN_LEAD_MS } from "./bookings-types";
 import { qrBlockReasonAr } from "./ticket-qr";
+import { cleanBreakdown, guestTotal, isMissingBreakdownColumn, type GuestBreakdown } from "./guests";
 
 type DatabaseBooking = {
   id: string;
@@ -16,6 +17,9 @@ type DatabaseBooking = {
   email: string | null;
   company: string;
   group_size: number;
+  adults?: number | null;
+  children?: number | null;
+  extra_guests?: number | null;
   notes: string;
   preferred_at: string;
   status: BookingStatus;
@@ -128,6 +132,7 @@ function normalizeRecord(row: DatabaseBooking): BookingRecord {
     email: row.email || "",
     company: row.company,
     groupSize: row.group_size,
+    guestBreakdown: cleanBreakdown({ adults: row.adults, children: row.children, extras: row.extra_guests }),
     notes: row.notes,
     preferredAt: new Date(row.preferred_at).toISOString(),
     status: row.status,
@@ -160,6 +165,7 @@ export type NewBookingInput = {
   email?: string;
   company?: string;
   groupSize?: number;
+  guestBreakdown?: GuestBreakdown | null;
   notes?: string;
   preferredAt?: string;
   status: BookingStatus;
@@ -178,7 +184,12 @@ export async function appendBooking(input: NewBookingInput, staffAccessToken?: s
       phone: input.phone || "—",
       email: input.email || "",
       company: input.company || "—",
-      group_size: Number.isFinite(input.groupSize) && Number(input.groupSize) >= 1 ? Number(input.groupSize) : 10,
+      group_size: input.guestBreakdown
+        ? guestTotal(input.guestBreakdown)
+        : Number.isFinite(input.groupSize) && Number(input.groupSize) >= 1 ? Number(input.groupSize) : 10,
+      ...(input.guestBreakdown
+        ? { adults: input.guestBreakdown.adults, children: input.guestBreakdown.children, extra_guests: input.guestBreakdown.extras }
+        : {}),
       notes: input.notes || "",
       preferred_at: input.preferredAt || new Date(Date.now() + 86400000).toISOString(),
       status: input.status || "pending",
@@ -198,6 +209,19 @@ export async function appendBooking(input: NewBookingInput, staffAccessToken?: s
       return normalizeRecord(inserted[0]);
     } catch (error) {
       if (attempt < 4 && error instanceof Error && error.message.includes("(409)")) continue;
+      if (isMissingBreakdownColumn(error) && "adults" in row) {
+        // Database not migrated yet: save without the breakdown columns.
+        const { adults: _a, children: _c, extra_guests: _e, ...plain } = row;
+        void _a; void _c; void _e;
+        const response = await databaseRequest("?select=*", {
+          method: "POST",
+          headers: { Prefer: "return=representation" },
+          body: JSON.stringify(plain),
+        }, staffAccessToken);
+        const inserted = (await response.json()) as DatabaseBooking[];
+        if (!inserted[0]) throw new Error("Booking database returned no inserted record.");
+        return normalizeRecord(inserted[0]);
+      }
       throw error;
     }
   }
@@ -378,5 +402,6 @@ export function sanitizeBookingFields(body: Record<string, unknown>) {
   const honeypot = String(body.website ?? "").trim();
   const rawSize = Number(body.groupSize);
   const groupSizeClean = Number.isFinite(rawSize) && rawSize >= 1 ? Math.min(Math.floor(rawSize), 5000) : 10;
-  return { id, name, phone, email, company, notes, preferredAtRaw, groupSizeClean, honeypot };
+  const guestBreakdown = cleanBreakdown(body.guestBreakdown);
+  return { id, name, phone, email, company, notes, preferredAtRaw, groupSizeClean, guestBreakdown, honeypot };
 }

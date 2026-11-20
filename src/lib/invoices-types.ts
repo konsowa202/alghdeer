@@ -1,3 +1,5 @@
+import type { GuestBreakdown } from "./guests";
+
 export type InvoiceStatus = "draft" | "approved" | "issued";
 export type CommissionType = "none" | "percent" | "fixed";
 
@@ -22,6 +24,8 @@ export type InvoiceInput = {
   company: string;
   eventAt: string | null;
   guestCount: number;
+  /** Adults / children / extra people; guestCount is their sum when set. */
+  guestBreakdown: GuestBreakdown | null;
   status: InvoiceStatus;
   items: InvoiceLineItem[];
   discount: number;

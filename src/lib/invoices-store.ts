@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import type { InvoiceInput, InvoiceRecord } from "./invoices-types";
 import { invoiceTotals, normalizeLineItems } from "./invoice-pricing";
+import { cleanBreakdown, isMissingBreakdownColumn } from "./guests";
 
 type DatabaseInvoice = {
   id: string;
@@ -12,6 +13,9 @@ type DatabaseInvoice = {
   company: string;
   event_at: string | null;
   guest_count: number;
+  adults?: number | null;
+  children?: number | null;
+  extra_guests?: number | null;
   status: InvoiceRecord["status"];
   currency: "SAR";
   line_items: unknown;
@@ -42,6 +46,20 @@ function config(accessToken: string) {
       "Content-Type": "application/json",
     },
   };
+}
+
+/** Retries a write without the guest-breakdown columns if the database has not been migrated yet. */
+async function writeRequest(path: string, accessToken: string, init: RequestInit & { body: string }) {
+  try {
+    return await request(path, accessToken, init);
+  } catch (error) {
+    if (!isMissingBreakdownColumn(error)) throw error;
+    const body = JSON.parse(init.body) as Record<string, unknown>;
+    delete body.adults;
+    delete body.children;
+    delete body.extra_guests;
+    return request(path, accessToken, { ...init, body: JSON.stringify(body) });
+  }
 }
 
 async function request(path: string, accessToken: string, init: RequestInit = {}) {
@@ -76,6 +94,7 @@ function normalize(row: DatabaseInvoice): InvoiceRecord {
     company: row.company,
     eventAt: row.event_at ? new Date(row.event_at).toISOString() : null,
     guestCount: row.guest_count,
+    guestBreakdown: cleanBreakdown({ adults: row.adults, children: row.children, extras: row.extra_guests }),
     status: row.status,
     currency: "SAR",
     items: normalizeLineItems(row.line_items),
@@ -105,6 +124,9 @@ function databaseFields(input: InvoiceInput, userId?: string) {
     company: input.company,
     event_at: input.eventAt,
     guest_count: input.guestCount,
+    ...(input.guestBreakdown
+      ? { adults: input.guestBreakdown.adults, children: input.guestBreakdown.children, extra_guests: input.guestBreakdown.extras }
+      : {}),
     status: input.status,
     currency: "SAR",
     line_items: input.items,
@@ -139,7 +161,7 @@ export async function createInvoice(input: InvoiceInput, userId: string, accessT
     const date = now.slice(0, 10).replaceAll("-", "");
     const invoiceNumber = `INV-${date}-${randomUUID().slice(0, 6).toUpperCase()}`;
     try {
-      const response = await request("?select=*", accessToken, {
+      const response = await writeRequest("?select=*", accessToken, {
         method: "POST",
         headers: { Prefer: "return=representation" },
         body: JSON.stringify({
@@ -164,7 +186,7 @@ export async function updateInvoice(id: string, input: InvoiceInput, accessToken
   const current = await getInvoice(id, accessToken);
   if (!current) return null;
   const updatedAt = new Date().toISOString();
-  const response = await request(
+  const response = await writeRequest(
     `?id=eq.${encodeURIComponent(id)}&updated_at=eq.${encodeURIComponent(current.updatedAt)}&select=*`,
     accessToken,
     {

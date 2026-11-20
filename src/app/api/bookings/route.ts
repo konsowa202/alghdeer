@@ -81,6 +81,7 @@ export async function POST(req: Request) {
       notes,
       preferredAtRaw,
       groupSizeClean,
+      guestBreakdown,
       honeypot,
     } = sanitizeBookingFields(body);
 
@@ -129,6 +130,7 @@ export async function POST(req: Request) {
       company: company || "—",
       notes: notes || "",
       groupSize: groupSizeClean || 10,
+      guestBreakdown: staff ? guestBreakdown : null,
       preferredAt: preferredAtIso,
       status,
       source: staff ? "staff" : "website",

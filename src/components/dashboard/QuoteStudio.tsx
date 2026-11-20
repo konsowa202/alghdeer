@@ -35,6 +35,10 @@ import { formatSar, invoiceTotals } from "@/lib/invoice-pricing";
 import { buildCustomerProfiles, normalizePhone, type CustomerProfile } from "@/lib/customers";
 import { matchesNormalizedQuery } from "@/lib/search-normalize";
 import { SUPPLIER_COSTS, SUPPLIER_COSTS_NOTE, type SupplierCost } from "@/data/supplier-costs";
+import { guestTotal, type GuestBreakdown } from "@/lib/guests";
+import { formatDateTime, isoToRiyadhLocal, riyadhLocalToIso } from "@/lib/format-date";
+import DateTimeField from "./DateTimeField";
+import GuestFields from "./GuestFields";
 
 const emptyDraft = (): InvoiceInput => ({
   bookingId: null,
@@ -44,6 +48,7 @@ const emptyDraft = (): InvoiceInput => ({
   company: "",
   eventAt: null,
   guestCount: 1,
+  guestBreakdown: null,
   status: "draft",
   items: [],
   discount: 0,
@@ -58,13 +63,6 @@ const inputClass =
   "w-full rounded-xl border border-white/10 bg-black/25 px-3.5 py-3 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-[#cba135]/60";
 const labelClass = "mb-1.5 block text-[11px] font-bold text-white/45";
 
-function toDateTimeLocal(iso: string | null) {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (!Number.isFinite(date.getTime())) return "";
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
-}
-
 function fromInvoice(invoice: InvoiceRecord): InvoiceInput {
   return {
     bookingId: invoice.bookingId,
@@ -74,6 +72,7 @@ function fromInvoice(invoice: InvoiceRecord): InvoiceInput {
     company: invoice.company,
     eventAt: invoice.eventAt,
     guestCount: invoice.guestCount,
+    guestBreakdown: invoice.guestBreakdown ?? null,
     status: invoice.status,
     items: invoice.items,
     discount: invoice.discount,
@@ -180,11 +179,12 @@ export default function QuoteStudio({
             company: booking.company === "—" ? "" : booking.company,
             eventAt: booking.preferredAt,
             guestCount: booking.groupSize,
+            guestBreakdown: booking.guestBreakdown ?? null,
             notes: booking.notes,
             items: [],
           });
           setPrompt(
-            booking.notes || `حجز لعدد ${booking.groupSize} شخص بتاريخ ${booking.preferredAt}`
+            booking.notes || `حجز لعدد ${booking.groupSize} شخص بتاريخ ${formatDateTime(booking.preferredAt)}`
           );
         } else if (initialPhone) {
           const profiles = buildCustomerProfiles(bookingRows, invoiceRows);
@@ -266,6 +266,7 @@ export default function QuoteStudio({
       company: booking.company === "—" ? "" : booking.company,
       eventAt: booking.preferredAt,
       guestCount: booking.groupSize,
+      guestBreakdown: booking.guestBreakdown ?? null,
       notes: current.notes || booking.notes,
     }));
     setClientSearch("");
@@ -284,6 +285,7 @@ export default function QuoteStudio({
       company: customer.company || current.company,
       eventAt: latestBooking?.preferredAt || current.eventAt,
       guestCount: latestBooking?.groupSize || current.guestCount,
+      guestBreakdown: latestBooking?.guestBreakdown ?? current.guestBreakdown,
       notes: current.notes || latestBooking?.notes || "",
     }));
     setClientSearch("");
@@ -747,26 +749,24 @@ export default function QuoteStudio({
                   className={inputClass}
                 />
               </label>
-              <label>
+              <div className="sm:col-span-2">
                 <span className={labelClass}>عدد الضيوف</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={5000}
-                  value={form.guestCount}
-                  onChange={(event) => update("guestCount", Number(event.target.value))}
-                  className={inputClass}
+                <GuestFields
+                  value={form.guestBreakdown ?? { adults: form.guestCount, children: 0, extras: 0 }}
+                  onChange={(b: GuestBreakdown) =>
+                    setForm((current) => ({ ...current, guestBreakdown: b, guestCount: Math.max(1, guestTotal(b)) }))
+                  }
+                  inputClassName={inputClass}
+                  labelClassName={labelClass}
                 />
-              </label>
-              <label>
+              </div>
+              <div className="sm:col-span-2">
                 <span className={labelClass}>تاريخ المناسبة</span>
-                <input
-                  type="datetime-local"
-                  value={toDateTimeLocal(form.eventAt)}
-                  onChange={(event) => update("eventAt", event.target.value)}
-                  className={`${inputClass} [color-scheme:dark]`}
+                <DateTimeField
+                  value={isoToRiyadhLocal(form.eventAt)}
+                  onChange={(v) => update("eventAt", riyadhLocalToIso(v))}
                 />
-              </label>
+              </div>
             </div>
           </section>
 

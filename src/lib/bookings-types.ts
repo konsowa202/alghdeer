@@ -1,3 +1,4 @@
+import type { GuestBreakdown } from "./guests";
 /** Minimum lead time for website bookings (24 hours). Shared client/server. */
 export const MIN_LEAD_MS = 24 * 60 * 60 * 1000;
 
@@ -62,6 +63,8 @@ export type BookingRecord = {
   email?: string;
   company: string;
   groupSize: number;
+  /** Adults / children / extra people (maids, drivers); groupSize is their sum when set. */
+  guestBreakdown?: GuestBreakdown | null;
   notes: string;
   /** ISO 8601 (UTC), from client via Date.toISOString() */
   preferredAt: string;

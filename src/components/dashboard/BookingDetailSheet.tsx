@@ -1,5 +1,6 @@
 "use client";
 
+import { breakdownLabel } from "@/lib/guests";
 import React, { useState } from "react";
 import Link from "next/link";
 import {
@@ -212,7 +213,7 @@ export default function BookingDetailSheet({
               )
             )}
             {detailRow("الجهة / المناسبة", booking.company)}
-            {detailRow("عدد الضيوف", `${booking.groupSize} شخص`)}
+            {detailRow("عدد الضيوف", `${booking.groupSize} شخص${booking.guestBreakdown ? ` (${breakdownLabel(booking.guestBreakdown)})` : ""}`)}
             {detailRow(
               "حالة QR والأساور",
               <span className={qrActive ? "text-emerald-300 font-bold" : "text-amber-300 font-bold"}>
