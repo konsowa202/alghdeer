@@ -99,6 +99,10 @@ export default function Adventures() {
     </div>
   );
 
+  if (!pinned && !reduce) {
+    return <MobileStrip intro={intro} end={end} shots={shots} card={card} ar={ar} />;
+  }
+
   if (!pinned) {
     return (
       <section id="adventures" className="v2-paper v2-section">
@@ -128,6 +132,59 @@ export default function Adventures() {
         </div>
         <Band className="absolute inset-x-0 top-0" />
       </div>
+    </section>
+  );
+}
+
+/**
+ * Phones: the photos glide on their own (CSS transform marquee, compositor-only),
+ * pause while off-screen or while a finger is down. Reduced motion uses the swipe list instead.
+ */
+function MobileStrip({
+  intro,
+  end,
+  shots,
+  card,
+  ar,
+}: {
+  intro: React.ReactNode;
+  end: React.ReactNode;
+  shots: Shot[];
+  card: (s: Shot, i: number) => React.ReactNode;
+  ar: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [held, setHeld] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { rootMargin: "100px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  const running = visible && !held;
+  return (
+    <section id="adventures" className="v2-paper v2-section">
+      <div className="v2-wrap">{intro}</div>
+      <div
+        ref={ref}
+        className="v2-adv-marquee mt-10"
+        dir="ltr"
+        onPointerDown={() => setHeld(true)}
+        onPointerUp={() => setHeld(false)}
+        onPointerCancel={() => setHeld(false)}
+        onPointerLeave={() => setHeld(false)}
+      >
+        <div className={`v2-adv-marquee-track ${ar ? "is-rtl" : ""}`} style={{ animationPlayState: running ? "running" : "paused" }}>
+          {[0, 1].map((k) => (
+            <div key={k} className="v2-adv-marquee-row" aria-hidden={k === 1}>
+              {shots.map((s, i) => card(s, i))}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="v2-wrap mt-10">{end}</div>
     </section>
   );
 }

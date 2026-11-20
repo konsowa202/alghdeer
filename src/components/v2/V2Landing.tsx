@@ -5,6 +5,7 @@ import { MotionConfig } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import { Hero, Manifesto, Nav, Ticker } from "./Top";
 import Cinema from "./Cinema";
+import Finale from "./Finale";
 import Evening from "./Evening";
 import { MapExplorer, NumbersBand } from "./Camp";
 import Adventures from "./Adventures";
@@ -31,6 +32,7 @@ export default function V2Landing() {
           <Prints />
           <Occasions />
           <Clients />
+          <Finale />
           <Booking />
         </main>
         <Foot />
