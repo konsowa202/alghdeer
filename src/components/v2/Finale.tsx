@@ -11,21 +11,20 @@ const SPARKS = [
   [10, 88, 1.1], [90, 86, 0.4],
 ];
 
-/** Closing chapter: fireworks over the lit camp in an arch window, flanked by the crowd and the sky. */
+/** Highlight showcase: fireworks over the lit camp in an arch window, flanked symmetrically by the crowd and the sky. */
 export default function Finale() {
   const { L } = useL();
   const reduce = useReducedMotion();
   const wide = useMedia("(min-width: 1024px)");
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const archScale = useTransform(scrollYProgress, [0.05, 0.45], [0.84, 1]);
-  const archY = useTransform(scrollYProgress, [0, 1], [70, -50]);
-  const leftY = useTransform(scrollYProgress, [0, 1], [140, -90]);
-  const rightY = useTransform(scrollYProgress, [0, 1], [60, -160]);
-  const glow = useTransform(scrollYProgress, [0.15, 0.5], [0, 1]);
+  const archScale = useTransform(scrollYProgress, [0.05, 0.45], [0.94, 1]);
+  const archY = useTransform(scrollYProgress, [0, 1], [18, -18]);
+  const sideY = useTransform(scrollYProgress, [0, 1], [32, -32]);
+  const glow = useTransform(scrollYProgress, [0.15, 0.5], [0.35, 1]);
 
   return (
-    <section ref={ref} className="v2-night v2-finale relative overflow-hidden" aria-label={L("الختام", "The finale")}>
+    <section ref={ref} className="v2-night v2-finale relative overflow-hidden" aria-label={L("ليالي الغدير", "Nights at ALGHDEER")}>
       <div className="v2-sparks" aria-hidden>
         {SPARKS.map(([x, y, d], i) => (
           <span key={i} style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${d}s` }}>✦</span>
@@ -34,23 +33,23 @@ export default function Finale() {
 
       <div className="v2-wrap v2-section relative">
         <div className="mx-auto max-w-3xl text-center">
-          <Heading tone="paper" kicker={L("الختام", "THE FINALE")} a={L("وفي آخر الليل", "And at the end of the night,")} b={L("تتكلّم السماء", "the sky takes over")} size="xl" />
+          <Heading tone="paper" kicker={L("ليالي الغدير", "NIGHTS AT ALGHDEER")} a={L("في ليالي الغدير", "When night falls,")} b={L("تتكلّم السماء", "the sky takes over")} size="xl" />
           <Reveal>
-            <p className="v2-body v2-body-paper mx-auto mt-6 max-w-xl">
+            <p className="v2-body v2-body-paper mx-auto mt-5 max-w-xl">
               {L(
-                "ألعاب نارية فوق المخيم المضاء، والضيوف يرفعون جوالاتهم ليحفظوا اللحظة. نرتّبها لكم كختام يليق بالمناسبة.",
-                "Fireworks over the lit camp while guests raise their phones to keep the moment. We set it up as a finale worthy of your occasion.",
+                "ألعاب نارية فوق المخيم المضاء، واحتفالات الضيوف تحت سماء مفتوحة — لقطات حقيقية من سهرات الغدير.",
+                "Fireworks over the lit camp while guests celebrate under the open sky — real moments from ALGHDEER nights.",
               )}
             </p>
           </Reveal>
         </div>
 
-        <div className="v2-finale-grid mt-14 lg:mt-20">
-          <motion.figure className="v2-finale-side" style={reduce || !wide ? undefined : { y: leftY }}>
+        <div className="v2-finale-grid mt-10 lg:mt-14">
+          <motion.figure className="v2-finale-side" style={reduce || !wide ? undefined : { y: sideY }}>
             <div className="v2-photo v2-photo-round aspect-[3/4]">
               <Video name="fireworks-2" label={L("ألعاب نارية فوق الخيام", "Fireworks above the tents")} />
             </div>
-            <figcaption className="v2-cap v2-cap-paper">{L("السماء فوق الخيام", "The sky above the tents")}</figcaption>
+            <figcaption className="v2-cap v2-cap-paper text-center">{L("السماء فوق الخيام", "The sky above the tents")}</figcaption>
           </motion.figure>
 
           <motion.figure className="v2-finale-main" style={reduce ? undefined : wide ? { scale: archScale, y: archY } : { scale: archScale }}>
@@ -62,11 +61,11 @@ export default function Finale() {
             <figcaption className="v2-cap v2-cap-paper text-center">{L("فوق المخيم المضاء", "Over the lit camp")}</figcaption>
           </motion.figure>
 
-          <motion.figure className="v2-finale-side" style={reduce || !wide ? undefined : { y: rightY }}>
+          <motion.figure className="v2-finale-side" style={reduce || !wide ? undefined : { y: sideY }}>
             <div className="v2-photo v2-photo-round aspect-[3/4]">
               <Video name="crowd" label={L("الضيوف يحتفلون في ساحة المخيم", "Guests celebrating in the camp yard")} />
             </div>
-            <figcaption className="v2-cap v2-cap-paper">{L("الضيوف في الساحة", "Guests in the yard")}</figcaption>
+            <figcaption className="v2-cap v2-cap-paper text-center">{L("الضيوف في الساحة", "Guests in the yard")}</figcaption>
           </motion.figure>
         </div>
       </div>

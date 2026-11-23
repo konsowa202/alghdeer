@@ -115,17 +115,18 @@ html:has(.v2){scroll-behavior:smooth;background:#F4EAD2;overflow-anchor:none}
 .v2-cinema{position:relative;width:100%;height:100%;overflow:hidden;border-radius:28px;background:#2a1f15;will-change:transform}
 @media(max-width:767px){.v2-cinema{border-radius:18px}}
 
-/* finale */
+/* finale / night fireworks showcase */
+.v2-finale .v2-section{padding-top:clamp(3.25rem,6vw,5.25rem);padding-bottom:clamp(4.5rem,8vw,7.5rem)}
 .v2-finale .v2-kicker{display:flex;justify-content:center}
-.v2-finale-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
-.v2-finale-main{grid-column:1/-1;order:-1;position:relative;margin:0 auto 1.5rem;width:min(100%,380px);will-change:transform}
+.v2-finale-grid{display:grid;grid-template-columns:1fr 1fr;gap:.95rem;align-items:start}
+.v2-finale-main{grid-column:1/-1;order:-1;position:relative;margin:0 auto 1.25rem;width:min(100%,340px);will-change:transform}
 .v2-finale-side{margin:0;will-change:transform}
 @media(min-width:1024px){
-  .v2-finale-grid{grid-template-columns:1fr 1.25fr 1fr;gap:2.5rem;align-items:center}
+  .v2-finale-grid{grid-template-columns:1fr 1.2fr 1fr;gap:clamp(1.75rem,3vw,2.75rem);align-items:center;max-width:1160px;margin-inline:auto}
   .v2-finale-main{grid-column:auto;order:0;width:100%;margin:0}
-  .v2-finale-side:first-child{margin-top:6rem}
 }
-.v2-arch{position:relative;aspect-ratio:540/990;max-height:78vh;margin-inline:auto;overflow:hidden;background:#120d08;border-radius:50% 50% 22px 22px / 26% 26% 22px 22px;box-shadow:0 0 0 1px rgba(203,161,53,.55),0 0 0 10px rgba(36,27,19,1),0 0 0 11px rgba(203,161,53,.3),0 40px 80px rgba(0,0,0,.45)}
+.v2-arch{position:relative;aspect-ratio:9/14;max-height:60svh;width:100%;margin-inline:auto;overflow:hidden;background:#120d08;border-radius:50% 50% 22px 22px / 26% 26% 22px 22px;box-shadow:0 0 0 1px rgba(203,161,53,.55),0 0 0 10px rgba(36,27,19,1),0 0 0 11px rgba(203,161,53,.3),0 40px 80px rgba(0,0,0,.45)}
+@media(min-width:1024px){.v2-arch{max-height:min(70vh,660px)}}
 .v2-arch-glow{position:absolute;inset:-12% -20% 10%;background:radial-gradient(closest-side,rgba(203,161,53,.28),rgba(181,56,42,.12) 55%,transparent 75%);pointer-events:none;z-index:-1}
 .v2-sparks{position:absolute;inset:0;pointer-events:none}
 .v2-sparks span{position:absolute;color:var(--gold);font-size:14px;opacity:0;animation:v2-twinkle 3.2s ease-in-out infinite;will-change:transform,opacity}
