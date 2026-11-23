@@ -22,6 +22,8 @@ export default function V2Landing() {
         <Nav />
         <main>
           <Hero />
+          <Clients />
+          <Finale />
           <Manifesto />
           <Ticker />
           <Evening />
@@ -31,8 +33,6 @@ export default function V2Landing() {
           <NumbersBand />
           <Prints />
           <Occasions />
-          <Clients />
-          <Finale />
           <Booking />
         </main>
         <Foot />

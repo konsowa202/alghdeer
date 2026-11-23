@@ -120,7 +120,7 @@ export function Hero() {
           </motion.div>
           <span className="v2-film-grain" aria-hidden />
         </motion.div>
-        <a href="#manifesto" className="v2-scroll-cue v2-fade" style={fade(1.2).style} aria-label={L("انزل", "Scroll down")}>
+        <a href="#clients" className="v2-scroll-cue v2-fade" style={fade(1.2).style} aria-label={L("انزل", "Scroll down")}>
           <ArrowDown size={16} />
         </a>
       </div>
